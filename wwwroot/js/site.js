@@ -4,13 +4,13 @@
     const footer = document.querySelector('footer');
 
     let reservedSize = header.clientHeight;
-
+    debugger;
     if (footer.childNodes.length > 0 &&
         footer.innerHTML.replace(/\s+/g, '').length > 0) {
         reservedSize += footer.clientHeight;
-        footer.style.display = "flex";
+        footer.style.visibility = "visible";
     } else {
-        footer.style.display = "none";
+        footer.style.visibility = "hidden";
         main.style.marginBottom = "0";
     }
 
