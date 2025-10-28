@@ -1,0 +1,46 @@
+﻿@model WebReader.Models.Dtos.AllFilesInBucketViewModel
+@{
+    ViewData["Title"] = "FILES";
+
+    string FormatSize(ulong size)
+    {
+        var digits = size.ToString().Length;
+
+        return digits switch
+        {
+            > 7 => size / 1024 / 1024 + "MB",
+            > 4 => size / 1024 + "KB",
+            _ => size + "B"
+        };
+    }
+}
+
+@section Style
+{
+    <style>
+    </style>
+}
+
+
+
+@if (Model.Files.Any())
+{
+    @foreach (var item in Model.Files)
+    {
+        <div>
+            <a asp-controller="File" asp-action="GetFile"
+               asp-route-bucketId="@Model.BucketId"
+               asp-route-objectName="@item.Key">@item.Key - @item.LastModifiedDateTime - @FormatSize(item.Size)</a>
+        </div>
+    }
+}
+else
+{
+    @await Html.PartialAsync("_EmptyDisplay")
+}
+
+@section Scripts
+{
+    <script>
+    </script>
+}

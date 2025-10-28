@@ -1,0 +1,43 @@
+﻿@model WebReader.Models.Dtos.RegisterViewModel
+
+@{
+    ViewData["Title"] = "REGISTER";
+}
+
+@section Style
+{
+    <link rel="stylesheet" href="~/css/login-register.css" asp-append-version="true"/>
+}
+
+<h2>Register</h2>
+<form asp-action="Register" method="post">
+    <input type="hidden" asp-for="ReturnUrl"/>
+
+    <div>
+        <label asp-for="Username"></label>
+        <input asp-for="Username"/>
+        <span asp-validation-for="Username"></span>
+    </div>
+
+    <div>
+        <label asp-for="Password"></label>
+        <input asp-for="Password"/>
+        <span asp-validation-for="Password"></span>
+    </div>
+
+    <div>
+        <input asp-for="RememberMe"/>
+        <label asp-for="RememberMe">Remember me</label>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+
+    <button type="submit">Register</button>
+    <a asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Already have an account?</a>
+</form>
+
+@section Scripts
+{
+    <script>
+    </script>
+}

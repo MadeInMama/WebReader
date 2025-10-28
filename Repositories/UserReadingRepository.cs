@@ -1,0 +1,38 @@
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using WebReader.Data;
+using WebReader.Models.Entities;
+
+namespace WebReader.Repositories;
+
+public class UserReadingRepository(ApplicationDbContext context) : IRepository<UserReading>
+{
+    public async Task<UserReading?> FirstOrDefaultAsync(Expression<Func<UserReading, bool>> predicate)
+    {
+        return await context.UserReadings.FirstOrDefaultAsync(predicate);
+    }
+
+    public async Task<IEnumerable<UserReading>> AllAsync(Expression<Func<UserReading, bool>> predicate)
+    {
+        return await context.UserReadings
+            .Where(predicate)
+            .Include(f => f.File)
+            .ToListAsync();
+    }
+
+    public async Task<UserReading> AddAsync(UserReading entity)
+    {
+        var res = await context.UserReadings.AddAsync(entity);
+        await context.SaveChangesAsync();
+        return res.Entity;
+    }
+
+    public async Task SetCurrPageAsync(Guid id, int page)
+    {
+        await context.UserReadings
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(f =>
+                f.SetProperty(e => e.Page, page)
+                    .SetProperty(e => e.UpdatedDate, DateTimeOffset.UtcNow));
+    }
+}

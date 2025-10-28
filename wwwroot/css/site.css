@@ -1,0 +1,95 @@
+@font-face {
+    font-family: "VarelaRound";
+    src: url("../fonts/VarelaRound-Regular.ttf");
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    font-family: "VarelaRound", sans-serif;
+    box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+}
+
+html {
+    font-size: 14px;
+    overflow-y: scroll;
+}
+
+header {
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+header, main, footer {
+    padding: 10px;
+}
+
+header, footer {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 3em;
+    box-shadow: 0 0 1em lightgray;
+    background-color: #ffffffbf;
+    backdrop-filter: blur(0.25em);
+    z-index: 1000;
+}
+
+header > div, footer > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 80em;
+}
+
+header > div {
+    flex-direction: row-reverse;
+}
+
+header > div > ul {
+    display: flex;
+    gap: 0.5em;
+}
+
+header > div > ul > li > a {
+    color: black;
+    text-decoration: none;
+    transition: text-shadow 0.15s ease-in-out;
+}
+
+header > div > ul > li > a:hover {
+    text-shadow: 0.025em 0 0 currentColor, -0.025em 0 0 currentColor;
+}
+
+main {
+    margin-top: 3em;
+    margin-bottom: 3em;
+}
+
+footer {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
+}
+
+button {
+    border: none;
+    background-color: transparent;
+    opacity: 1;
+    transition: opacity 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.5;
+}

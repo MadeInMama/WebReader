@@ -1,0 +1,32 @@
+﻿@model WebReader.Models.Dtos.AllBucketsViewModel
+
+@{
+    ViewData["Title"] = "BUCKETS";
+}
+
+@section Style
+{
+    <style>
+    </style>
+}
+
+@if (Model.Buckets.Any())
+{
+    @foreach (var item in Model.Buckets)
+    {
+        <div>
+            <a asp-controller="File" asp-action="GetAllFilesInBucket"
+               asp-route-bucketId="@item.Name">@item.Name - @item.CreationDateDateTime</a>
+        </div>
+    }
+}
+else
+{
+    @await Html.PartialAsync("_EmptyDisplay")
+}
+
+@section Scripts
+{
+    <script>
+    </script>
+}

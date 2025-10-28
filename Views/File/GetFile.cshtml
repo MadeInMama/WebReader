@@ -1,0 +1,169 @@
+﻿@model WebReader.Models.Dtos.FileViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@section Style
+{
+    <link rel="stylesheet" href="~/css/file-preview.css" asp-append-version="true"/>
+
+}
+
+<input name="__RequestVerificationToken" type="hidden" value="@Html.AntiForgeryToken().ToString()"/>
+<h1>@Model.Title</h1>
+<div class="pdf-canvas-container">
+    <canvas id="pdf-canvas"></canvas>
+</div>
+
+@section Footer
+{
+    <div class="controls">
+        <div class="spacer controls-start"></div>
+        <div class="controls-center">
+            <button class="prev-page"></button>
+            <span class="preview-page">0/0</span>
+            <button class="next-page"></button>
+        </div>
+        <div class="controls-end">
+            <select class="set-scale">
+                <option value="0.5">0.5</option>
+                <option value="0.75">0.75</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+    </div>
+}
+
+@section Scripts
+{
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs" type="module"></script>
+    <script type="module">
+        import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs';
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@latest/build/pdf.worker.min.mjs';
+
+        let pdfDoc = null;
+        let currentPage = @Model.Page;
+        let maxPage = 1;
+        let currentScale = 1;
+
+        async function loadPdf(url, page, scale) {
+            pdfDoc = await pdfjsLib.getDocument(url).promise;
+            maxPage = pdfDoc.numPages;
+            await SetScale(currentScale);
+            await SetPage(page);
+        }
+
+        async function renderPage(num, scale) {
+            currentPage = num;
+
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({scale: scale * 1.5});
+            const canvas = document.getElementById('pdf-canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+
+            Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                value.textContent = `${currentPage}/${maxPage}`;
+            });
+        }
+
+        const url = @Html.Raw(Json.Serialize(Model.Url));
+        const decodedString = url.replace(/\\u0026/g, '&')
+
+        loadPdf(decodedString,
+            currentPage,
+            currentScale);
+
+        Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+            value.onclick = () => {
+                SetPage(--currentPage);
+
+                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                    value.disabled = false;
+                });
+            };
+        });
+
+        Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+            value.onclick = () => {
+                SetPage(++currentPage);
+
+                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                    value.disabled = false;
+                });
+            };
+        });
+
+        Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
+            value.value = currentScale;
+
+            value.onchange = (e) => {
+                SetScale(e.target.value);
+            };
+        });
+
+        async function SetPage(page) {
+            currentPage = clamp(page, 1, maxPage);
+
+            if (currentPage === maxPage) {
+                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                    value.disabled = true;
+                });
+            } else if (currentPage === 1) {
+                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                    value.disabled = true;
+                });
+            }
+
+            await renderPage(currentPage, currentScale);
+            SendCurrPage();
+        }
+
+        async function SetScale(scale) {
+            currentScale = scale;
+            Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
+                value.value = currentScale
+            });
+            document.getElementById("pdf-canvas").style.maxWidth = 5.7 * 5.5 * currentScale + "em";
+            await renderPage(currentPage, currentScale);
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        if (@Model.SendUpdateInSeconds != null && @Model.SendUpdateInSeconds > 0)
+            setInterval(SendCurrPage, (@Model.SendUpdateInSeconds - 10) * 1000);
+        else setInterval(SendCurrPage, 20 * 60 * 1000);
+
+        function SendCurrPage() {
+            const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            axios.post('/api/FileApi/UpdatePage', {
+                FileId: "@Model.FileId",
+                UserId: "@Model.UserId",
+                Page: currentPage,
+            }, {
+                headers: {
+                    'RequestVerificationToken': antiForgeryToken
+                },
+                withCredentials: true
+            });
+        }
+    </script>
+}

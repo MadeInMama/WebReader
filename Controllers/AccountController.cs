@@ -1,0 +1,103 @@
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
+using WebReader.Models.Dtos;
+using WebReader.Models.Entities;
+using WebReader.Services;
+
+namespace WebReader.Controllers;
+
+[Route("[controller]/[action]")]
+public class AccountController(IUserService userService) : Controller
+{
+    [HttpGet]
+    public IActionResult Login(string? returnUrl = null)
+    {
+        if (User.Identity is { IsAuthenticated: true })
+            return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
+
+        return View(new LoginViewModel { ReturnUrl = returnUrl });
+    }
+
+    [HttpGet]
+    public IActionResult Register(string? returnUrl = null)
+    {
+        if (User.Identity is { IsAuthenticated: true })
+            return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
+
+        return View(new RegisterViewModel { ReturnUrl = returnUrl });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await userService.AuthenticateAsync(model.Username, model.Password);
+
+        if (user != null) return await SetUser(user, model.RememberMe, model.ReturnUrl);
+
+        ModelState.AddModelError(string.Empty, "Invalid username or password.");
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var user = await userService.CreateUserAsync(model.Username, model.Password);
+
+        if (user != null) return await SetUser(user, model.RememberMe, model.ReturnUrl);
+
+        ModelState.AddModelError(string.Empty, "Invalid username or password.");
+
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        if (User.Identity is { IsAuthenticated: false })
+            return LocalRedirect(Url.Action("Index", "Home")!);
+
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
+
+    private async Task<IActionResult> SetUser(CustomUser user, bool rememberMe, string? returnUrl = null)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username)
+        };
+        claims.AddRange(user.Roles.Select(f => new Claim(ClaimTypes.Role, f.ToString())));
+
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+        var authProperties = new AuthenticationProperties
+        {
+            IsPersistent = rememberMe,
+            ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null
+        };
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            claimsPrincipal,
+            authProperties);
+
+        return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
+    }
+}
