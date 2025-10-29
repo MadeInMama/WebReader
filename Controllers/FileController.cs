@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Minio.DataModel;
 using WebReader.Models;
 using WebReader.Models.Dtos;
 using WebReader.Repositories;
@@ -25,12 +24,19 @@ public class FileController(
             .Select(Enum.Parse<RoleType>)
             .ToList();
 
-        var bucketNames = await fileRepository.GetAllAvailableBucketsAsync(roles);
-        var buckets = await minioService.ListBucketsAsync();
+        var allAvailableBucketsForUser = await fileRepository.GetAllAvailableBucketsAsync(roles);
+        var allBucketsInS3 = await minioService.ListBucketsAsync();
 
-        var filteredBuckets = buckets.Where(f => bucketNames.Contains(f.Name));
+        var intersectedBuckets = allBucketsInS3.Where(f => allAvailableBucketsForUser.Contains(f.Name));
 
-        return View(new AllBucketsViewModel { Buckets = filteredBuckets });
+        var res = intersectedBuckets.Select(bucket => new AllBucketsItem
+        {
+            Name = bucket.Name,
+            CustomName = bucket.Name, //TODO: store buckets in db and autoupdate availability to simplify execution
+            DateTime = bucket.CreationDateDateTime
+        });
+
+        return View(new AllBucketsViewModel { Items = res });
     }
 
     public async Task<IActionResult> GetAllFilesInBucket(string bucketId)
@@ -41,12 +47,24 @@ public class FileController(
             .Select(Enum.Parse<RoleType>)
             .ToList();
 
-        var objectNames = await fileRepository.GetAllAvailableObjectsInBucketAsync(bucketId, roles);
-        var objects = await minioService.ListObjectsAsync(bucketId);
+        var allAvailableObjectsForUser =
+            (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucketId, roles)).ToList();
+        var allAvailableObjectsForUserKeys = allAvailableObjectsForUser.Select(f => f.Object).Distinct();
+        var allObjectsInS3 = await minioService.ListObjectsAsync(bucketId);
 
-        var filteredObjects = objects.Where(f => objectNames.Contains(f.Key));
+        var intersectedObjects = allObjectsInS3.Where(f => allAvailableObjectsForUserKeys.Contains(f.Key));
 
-        return View(new AllFilesInBucketViewModel { BucketId = bucketId, Files = filteredObjects });
+        var res = intersectedObjects.Select(obj => new AllFilesInBucketItem
+        {
+            Name = obj.Key,
+            CustomName =
+                allAvailableObjectsForUser.FirstOrDefault(f => f.Object.Equals(obj.Key))?.CustomName ??
+                obj.Key, //TODO: autoupdate availability to simplify execution
+            DateTime = obj.LastModifiedDateTime ?? DateTime.Now,
+            Size = obj.Size
+        });
+
+        return View(new AllFilesInBucketViewModel { BucketId = bucketId, Items = res });
     }
 
     public async Task<IActionResult> GetReading()
@@ -59,26 +77,33 @@ public class FileController(
         var userGuidClaim = User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier);
         var userGuid = Guid.Parse(userGuidClaim.Value);
 
-        var readings = await readingRepository.AllAsync(f => f.UserId == userGuid &&
-                                                             !f.File!.IsHidden &&
-                                                             f.File.AccessRoles.Intersect(roles).Any());
+        var readings = (await readingRepository.AllAsync(f => f.UserId == userGuid &&
+                                                              !f.File!.IsHidden &&
+                                                              f.File.AccessRoles.Intersect(roles).Any(),
+            f => f.File!)).ToList();
         var allBucketsFromDb = readings.Select(f => f.File!.Bucket).Distinct();
         var allObjectsFromDb = readings.Select(f => f.File!.Object).Distinct();
         var allBuckets = (await minioService.ListBucketsAsync())
             .Where(f => allBucketsFromDb.Contains(f.Name))
             .Select(f => f.Name);
 
-        var res = new Dictionary<string, IEnumerable<Item>>();
+        var res = new Dictionary<string, IEnumerable<AllFilesReadingItem>>();
 
         foreach (var bucket in allBuckets)
         {
             var allObjects = await minioService.ListObjectsAsync(bucket!);
             var readingObjects = allObjects.Where(f => allObjectsFromDb.Contains(f.Key));
 
-            res.Add(bucket!, readingObjects);
+            res.Add(bucket!, readingObjects.Select(obj => new AllFilesReadingItem //TODO:CustomNameForBuckets
+            {
+                Name = obj.Key,
+                CustomName = readings.FirstOrDefault(f => f.File!.Object.Equals(obj.Key))?.File?.CustomName ?? obj.Key,
+                DateTime = obj.LastModifiedDateTime ?? DateTime.Now,
+                Size = obj.Size
+            }));
         }
 
-        return View(new AllFilesReadingViewModel { BucketFiles = res });
+        return View(new AllFilesReadingViewModel { Items = res });
     }
 
     public async Task<IActionResult> GetFile(string bucketId, string objectName)
@@ -111,7 +136,7 @@ public class FileController(
             UserId = userGuid,
             FileId = file.Id,
             Page = reading?.Page ?? 1,
-            Title = objectName,
+            Title = file.CustomName ?? objectName,
             Url = await minioService.GetFileUrlAsync(bucketId, objectName),
             SendUpdateInSeconds = authValidSeconds
         });

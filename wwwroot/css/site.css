@@ -3,12 +3,66 @@
     src: url("../fonts/VarelaRound-Regular.ttf");
 }
 
+@font-face {
+    font-family: "MPLUSRounded1c";
+    src: url("../fonts/MPLUSRounded1c-Black.ttf");
+    font-weight: 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "MPLUSRounded1c";
+    src: url("../fonts/MPLUSRounded1c-ExtraBold.ttf");
+    font-weight: 800;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "MPLUSRounded1c";
+    src: url("../fonts/MPLUSRounded1c-Bold.ttf");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "MPLUSRounded1c";
+    src: url("../fonts/MPLUSRounded1c-Medium.ttf");
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "MPLUSRounded1c";
+    src: url("../fonts/MPLUSRounded1c-Regular.ttf");
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "MPLUSRounded1c";
+    src: url("../fonts/MPLUSRounded1c-Light.ttf");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "MPLUSRounded1c";
+    src: url("../fonts/MPLUSRounded1c-Thin.ttf");
+    font-weight: 300;
+    font-style: normal;
+}
+
 * {
     padding: 0;
     margin: 0;
     list-style-type: none;
-    font-family: "VarelaRound", sans-serif;
+    font-family: "MPLUSRounded1c", sans-serif;
+    font-weight: 500;
     box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
 }
 
 *,
@@ -17,7 +71,7 @@
 }
 
 html {
-    font-size: 14px;
+    font-size: 16px;
     overflow-y: scroll;
 }
 
@@ -61,13 +115,27 @@ header > div > ul {
 }
 
 header > div > ul > li > a {
+    position: relative;
+    display: inline-block;
     color: black;
     text-decoration: none;
-    transition: text-shadow 0.15s ease-in-out;
 }
 
-header > div > ul > li > a:hover {
-    text-shadow: 0.025em 0 0 currentColor, -0.025em 0 0 currentColor;
+header > div > ul > li > a::after {
+    position: absolute;
+    content: "";
+    width: 0;
+    bottom: 0;
+    left: 50%;
+    height: 0.025em;
+    display: block;
+    background: black;
+    transition: 300ms;
+}
+
+header > div > ul > li > a:hover::after {
+    width: 100%;
+    left: 0;
 }
 
 main {

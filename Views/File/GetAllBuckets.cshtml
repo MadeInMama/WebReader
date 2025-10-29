@@ -10,13 +10,14 @@
     </style>
 }
 
-@if (Model.Buckets.Any())
+<h1>ХУЙ</h1>
+@if (Model.Items.Any())
 {
-    @foreach (var item in Model.Buckets)
+    @foreach (var item in Model.Items)
     {
         <div>
             <a asp-controller="File" asp-action="GetAllFilesInBucket"
-               asp-route-bucketId="@item.Name">@item.Name - @item.CreationDateDateTime</a>
+               asp-route-bucketId="@item.Name">@item.Name - @item.DateTime</a>
         </div>
     }
 }

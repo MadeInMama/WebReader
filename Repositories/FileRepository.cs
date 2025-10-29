@@ -13,7 +13,8 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         return await context.Files.FirstOrDefaultAsync(predicate);
     }
 
-    public Task<IEnumerable<File>> AllAsync(Expression<Func<File, bool>> predicate)
+    public Task<IEnumerable<File>> AllAsync(Expression<Func<File, bool>> predicate,
+        params Expression<Func<File, object>>[] includes)
     {
         throw new NotImplementedException();
     }
@@ -32,13 +33,11 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<string>> GetAllAvailableObjectsInBucketAsync(string bucketId,
+    public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(string bucketId,
         IEnumerable<RoleType> roles)
     {
         return await context.Files
             .Where(f => f.Bucket == bucketId && !f.IsHidden && f.AccessRoles.Intersect(roles).Any())
-            .Select(f => f.Object)
-            .Distinct()
             .ToListAsync();
     }
 }

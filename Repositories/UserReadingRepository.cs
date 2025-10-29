@@ -12,19 +12,23 @@ public class UserReadingRepository(ApplicationDbContext context) : IRepository<U
         return await context.UserReadings.FirstOrDefaultAsync(predicate);
     }
 
-    public async Task<IEnumerable<UserReading>> AllAsync(Expression<Func<UserReading, bool>> predicate)
-    {
-        return await context.UserReadings
-            .Where(predicate)
-            .Include(f => f.File)
-            .ToListAsync();
-    }
-
     public async Task<UserReading> AddAsync(UserReading entity)
     {
         var res = await context.UserReadings.AddAsync(entity);
         await context.SaveChangesAsync();
         return res.Entity;
+    }
+
+    public async Task<IEnumerable<UserReading>> AllAsync(Expression<Func<UserReading, bool>> predicate,
+        params Expression<Func<UserReading, object>>[] includes)
+    {
+        IQueryable<UserReading> query = context.Set<UserReading>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        return await query.Where(predicate)
+            .ToListAsync();
     }
 
     public async Task SetCurrPageAsync(Guid id, int page)

@@ -1,18 +1,6 @@
 ﻿@model WebReader.Models.Dtos.AllFilesReadingViewModel
 @{
     ViewData["Title"] = "READING";
-
-    string FormatSize(ulong size)
-    {
-        var digits = size.ToString().Length;
-
-        return digits switch
-        {
-            > 7 => size / 1024 / 1024 + "MB",
-            > 4 => size / 1024 + "KB",
-            _ => size + "B"
-        };
-    }
 }
 
 @section Style
@@ -21,18 +9,16 @@
     </style>
 }
 
-
-
-@if (Model.BucketFiles.Any())
+@if (Model.Items.Any())
 {
-    @foreach (var item in Model.BucketFiles)
+    @foreach (var item in Model.Items)
     {
         @foreach (var obj in item.Value)
         {
             <div>
                 <a asp-controller="File" asp-action="GetFile"
                    asp-route-bucketId="@item.Key"
-                   asp-route-objectName="@obj.Key">@item.Key - @obj.Key - @obj.LastModifiedDateTime - @FormatSize(obj.Size)</a>
+                   asp-route-objectName="@obj.Name">@item.Key - @obj.CustomName - @obj.DateTime - @FormatSize(obj.Size)</a>
             </div>
         }
     }

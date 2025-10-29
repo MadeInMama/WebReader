@@ -35,6 +35,7 @@ public class ApplicationDbContext : DbContext
                 {
                     Bucket = "mybucket",
                     Object = "file-sample_150kB.pdf",
+                    CustomName = "Small File",
                     AccessRoles = [RoleType.Admin],
                     IsHidden = false,
                     Type = FileType.Pdf
@@ -42,6 +43,7 @@ public class ApplicationDbContext : DbContext
                 {
                     Bucket = "mybucket",
                     Object = "file-example_500_kB.pdf",
+                    CustomName = "Medium File",
                     AccessRoles = [RoleType.User, RoleType.Admin],
                     IsHidden = false,
                     Type = FileType.Pdf
@@ -49,6 +51,7 @@ public class ApplicationDbContext : DbContext
                 {
                     Bucket = "mybucket",
                     Object = "file-example_1MB.pdf",
+                    CustomName = "Large File",
                     AccessRoles = [RoleType.User, RoleType.Admin],
                     IsHidden = false,
                     Type = FileType.Pdf
@@ -56,6 +59,7 @@ public class ApplicationDbContext : DbContext
                 {
                     Bucket = "mybucket",
                     Object = "file-example_200MB.pdf",
+                    CustomName = "Giant File",
                     AccessRoles = [RoleType.User, RoleType.Admin],
                     IsHidden = false,
                     Type = FileType.Pdf

@@ -12,7 +12,8 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         return await context.Users.FirstOrDefaultAsync(predicate);
     }
 
-    public Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate)
+    public Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate,
+        params Expression<Func<CustomUser, object>>[] includes)
     {
         throw new NotImplementedException();
     }
