@@ -15,8 +15,8 @@
     {
         <div>
             <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketId="@Model.BucketId"
-               asp-route-objectName="@item.Name">@item.CustomName - @item.DateTime - @FormatSize(item.Size)</a>
+               asp-route-bucketName="@Model.BucketId"
+               asp-route-fileName="@item.Name">@item.CustomName @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime - @FormatSize(item.Size)</a>
         </div>
     }
 }

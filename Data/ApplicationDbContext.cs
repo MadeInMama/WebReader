@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<CustomUser> Users { get; set; }
+    public DbSet<Bucket> Buckets { get; set; }
     public DbSet<File> Files { get; set; }
     public DbSet<UserReading> UserReadings { get; set; }
 
@@ -30,39 +31,46 @@ public class ApplicationDbContext : DbContext
                     Roles = [RoleType.Admin, RoleType.User]
                 });
 
+            if (!context.Set<Bucket>().Any())
+                context.Set<Bucket>().Add(new Bucket
+                {
+                    Name = "mybucket",
+                    CustomName = "Default Bucket"
+                });
+
+            context.SaveChanges();
+
+            var bucketId = context.Set<Bucket>().First(f => f.Name.Equals("mybucket")).Id;
+
             if (!context.Set<File>().Any())
                 context.Set<File>().AddRange(new File
                 {
-                    Bucket = "mybucket",
-                    Object = "file-sample_150kB.pdf",
+                    BucketId = bucketId,
+                    Name = "file-sample_150kB.pdf",
                     CustomName = "Small File",
                     AccessRoles = [RoleType.Admin],
-                    IsHidden = false,
-                    Type = FileType.Pdf
+                    IsHidden = false
                 }, new File
                 {
-                    Bucket = "mybucket",
-                    Object = "file-example_500_kB.pdf",
+                    BucketId = bucketId,
+                    Name = "file-example_500_kB.pdf",
                     CustomName = "Medium File",
                     AccessRoles = [RoleType.User, RoleType.Admin],
-                    IsHidden = false,
-                    Type = FileType.Pdf
+                    IsHidden = false
                 }, new File
                 {
-                    Bucket = "mybucket",
-                    Object = "file-example_1MB.pdf",
+                    BucketId = bucketId,
+                    Name = "file-example_1MB.pdf",
                     CustomName = "Large File",
                     AccessRoles = [RoleType.User, RoleType.Admin],
-                    IsHidden = false,
-                    Type = FileType.Pdf
+                    IsHidden = false
                 }, new File
                 {
-                    Bucket = "mybucket",
-                    Object = "file-example_200MB.pdf",
+                    BucketId = bucketId,
+                    Name = "file-example_200MB.pdf",
                     CustomName = "Giant File",
                     AccessRoles = [RoleType.User, RoleType.Admin],
-                    IsHidden = false,
-                    Type = FileType.Pdf
+                    IsHidden = false
                 });
 
             context.SaveChanges();

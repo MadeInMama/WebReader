@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Minio;
+using WebReader.Background;
 using WebReader.Configuration;
 using WebReader.Data;
 using WebReader.Repositories;
@@ -33,9 +34,12 @@ builder.Services.AddSingleton<IMinioClient>(_ => new MinioClient()
 
 builder.Services.AddScoped<IMinioService, MinioService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<BucketRepository>();
 builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
+
+builder.Services.AddHostedService<UpdateFilesFromS3>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

@@ -27,8 +27,7 @@ public class UserReadingRepository(ApplicationDbContext context) : IRepository<U
         foreach (var include in includes)
             query = query.Include(include);
 
-        return await query.Where(predicate)
-            .ToListAsync();
+        return await query.Where(predicate).ToListAsync();
     }
 
     public async Task SetCurrPageAsync(Guid id, int page)

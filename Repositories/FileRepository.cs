@@ -13,10 +13,15 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         return await context.Files.FirstOrDefaultAsync(predicate);
     }
 
-    public Task<IEnumerable<File>> AllAsync(Expression<Func<File, bool>> predicate,
+    public async Task<IEnumerable<File>> AllAsync(Expression<Func<File, bool>> predicate,
         params Expression<Func<File, object>>[] includes)
     {
-        throw new NotImplementedException();
+        IQueryable<File> query = context.Set<File>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        return await query.Where(predicate).ToListAsync();
     }
 
     public Task<File> AddAsync(File entity)
@@ -24,20 +29,21 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<string>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles)
+    public async Task UpdateAllAsync(IEnumerable<File> entities)
     {
-        return await context.Files
-            .Where(f => !f.IsHidden && f.AccessRoles.Intersect(roles).Any())
-            .Select(f => f.Bucket)
-            .Distinct()
-            .ToListAsync();
+        context.Files.UpdateRange(entities);
+        await context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(string bucketId,
+    public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(string bucketName,
         IEnumerable<RoleType> roles)
     {
+        var rolesList = roles.ToList();
+
         return await context.Files
-            .Where(f => f.Bucket == bucketId && !f.IsHidden && f.AccessRoles.Intersect(roles).Any())
+            .Where(f => f.Bucket!.Name == bucketName && !f.Bucket.IsHidden &&
+                        f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
+                        !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any())
             .ToListAsync();
     }
 }

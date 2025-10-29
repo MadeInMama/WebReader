@@ -12,4 +12,5 @@ public class AllFilesInBucketItem
     public required string CustomName { get; set; }
     public DateTime DateTime { get; set; }
     public ulong Size { get; set; }
+    public string? Type { get; set; }
 }
