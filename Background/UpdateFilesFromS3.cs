@@ -7,7 +7,7 @@ namespace WebReader.Background;
 
 public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
 {
-    private static readonly TimeSpan PeriodTime = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan PeriodTime = TimeSpan.FromHours(1);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
