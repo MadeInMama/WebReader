@@ -11,4 +11,5 @@ public class AllFilesReadingItem
     public required string CustomName { get; set; }
     public DateTime DateTime { get; set; }
     public ulong Size { get; set; }
+    public int Page { get; set; }
 }

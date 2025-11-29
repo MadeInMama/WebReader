@@ -96,12 +96,19 @@ public class FileController(
             var allObjects = await minioService.ListObjectsAsync(bucket!);
             var readingObjects = allObjects.Where(f => allObjectsFromDb.Contains(f.Key));
 
-            res.Add(bucket!, readingObjects.Select(obj => new AllFilesReadingItem //TODO:CustomNameForBuckets
+            res.Add(bucket!, readingObjects.Select(obj =>
             {
-                Name = obj.Key,
-                CustomName = readings.FirstOrDefault(f => f.File!.Name.Equals(obj.Key))?.File?.CustomName ?? obj.Key,
-                DateTime = obj.LastModifiedDateTime ?? DateTime.Now,
-                Size = obj.Size
+                var r = readings.FirstOrDefault(f => f.File!.Name.Equals(obj.Key));
+
+                return new AllFilesReadingItem
+                {
+                    Name = obj.Key,
+                    CustomName =
+                        r?.File?.CustomName ?? obj.Key,
+                    DateTime = obj.LastModifiedDateTime ?? DateTime.Now,
+                    Size = obj.Size,
+                    Page = r?.Page ?? 1
+                };
             }));
         }
 
