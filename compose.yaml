@@ -9,10 +9,10 @@
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 5167
-      DbConfig__ConnectionString: Host=host.docker.internal;Port=5432;Database=web_reader;Username=postgres;Password=postgres
-      MinioConfig__Endpoint: host.docker.internal:9000
       MinioConfig__AccessKey: minioadmin
       MinioConfig__SecretKey: minioadmin
+    env_file:
+      - ./.env
   
   db:
     image: postgres:16-alpine
