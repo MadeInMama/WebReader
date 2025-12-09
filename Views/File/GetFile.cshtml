@@ -146,6 +146,8 @@
             });
             document.getElementById("pdf-canvas").style.maxWidth = 5.7 * 5.5 * currentScale + "em";
             await renderPage(currentPage, currentScale);
+
+            SendCurrPage();
         }
 
         function clamp(value, min, max) {
