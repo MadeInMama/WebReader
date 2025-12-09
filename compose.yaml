@@ -13,7 +13,7 @@
       MinioConfig__SecretKey: minioadmin
     env_file:
       - ./.env
-    restart: unless-stopped
+    restart: always
   
   db:
     image: postgres:16-alpine
@@ -23,7 +23,7 @@
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
-    restart: unless-stopped
+    restart: always
   
   minio:
     image: minio/minio:latest
@@ -34,7 +34,7 @@
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: server /data --console-address ":9001"
-    restart: unless-stopped
+    restart: always
   
   minio-create-bucket:
     image: minio/mc:latest
