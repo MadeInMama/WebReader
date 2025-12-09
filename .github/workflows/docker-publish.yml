@@ -1,0 +1,20 @@
+name: Docker
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        run: git reset --hard; git pull
+      - name: Stop container
+        run: docker stop webreader-webreader-1
+      - name: Prune docker
+        run: docker system prune -a
+      - name: Start container
+        run: docker compose -f compose.yaml up webreader
