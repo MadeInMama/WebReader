@@ -59,6 +59,14 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    Console.WriteLine("Database migration started");
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    context.Database.Migrate();
+    Console.WriteLine("Database migration finished");
+}
+
 if (!app.Environment.IsDevelopment()) app.UseHsts();
 
 app.UseHttpsRedirection();

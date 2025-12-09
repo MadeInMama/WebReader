@@ -18,4 +18,8 @@
         <PackageReference Include="System.Linq.Async" Version="6.0.3"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="Migrations\"/>
+    </ItemGroup>
+
 </Project>
