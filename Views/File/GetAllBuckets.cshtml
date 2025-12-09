@@ -6,7 +6,12 @@
 
 @section Style
 {
+
     <style>
+        .bucket-line {
+            width: 100%;
+            max-width: var(--max-width);
+        }
     </style>
 }
 
@@ -14,9 +19,9 @@
 {
     @foreach (var item in Model.Items)
     {
-        <div>
+        <div class="bucket-line">
             <a asp-controller="File" asp-action="GetAllFilesInBucket"
-               asp-route-bucketName="@item.Name">@item.Name - @item.DateTime</a>
+               asp-route-bucketName="@item.Name">@item.CustomName - @item.DateTime.LocalDateTime</a>
         </div>
     }
 }

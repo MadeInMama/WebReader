@@ -8,9 +8,9 @@ public class AllFilesInBucketViewModel
 
 public class AllFilesInBucketItem
 {
-    public required string Name { get; set; }
-    public required string CustomName { get; set; }
-    public DateTime DateTime { get; set; }
-    public ulong Size { get; set; }
-    public string? Type { get; set; }
+    public required string Name { get; init; }
+    public required string CustomName { get; init; }
+    public DateTimeOffset DateTime { get; init; }
+    public ulong Size { get; init; }
+    public string? Type { get; init; }
 }

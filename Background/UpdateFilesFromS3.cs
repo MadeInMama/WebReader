@@ -32,7 +32,7 @@ public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
     {
         using var scope = services.CreateScope();
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<IMinioService>();
+        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
         var allStoredBuckets = (await bucketRepository.AllAsync(f => !f.IsHidden)).ToList();
         var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
@@ -47,7 +47,7 @@ public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
     {
         using var scope = services.CreateScope();
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<IMinioService>();
+        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
         var bucketFileDictionary = new Dictionary<string, IEnumerable<Item>>();
 

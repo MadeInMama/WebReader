@@ -6,30 +6,100 @@
 @section Style
 {
     <style>
+        summary > span {
+            cursor: pointer;
+            position: relative;
+        }
+
+        summary > span::after {
+            position: absolute;
+            content: "";
+            width: 0;
+            bottom: 0;
+            left: 50%;
+            height: 0.025em;
+            display: block;
+            background: black;
+            transition: 300ms;
+        }
+
+        summary > span:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        .reading-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 1.5em;
+            width: 100%;
+        }
+
+        #full_content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: var(--max-width);
+        }
     </style>
 }
 
-@if (Model.Items.Any())
-{
-    @foreach (var item in Model.Items)
+<div id="full_content">
+    @foreach (var (item, index) in Model.Items.Select((item, index) => (item, index)))
     {
-        @foreach (var obj in item.Value)
-        {
-            <div>
-                <a asp-controller="File" asp-action="GetFile"
-                   asp-route-bucketName="@item.Key"
-                   asp-route-fileName="@obj.Name">@item.Key - @obj.CustomName - @obj.DateTime - @obj.Page - @FormatSize(obj.Size)</a>
-            </div>
-        }
+        <details @(index == 0 ? "open" : "")>
+            <summary><span>@item.Key</span></summary>
+            @foreach (var obj in item.Value)
+            {
+                <div class="reading-line" id="@obj.Id">
+                    <a asp-controller="File" asp-action="GetFile"
+                       asp-route-bucketName="@item.Key"
+                       asp-route-fileName="@obj.Name">@obj.CustomName - @obj.DateTime.LocalDateTime - @obj.Page - @FormatSize(obj.Size)</a>
+                    <button class="remove" onclick="Delete('@obj.Id')"></button>
+                </div>
+            }
+        </details>
     }
-}
-else
-{
-    @await Html.PartialAsync("_EmptyDisplay")
-}
+</div>
+
+@await Html.PartialAsync("_EmptyDisplay")
 
 @section Scripts
 {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        const fullContentEl = document.getElementById("full_content");
+        const emptyContentEl = document.getElementById("empty_content");
+
+        CheckOnEmpty();
+
+        async function Delete(id) {
+            try {
+                await axios.post('/api/FileApi/DeleteReading', {
+                    ReadingId: id
+                }, {
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
+                }).then(_ => {
+                    document.getElementById(id).remove();
+                    CheckOnEmpty();
+                });
+            } catch (err) {
+                alert("Error deleting Reading");
+            }
+        }
+
+        function CheckOnEmpty() {
+            if (document.querySelectorAll(".reading-line").length === 0) {
+                fullContentEl.style.display = "none";
+                emptyContentEl.style.display = "flex";
+            } else {
+                fullContentEl.style.display = "flex";
+                emptyContentEl.style.display = "none";
+            }
+        }
     </script>
 }

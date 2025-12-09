@@ -4,28 +4,30 @@ using Microsoft.AspNetCore.Mvc;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Dtos;
+using WebReader.Models.Entities;
 using WebReader.Repositories;
 using WebReader.Services;
+using File = System.IO.File;
 
 namespace WebReader.Controllers;
 
 [Authorize]
 [Route("[controller]/[action]")]
 public class FileController(
-    IMinioService minioService,
+    MinioService minioService,
     BucketRepository bucketRepository,
     FileRepository fileRepository,
     UserReadingRepository readingRepository) : Controller
 {
     public async Task<IActionResult> GetAllBuckets()
     {
-        var res = (await bucketRepository.GetAllAvailableBucketsAsync(User.GetUserRoles()))
+        var res = (await bucketRepository.GetAllAvailableBucketsAsync(User.GetUserRoles(), User.GetUserGuid()))
             .Select(bucket =>
                 new AllBucketsItem
                 {
                     Name = bucket.Name,
                     CustomName = bucket.Name,
-                    DateTime = bucket.CreatedDate.UtcDateTime
+                    DateTime = bucket.CreatedDate
                 });
 
         return View(new AllBucketsViewModel { Items = res });
@@ -35,12 +37,21 @@ public class FileController(
     {
         var prop = typeof(File).GetProperty(orderBy);
 
+        var bucket = await bucketRepository
+            .FirstOrDefaultAsync(f => f.IsAvailable &&
+                                      !f.IsHidden &&
+                                      f.Name == bucketName &&
+                                      f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
+                                      (f.UserId == User.GetUserGuid() || f.UserId == null));
+
+        if (bucket == null) return RedirectToAction("AccessDenied", "Account");
+
         var res = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucketName, User.GetUserRoles()))
             .Select(obj => new AllFilesInBucketItem
             {
                 Name = obj.Name,
                 CustomName = obj.CustomName ?? obj.Name,
-                DateTime = obj.UpdatedDate.UtcDateTime,
+                DateTime = obj.UpdatedDate,
                 Size = obj.Size ?? 0
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.CustomName);
 
@@ -51,6 +62,37 @@ public class FileController(
     {
         var userGuid = User.GetUserGuid();
 
+        var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
+
+        var allUserReadingsGroupedByFile = allUserReadings
+            .GroupBy(reading => reading.FileId)
+            .ToDictionary(reading => reading.Key, reading => reading.ToList());
+
+        var idsToDelete = new List<Guid>();
+        var readingsToUpdate = new List<UserReading>();
+
+        foreach (var readingGroup in allUserReadingsGroupedByFile.Where(f => f.Value.Count > 1))
+        {
+            var readingsOrdered = readingGroup.Value.OrderBy(f => f.CreatedDate).ToList();
+            var picked = readingsOrdered.First();
+
+            picked.Page = readingGroup.Value.Max(reading => reading.Page);
+            picked.Scale = readingGroup.Value.OrderByDescending(f => f.UpdatedDate).First().Scale;
+
+            readingsToUpdate.Add(picked);
+            idsToDelete.AddRange(readingsOrdered.Skip(1).Select(reading => reading.Id));
+        }
+
+        var delete = idsToDelete.Count != 0
+            ? readingRepository.DeleteAllAsync(idsToDelete)
+            : Task.CompletedTask;
+
+        var update = readingsToUpdate.Count != 0
+            ? readingRepository.SetCurrPageAndScaleAsync(readingsToUpdate)
+            : Task.CompletedTask;
+
+        await Task.WhenAll(delete, update);
+
         var readings = (await readingRepository.AllAsync(f => f.UserId == userGuid &&
                                                               !f.File!.IsHidden &&
                                                               f.File.AccessRoles.Intersect(User.GetUserRoles()).Any(),
@@ -58,15 +100,18 @@ public class FileController(
             f => f.File!.Bucket!)).ToList();
 
         var res = readings
-            .GroupBy(reading => reading.File?.Bucket?.Name)
-            .ToDictionary(reading => reading.Key!, reading => reading.Select(r => new AllFilesReadingItem
-            {
-                Name = r.File?.Name ?? "",
-                CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
-                DateTime = r.File?.UpdatedDate.UtcDateTime ?? DateTime.UtcNow,
-                Size = r.File?.Size ?? 0,
-                Page = r.Page
-            }));
+            .GroupBy(reading => reading.File?.Bucket?.CustomName)
+            .ToDictionary(reading => reading.Key!, reading => reading
+                .OrderByDescending(f => f.UpdatedDate)
+                .Select(r => new AllFilesReadingItem
+                {
+                    Id = r.Id,
+                    Name = r.File?.Name ?? "",
+                    CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
+                    DateTime = r.UpdatedDate,
+                    Size = r.File?.Size ?? 0,
+                    Page = r.Page
+                }));
 
         return View(new AllFilesReadingViewModel { Items = res });
     }
@@ -83,7 +128,7 @@ public class FileController(
         var userGuid = User.GetUserGuid();
 
         var reading = await readingRepository
-            .FirstOrDefaultAsync(f => f.User!.Id == userGuid
+            .FirstOrDefaultAsync(f => f.UserId == userGuid
                                       && f.File!.Bucket!.Name == bucketName
                                       && f.File!.Name == fileName);
 

@@ -6,7 +6,6 @@ using WebReader.Configuration;
 using WebReader.Data;
 using WebReader.Repositories;
 using WebReader.Services;
-using WebReader.Services.Impl;
 using MinioConfig = WebReader.Configuration.MinioConfig;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +22,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         )
     )
 );
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
+        options.UseNpgsql(
+            dbConfig.ConnectionString!,
+            npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
+                5,
+                TimeSpan.FromSeconds(30),
+                null
+            )
+        ),
+    ServiceLifetime.Scoped
+);
 
 var minioConfig = new MinioConfig();
 builder.Configuration.GetRequiredSection(nameof(MinioConfig)).Bind(minioConfig);
@@ -32,8 +42,9 @@ builder.Services.AddSingleton<IMinioClient>(_ => new MinioClient()
     .WithSSL(false)
     .Build());
 
-builder.Services.AddScoped<IMinioService, MinioService>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<BucketService>();
+builder.Services.AddScoped<MinioService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<BucketRepository>();
 builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();

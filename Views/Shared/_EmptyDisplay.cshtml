@@ -1,14 +1,18 @@
 ﻿<style>
-    main {
+    #empty_content {
         display: flex;
+        flex-grow: 1;
         justify-content: center;
         align-items: center;
+        max-width: var(--max-width);
+        width: 100%;
     }
 
-    main > div {
+    #empty_content > div {
         font-size: 1.5em;
     }
 </style>
 
-
-<div>No items to display.</div>
+<div id="empty_content">
+    <div>No items to display.</div>
+</div>

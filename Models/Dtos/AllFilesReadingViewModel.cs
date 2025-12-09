@@ -7,9 +7,10 @@ public class AllFilesReadingViewModel
 
 public class AllFilesReadingItem
 {
-    public required string Name { get; set; }
-    public required string CustomName { get; set; }
-    public DateTime DateTime { get; set; }
-    public ulong Size { get; set; }
-    public int Page { get; set; }
+    public required Guid Id { get; init; }
+    public required string Name { get; init; }
+    public required string CustomName { get; init; }
+    public DateTimeOffset DateTime { get; init; }
+    public ulong Size { get; init; }
+    public int Page { get; init; }
 }

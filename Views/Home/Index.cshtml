@@ -5,8 +5,27 @@
 @section Style
 {
     <style>
+        #under-construction {
+            display: flex;
+            flex-grow: 1;
+            justify-content: center;
+            align-items: center;
+            max-width: var(--max-width);
+            width: 100%;
+            flex-wrap: wrap;
+            flex-direction: column;
+        }
+
+        #under-construction > h1 {
+            font-size: 4em;
+        }
     </style>
 }
+
+<div id="under-construction">
+    <h1>UNDER</h1>
+    <h1>CONSTRUCTION</h1>
+</div>
 
 @section Scripts
 {

@@ -9,7 +9,7 @@ using WebReader.Services;
 namespace WebReader.Controllers;
 
 [Route("[controller]/[action]")]
-public class AccountController(IUserService userService) : Controller
+public class AccountController(UserService userService) : Controller
 {
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)

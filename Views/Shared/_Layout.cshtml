@@ -10,6 +10,9 @@
     @await RenderSectionAsync("Style", false)
 </head>
 <body>
+
+@Html.AntiForgeryToken()
+
 <header>
     <div>
         <ul>

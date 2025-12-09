@@ -4,7 +4,7 @@
     const footer = document.querySelector('footer');
 
     let reservedSize = header.clientHeight;
-    
+
     if (footer.childNodes.length > 0 &&
         footer.innerHTML.replace(/\s+/g, '').length > 0) {
         reservedSize += footer.clientHeight;
@@ -16,3 +16,7 @@
 
     main.style.minHeight = `calc(100vh - ${reservedSize}px)`;
 };
+
+function GetAntiForgeryToken() {
+    return document.querySelector('input[name="__RequestVerificationToken"]').value;
+}

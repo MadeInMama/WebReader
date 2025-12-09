@@ -12,6 +12,7 @@ namespace WebReader.Controllers;
 public class FileApiController(UserReadingRepository readingRepository) : Controller
 {
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePage([FromBody] UpdatePageRequest request)
     {
         if (!ModelState.IsValid)
@@ -24,8 +25,20 @@ public class FileApiController(UserReadingRepository readingRepository) : Contro
             reading = await readingRepository.AddAsync(new UserReading
                 { FileId = request.FileId, UserId = request.UserId, Page = request.Page, Scale = request.Scale });
         else
-            await readingRepository.SetCurrPageAsync(reading.Id, request.Page, request.Scale);
+            await readingRepository.SetCurrPageAndScaleAsync(reading.Id, request.Page, request.Scale);
 
         return Ok(reading);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteReading([FromBody] DeleteReadingRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        await readingRepository.DeleteAllAsync([request.ReadingId]);
+
+        return NoContent();
     }
 }

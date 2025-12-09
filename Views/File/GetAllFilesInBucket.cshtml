@@ -6,6 +6,10 @@
 @section Style
 {
     <style>
+        .file-line {
+            width: 100%;
+            max-width: var(--max-width);
+        }
     </style>
 }
 
@@ -13,10 +17,10 @@
 {
     @foreach (var item in Model.Items)
     {
-        <div>
+        <div class="file-line">
             <a asp-controller="File" asp-action="GetFile"
                asp-route-bucketName="@Model.BucketId"
-               asp-route-fileName="@item.Name">@item.CustomName @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime - @FormatSize(item.Size)</a>
+               asp-route-fileName="@item.Name">@item.CustomName @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime.LocalDateTime - @FormatSize(item.Size)</a>
         </div>
     }
 }

@@ -5,7 +5,9 @@ using WebReader.Models.Entities;
 
 namespace WebReader.Repositories;
 
-public class UserReadingRepository(ApplicationDbContext context) : IRepository<UserReading>
+public class UserReadingRepository(
+    ApplicationDbContext context,
+    IDbContextFactory<ApplicationDbContext> contextFactory) : IRepository<UserReading>
 {
     public async Task<UserReading?> FirstOrDefaultAsync(Expression<Func<UserReading, bool>> predicate)
     {
@@ -30,13 +32,33 @@ public class UserReadingRepository(ApplicationDbContext context) : IRepository<U
         return await query.Where(predicate).ToListAsync();
     }
 
-    public async Task SetCurrPageAsync(Guid id, int page, int scale)
+    public async Task SetCurrPageAndScaleAsync(Guid id, int page, int scale, ApplicationDbContext? ctx = null)
     {
-        await context.UserReadings
-            .Where(x => x.Id == id)
+        await (ctx ?? context).UserReadings
+            .Where(r => r.Id == id)
             .ExecuteUpdateAsync(f =>
                 f.SetProperty(e => e.Page, page)
                     .SetProperty(e => e.Scale, scale)
                     .SetProperty(e => e.UpdatedDate, DateTimeOffset.UtcNow));
+    }
+
+    public async Task SetCurrPageAndScaleAsync(IEnumerable<UserReading> readings)
+    {
+        var tasks = new List<Task>();
+
+        foreach (var reading in readings)
+        {
+            var ctx = await contextFactory.CreateDbContextAsync();
+            tasks.Add(SetCurrPageAndScaleAsync(reading.Id, reading.Page, reading.Scale, ctx));
+        }
+
+        await Task.WhenAll(tasks);
+    }
+
+    public async Task DeleteAllAsync(IEnumerable<Guid> ids)
+    {
+        await context.UserReadings
+            .Where(r => ids.Contains(r.Id))
+            .ExecuteDeleteAsync();
     }
 }

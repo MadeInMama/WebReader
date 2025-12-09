@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="~/css/file-pdf-preview.css" asp-append-version="true"/>
 }
 
-<input name="__RequestVerificationToken" type="hidden" value="@Html.AntiForgeryToken().ToString()"/>
 <h1>@Model.Title</h1>
 <div class="pdf-canvas-container">
     <canvas id="pdf-canvas"></canvas>
@@ -159,16 +158,14 @@
         else setInterval(SendCurrPage, 20 * 60 * 1000);
 
         function SendCurrPage() {
-            const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
             axios.post('/api/FileApi/UpdatePage', {
                 FileId: "@Model.FileId",
                 UserId: "@Model.UserId",
                 Page: currentPage,
-                Scale: currentScale,
+                Scale: currentScale >= 1 ? currentScale : 1,
             }, {
                 headers: {
-                    'RequestVerificationToken': antiForgeryToken
+                    'RequestVerificationToken': GetAntiForgeryToken()
                 },
                 withCredentials: true
             });

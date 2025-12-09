@@ -12,4 +12,7 @@ public class Bucket : BaseEntity
     public IEnumerable<RoleType> AccessRoles { get; init; } = [RoleType.Admin, RoleType.User];
     public bool IsHidden { get; set; }
     public bool IsAvailable { get; set; }
+
+    public Guid? UserId { get; init; }
+    public CustomUser? User { get; init; }
 }

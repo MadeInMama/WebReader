@@ -24,9 +24,11 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         return await query.Where(predicate).ToListAsync();
     }
 
-    public Task<Bucket> AddAsync(Bucket entity)
+    public async Task<Bucket> AddAsync(Bucket entity)
     {
-        throw new NotImplementedException();
+        var res = await context.Buckets.AddAsync(entity);
+        await context.SaveChangesAsync();
+        return res.Entity;
     }
 
     public async Task UpdateAllAsync(IEnumerable<Bucket> entities)
@@ -35,10 +37,11 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         await context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Bucket>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles)
+    public async Task<IEnumerable<Bucket>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles, Guid userId)
     {
         return await context.Buckets
-            .Where(f => !f.IsHidden && f.AccessRoles.Intersect(roles).Any())
+            .Where(f => f.IsAvailable && !f.IsHidden && f.AccessRoles.Intersect(roles).Any() &&
+                        (f.UserId == userId || f.UserId == null))
             .ToListAsync();
     }
 }

@@ -52,6 +52,10 @@
     font-style: normal;
 }
 
+:root {
+    --max-width: 80em;
+}
+
 * {
     padding: 0;
     margin: 0;
@@ -102,7 +106,7 @@ header > div, footer > div {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 80em;
+    max-width: var(--max-width);
 }
 
 header > div {
@@ -141,6 +145,10 @@ header > div > ul > li > a:hover::after {
 main {
     margin-top: 3em;
     margin-bottom: 3em;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-direction: column;
 }
 
 footer {
@@ -160,4 +168,12 @@ button {
 
 button:disabled {
     opacity: 0.5;
+}
+
+.remove {
+    background-image: url("../icons/cross-circle-svgrepo-com.svg");
+    height: 2em;
+    width: 2em;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
