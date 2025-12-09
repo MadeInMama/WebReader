@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Dtos;
 using WebReader.Repositories;
@@ -19,117 +19,69 @@ public class FileController(
 {
     public async Task<IActionResult> GetAllBuckets()
     {
-        var roles = User.Claims
-            .Where(x => x.Type == ClaimTypes.Role)
-            .Select(x => x.Value)
-            .Select(Enum.Parse<RoleType>)
-            .ToList();
-
-        var allAvailableBucketsForUser = await bucketRepository.GetAllAvailableBucketsAsync(roles);
-        var allBucketsInS3 = await minioService.ListBucketsAsync();
-
-        var intersectedBuckets =
-            allBucketsInS3.Where(f => allAvailableBucketsForUser.Select(bucket => bucket.Name).Contains(f.Name));
-
-        var res = intersectedBuckets.Select(bucket => new AllBucketsItem
-        {
-            Name = bucket.Name,
-            CustomName = bucket.Name, //TODO: store buckets in db and autoupdate availability to simplify execution
-            DateTime = bucket.CreationDateDateTime
-        });
+        var res = (await bucketRepository.GetAllAvailableBucketsAsync(User.GetUserRoles()))
+            .Select(bucket =>
+                new AllBucketsItem
+                {
+                    Name = bucket.Name,
+                    CustomName = bucket.Name,
+                    DateTime = bucket.CreatedDate.UtcDateTime
+                });
 
         return View(new AllBucketsViewModel { Items = res });
     }
 
-    public async Task<IActionResult> GetAllFilesInBucket(string bucketName)
+    public async Task<IActionResult> GetAllFilesInBucket(string bucketName, string orderBy = "CustomName")
     {
-        var roles = User.Claims
-            .Where(x => x.Type == ClaimTypes.Role)
-            .Select(x => x.Value)
-            .Select(Enum.Parse<RoleType>)
-            .ToList();
+        var prop = typeof(File).GetProperty(orderBy);
 
-        var allAvailableObjectsForUser =
-            (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucketName, roles)).ToList();
-        var allAvailableObjectsForUserKeys = allAvailableObjectsForUser.Select(f => f.Name).Distinct();
-        var allObjectsInS3 = await minioService.ListObjectsAsync(bucketName);
-
-        var intersectedObjects = allObjectsInS3.Where(f => allAvailableObjectsForUserKeys.Contains(f.Key));
-
-        var res = intersectedObjects.Select(obj => new AllFilesInBucketItem
-        {
-            Name = obj.Key,
-            CustomName =
-                allAvailableObjectsForUser.FirstOrDefault(f => f.Name.Equals(obj.Key))?.CustomName ??
-                obj.Key, //TODO: autoupdate availability to simplify execution
-            DateTime = obj.LastModifiedDateTime ?? DateTime.Now,
-            Size = obj.Size
-        }).OrderBy(f => f.CustomName);
+        var res = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucketName, User.GetUserRoles()))
+            .Select(obj => new AllFilesInBucketItem
+            {
+                Name = obj.Name,
+                CustomName = obj.CustomName ?? obj.Name,
+                DateTime = obj.UpdatedDate.UtcDateTime,
+                Size = obj.Size ?? 0
+            }).OrderBy(f => prop?.GetValue(f, null) ?? f.CustomName);
 
         return View(new AllFilesInBucketViewModel { BucketId = bucketName, Items = res });
     }
 
     public async Task<IActionResult> GetReading()
     {
-        var roles = User.Claims
-            .Where(x => x.Type == ClaimTypes.Role)
-            .Select(x => x.Value)
-            .Select(Enum.Parse<RoleType>)
-            .ToList();
-        var userGuidClaim = User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier);
-        var userGuid = Guid.Parse(userGuidClaim.Value);
+        var userGuid = User.GetUserGuid();
 
         var readings = (await readingRepository.AllAsync(f => f.UserId == userGuid &&
                                                               !f.File!.IsHidden &&
-                                                              f.File.AccessRoles.Intersect(roles).Any(),
-            f => f.File!, f => f.File!.Bucket!)).ToList();
-        var allBucketsFromDb = readings.Select(f => f.File!.Bucket!.Name).Distinct();
-        var allObjectsFromDb = readings.Select(f => f.File!.Name).Distinct();
-        var allBuckets = (await minioService.ListBucketsAsync())
-            .Where(f => allBucketsFromDb.Contains(f.Name))
-            .Select(f => f.Name);
+                                                              f.File.AccessRoles.Intersect(User.GetUserRoles()).Any(),
+            f => f.File!,
+            f => f.File!.Bucket!)).ToList();
 
-        var res = new Dictionary<string, IEnumerable<AllFilesReadingItem>>();
-
-        foreach (var bucket in allBuckets)
-        {
-            var allObjects = await minioService.ListObjectsAsync(bucket!);
-            var readingObjects = allObjects.Where(f => allObjectsFromDb.Contains(f.Key));
-
-            res.Add(bucket!, readingObjects.Select(obj =>
+        var res = readings
+            .GroupBy(reading => reading.File?.Bucket?.Name)
+            .ToDictionary(reading => reading.Key!, reading => reading.Select(r => new AllFilesReadingItem
             {
-                var r = readings.FirstOrDefault(f => f.File!.Name.Equals(obj.Key));
-
-                return new AllFilesReadingItem
-                {
-                    Name = obj.Key,
-                    CustomName =
-                        r?.File?.CustomName ?? obj.Key,
-                    DateTime = obj.LastModifiedDateTime ?? DateTime.Now,
-                    Size = obj.Size,
-                    Page = r?.Page ?? 1
-                };
+                Name = r.File?.Name ?? "",
+                CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
+                DateTime = r.File?.UpdatedDate.UtcDateTime ?? DateTime.UtcNow,
+                Size = r.File?.Size ?? 0,
+                Page = r.Page
             }));
-        }
 
         return View(new AllFilesReadingViewModel { Items = res });
     }
 
     public async Task<IActionResult> GetFile(string bucketName, string fileName)
     {
-        var roles = User.Claims
-            .Where(x => x.Type == ClaimTypes.Role)
-            .Select(x => x.Value)
-            .Select(Enum.Parse<RoleType>)
-            .ToList();
-
         var file = await fileRepository.FirstOrDefaultAsync(f =>
-            f.Bucket!.Name == bucketName && f.Name == fileName && f.AccessRoles.Intersect(roles).Any());
+            f.Bucket!.Name == bucketName &&
+            f.Name == fileName &&
+            f.AccessRoles.Intersect(User.GetUserRoles()).Any());
 
         if (file == null) return RedirectToAction("AccessDenied", "Account");
 
-        var userGuidClaim = User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier);
-        var userGuid = Guid.Parse(userGuidClaim.Value);
+        var userGuid = User.GetUserGuid();
+
         var reading = await readingRepository
             .FirstOrDefaultAsync(f => f.User!.Id == userGuid
                                       && f.File!.Bucket!.Name == bucketName
@@ -140,7 +92,7 @@ public class FileController(
         if (authProps is { ExpiresUtc: not null, IssuedUtc: not null })
             authValidSeconds = (int)authProps.ExpiresUtc.Value.Subtract(authProps.IssuedUtc.Value).TotalSeconds;
 
-        return View(new FileViewModel
+        var res = new FileViewModel
         {
             UserId = userGuid,
             FileId = file.Id,
@@ -149,6 +101,15 @@ public class FileController(
             Title = file.CustomName ?? fileName,
             Url = await minioService.GetFileUrlAsync(bucketName, fileName),
             SendUpdateInSeconds = authValidSeconds
-        });
+        };
+
+        switch (file.Type)
+        {
+            case FileType.Pdf:
+                return View("GetFilePdf", res);
+            case FileType.Txt:
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 }

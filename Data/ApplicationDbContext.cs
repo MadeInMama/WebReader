@@ -49,6 +49,7 @@ public class ApplicationDbContext : DbContext
                     Name = "314041.pdf",
                     CustomName = "Семья Корлеоне: Пьюзо, Фалько",
                     AccessRoles = [RoleType.User],
+                    Type = FileType.Pdf,
                     IsHidden = false
                 });
 
