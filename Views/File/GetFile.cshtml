@@ -50,7 +50,7 @@
         let pdfDoc = null;
         let currentPage = @Model.Page;
         let maxPage = 1;
-        let currentScale = 1;
+        let currentScale = @Model.Scale;
 
         async function loadPdf(url, page) {
             pdfDoc = await pdfjsLib.getDocument(url).promise;

@@ -22,9 +22,9 @@ public class FileApiController(UserReadingRepository readingRepository) : Contro
 
         if (reading == null)
             reading = await readingRepository.AddAsync(new UserReading
-                { FileId = request.FileId, UserId = request.UserId, Page = request.Page });
+                { FileId = request.FileId, UserId = request.UserId, Page = request.Page, Scale = request.Scale });
         else
-            await readingRepository.SetCurrPageAsync(reading.Id, request.Page);
+            await readingRepository.SetCurrPageAsync(reading.Id, request.Page, request.Scale);
 
         return Ok(reading);
     }

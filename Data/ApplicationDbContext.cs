@@ -40,41 +40,33 @@ public class ApplicationDbContext : DbContext
 
             context.SaveChanges();
 
-            // var bucketId = context.Set<Bucket>().First(f => f.Name.Equals("mybucket")).Id;
-            //
-            // if (!context.Set<File>().Any())
-            //     context.Set<File>().AddRange(new File
-            //     {
-            //         BucketId = bucketId,
-            //         Name = "file-sample_150kB.pdf",
-            //         CustomName = "Small File",
-            //         AccessRoles = [RoleType.Admin],
-            //         IsHidden = false
-            //     }, new File
-            //     {
-            //         BucketId = bucketId,
-            //         Name = "file-example_500_kB.pdf",
-            //         CustomName = "Medium File",
-            //         AccessRoles = [RoleType.User, RoleType.Admin],
-            //         IsHidden = false
-            //     }, new File
-            //     {
-            //         BucketId = bucketId,
-            //         Name = "file-example_1MB.pdf",
-            //         CustomName = "Large File",
-            //         AccessRoles = [RoleType.User, RoleType.Admin],
-            //         IsHidden = false
-            //     }, new File
-            //     {
-            //         BucketId = bucketId,
-            //         Name = "file-example_200MB.pdf",
-            //         CustomName = "Giant File",
-            //         AccessRoles = [RoleType.User, RoleType.Admin],
-            //         IsHidden = false
-            //     });
-            //
-            // context.SaveChanges();
+            var bucketId = context.Set<Bucket>().First(f => f.Name.Equals("mybucket")).Id;
+
+            if (!context.Set<File>().Any())
+                context.Set<File>().AddRange(new File
+                {
+                    BucketId = bucketId,
+                    Name = "314041.pdf",
+                    CustomName = "Семья Корлеоне: Пьюзо, Фалько",
+                    AccessRoles = [RoleType.User],
+                    IsHidden = false
+                });
+
+            context.SaveChanges();
         });
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserReading>()
+            .Property(f => f.Page)
+            .HasDefaultValue(1);
+
+        modelBuilder.Entity<UserReading>()
+            .Property(f => f.Scale)
+            .HasDefaultValue(1);
+
+        base.OnModelCreating(modelBuilder);
     }
 
     public override int SaveChanges()

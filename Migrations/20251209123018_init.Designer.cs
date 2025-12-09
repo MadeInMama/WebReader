@@ -12,7 +12,7 @@ using WebReader.Data;
 namespace WebReader.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251209114359_init")]
+    [Migration("20251209123018_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -155,7 +155,14 @@ namespace WebReader.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<int>("Page")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("Scale")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
 
                     b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("timestamp with time zone");

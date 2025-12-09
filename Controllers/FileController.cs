@@ -145,6 +145,7 @@ public class FileController(
             UserId = userGuid,
             FileId = file.Id,
             Page = reading?.Page ?? 1,
+            Scale = reading?.Scale ?? 1,
             Title = file.CustomName ?? fileName,
             Url = await minioService.GetFileUrlAsync(bucketName, fileName),
             SendUpdateInSeconds = authValidSeconds

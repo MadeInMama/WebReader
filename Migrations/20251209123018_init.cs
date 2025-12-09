@@ -80,7 +80,8 @@ namespace WebReader.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     FileId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Page = table.Column<int>(type: "integer", nullable: false),
+                    Page = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
+                    Scale = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
                     CreatedDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },

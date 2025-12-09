@@ -30,12 +30,13 @@ public class UserReadingRepository(ApplicationDbContext context) : IRepository<U
         return await query.Where(predicate).ToListAsync();
     }
 
-    public async Task SetCurrPageAsync(Guid id, int page)
+    public async Task SetCurrPageAsync(Guid id, int page, int scale)
     {
         await context.UserReadings
             .Where(x => x.Id == id)
             .ExecuteUpdateAsync(f =>
                 f.SetProperty(e => e.Page, page)
+                    .SetProperty(e => e.Scale, scale)
                     .SetProperty(e => e.UpdatedDate, DateTimeOffset.UtcNow));
     }
 }
