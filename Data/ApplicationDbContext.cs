@@ -66,6 +66,10 @@ public class ApplicationDbContext : DbContext
             .Property(f => f.Scale)
             .HasDefaultValue(1);
 
+        modelBuilder.Entity<File>()
+            .HasIndex(f => f.Name)
+            .IsUnique();
+
         base.OnModelCreating(modelBuilder);
     }
 
