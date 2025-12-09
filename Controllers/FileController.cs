@@ -64,7 +64,7 @@ public class FileController(
                 obj.Key, //TODO: autoupdate availability to simplify execution
             DateTime = obj.LastModifiedDateTime ?? DateTime.Now,
             Size = obj.Size
-        });
+        }).OrderBy(f => f.CustomName);
 
         return View(new AllFilesInBucketViewModel { BucketId = bucketName, Items = res });
     }
