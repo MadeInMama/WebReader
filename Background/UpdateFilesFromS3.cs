@@ -19,6 +19,7 @@ public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             await BucketBackgroundProcessing();
+            await PersonalBucketBackgroundProcessing();
             await FileBackgroundProcessing();
         }
     }
@@ -34,13 +35,35 @@ public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allStoredBuckets = (await bucketRepository.AllAsync(f => !f.IsHidden)).ToList();
+        var allStoredBuckets = (await bucketRepository.AllAsync(f => true)).ToList();
         var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
 
         foreach (var storedBucket in allStoredBuckets)
             storedBucket.IsAvailable = allBucketsInS3.Exists(f => f.Name.Equals(storedBucket.Name));
 
-        await bucketRepository.UpdateAllAsync(allStoredBuckets);
+        var tasks = new List<Task>();
+
+        foreach (var storedBucket in allBucketsInS3)
+            if (await bucketRepository.FirstOrDefaultAsync(f => f.Name.Equals(storedBucket.Name)) == null)
+                tasks.Add(minioService.RemoveBucketAsync(storedBucket.Name));
+
+        //TODO: remove files
+
+        tasks.Add(bucketRepository.UpdateAllAsync(allStoredBuckets));
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task PersonalBucketBackgroundProcessing()
+    {
+        using var scope = services.CreateScope();
+        var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
+        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
+
+        var allStoredBuckets = (await bucketRepository.AllAsync(f => true)).ToList();
+        var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
+
+        //TODO: delete buckets if user not exists
     }
 
     private async Task FileBackgroundProcessing()

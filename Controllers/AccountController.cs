@@ -12,7 +12,7 @@ namespace WebReader.Controllers;
 public class AccountController(UserService userService) : Controller
 {
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public IActionResult SignIn(string? returnUrl = null)
     {
         if (User.Identity is { IsAuthenticated: true })
             return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
@@ -21,7 +21,7 @@ public class AccountController(UserService userService) : Controller
     }
 
     [HttpGet]
-    public IActionResult Register(string? returnUrl = null)
+    public IActionResult SignUp(string? returnUrl = null)
     {
         if (User.Identity is { IsAuthenticated: true })
             return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
@@ -31,7 +31,7 @@ public class AccountController(UserService userService) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model)
+    public async Task<IActionResult> SignIn(LoginViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
 
@@ -46,7 +46,7 @@ public class AccountController(UserService userService) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
+    public async Task<IActionResult> SignUp(RegisterViewModel model)
     {
         if (!ModelState.IsValid)
             return View(model);
