@@ -9,17 +9,12 @@
     <link rel="stylesheet" href="~/css/login-register.css" asp-append-version="true"/>
 }
 
-<h2 class="title">Sign in</h2>
-
-<form asp-controller="Account" asp-action="Login" method="post">
+<form asp-controller="Account" asp-action="SignIn" method="post">
     <input type="hidden" asp-for="ReturnUrl"/>
 
     <div class="username-password-container">
-        <label asp-for="Username"></label>
-        <input asp-for="Username"/>
-
-        <label asp-for="Password"></label>
-        <input asp-for="Password"/>
+        <input asp-for="Username" placeholder="Username" autocomplete="username"/>
+        <input asp-for="Password" placeholder="Password"/>
     </div>
 
     <div class="remember-me">
@@ -31,7 +26,6 @@
 
     <div class="login-register-btns">
         <button type="submit" class="login-btn"></button>
-        <a asp-action="SignUp" asp-route-returnUrl="@Model.ReturnUrl" class="register-btn"></a>
     </div>
 </form>
 

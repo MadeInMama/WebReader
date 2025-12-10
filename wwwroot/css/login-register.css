@@ -8,14 +8,24 @@ main {
 
 .username-password-container {
     display: grid;
-    grid-template-columns: 1fr 3fr;
     grid-template-rows: 1fr 1fr;
     gap: 0.5em;
-    margin-bottom: 0.5em;
+    margin-bottom: 1em;
+}
+
+.username-password-container > input {
+    width: 20em;
+    max-width: var(--max-width);
+    font-size: 1em;
+    padding: 0.5em 1em;
 }
 
 .remember-me {
     margin-bottom: 1em;
+}
+
+.remember-me > label {
+    font-size: 1em;
 }
 
 .validation-summary-errors {

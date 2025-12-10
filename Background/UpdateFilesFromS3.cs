@@ -11,17 +11,15 @@ public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await BucketBackgroundProcessing();
+        // await BucketBackgroundProcessing();
         await FileBackgroundProcessing();
 
         using PeriodicTimer timer = new(PeriodTime);
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
-        {
-            await BucketBackgroundProcessing();
-            await PersonalBucketBackgroundProcessing();
+            // await RemoveBucketsThatNotExistsInDb();
+            // await BucketBackgroundProcessing();
             await FileBackgroundProcessing();
-        }
     }
 
     public override async Task StopAsync(CancellationToken stoppingToken)
@@ -49,21 +47,30 @@ public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
 
         //TODO: remove files
 
+        //TODO: delete buckets if user not exists
+
         tasks.Add(bucketRepository.UpdateAllAsync(allStoredBuckets));
 
         await Task.WhenAll(tasks);
     }
 
-    private async Task PersonalBucketBackgroundProcessing()
+    private async Task RemoveBucketsThatNotExistsInDb()
     {
+        //TODO: run on SettingsEntity
         using var scope = services.CreateScope();
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allStoredBuckets = (await bucketRepository.AllAsync(f => true)).ToList();
-        var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
+        var allBucketsInDb = (await bucketRepository.AllAsync(f => true)).ToList();
+        var allBucketsInS3 = await minioService.ListBucketsAsync();
 
-        //TODO: delete buckets if user not exists
+        var tasks = new List<Task>();
+
+        foreach (var bucketInS3 in allBucketsInS3)
+            if (allBucketsInDb.FirstOrDefault(f => f.Name == bucketInS3.Name) == null)
+                tasks.Add(minioService.RemoveBucketAsync(bucketInS3.Name));
+
+        await Task.WhenAll(tasks);
     }
 
     private async Task FileBackgroundProcessing()
