@@ -76,6 +76,12 @@ public class AccountController(UserService userService) : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult CustomNotFound()
+    {
+        return View();
+    }
+
     private async Task<IActionResult> SetUser(CustomUser user, bool rememberMe, string? returnUrl = null)
     {
         var claims = new List<Claim>

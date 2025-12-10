@@ -127,7 +127,7 @@ public class FileController(
             f.Name == fileName &&
             f.AccessRoles.Intersect(User.GetUserRoles()).Any());
 
-        if (file == null) return RedirectToAction("AccessDenied", "Account");
+        if (file == null) return RedirectToAction("CustomNotFound", "Account");
 
         var userGuid = User.GetUserGuid();
 
