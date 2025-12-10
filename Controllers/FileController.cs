@@ -26,7 +26,7 @@ public class FileController(
                 new AllBucketsItem
                 {
                     Name = bucket.Name,
-                    CustomName = bucket.Name,
+                    CustomName = bucket.CustomName ?? bucket.Name,
                     DateTime = bucket.CreatedDate
                 });
 
@@ -55,7 +55,8 @@ public class FileController(
                 Size = obj.Size ?? 0
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.CustomName);
 
-        return View(new AllFilesInBucketViewModel { BucketId = bucketName, Items = res });
+        return View(new AllFilesInBucketViewModel
+            { BucketId = bucketName, BucketName = bucket.CustomName ?? bucketName, Items = res });
     }
 
     public async Task<IActionResult> GetReading()
@@ -99,8 +100,11 @@ public class FileController(
             f => f.File!,
             f => f.File!.Bucket!)).ToList();
 
-        var res = readings
-            .GroupBy(reading => reading.File?.Bucket?.Name) //TODO: to custom name
+        var res = readings.GroupBy(reading => new AllFilesReadingItemKey
+            {
+                Name = reading.File?.Bucket?.Name!,
+                CustomName = reading.File?.Bucket?.CustomName ?? reading.File?.Bucket?.Name!
+            })
             .ToDictionary(reading => reading.Key!, reading => reading
                 .OrderByDescending(f => f.UpdatedDate)
                 .Select(r => new AllFilesReadingItem

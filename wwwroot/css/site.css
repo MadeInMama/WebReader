@@ -53,7 +53,7 @@
 }
 
 :root {
-    --max-width: 80em;
+    --max-width: 60em;
 }
 
 * {
@@ -75,7 +75,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 html {
-    font-size: 16px;
+    font-size: 18px;
     overflow-y: scroll;
 }
 
@@ -177,4 +177,13 @@ button:disabled {
     width: 2em;
     background-repeat: no-repeat;
     background-size: cover;
+}
+
+details > summary > span {
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.always-open-details {
+    cursor: text;
 }

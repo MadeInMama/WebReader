@@ -6,23 +6,38 @@
 @section Style
 {
     <style>
-        .file-line {
+        .content {
+            display: flex;
+            flex-direction: column;
             width: 100%;
             max-width: var(--max-width);
+        }
+
+        .file-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 1.5em;
+            width: 100%;
         }
     </style>
 }
 
 @if (Model.Items.Any())
 {
-    @foreach (var item in Model.Items)
-    {
-        <div class="file-line">
-            <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketName="@Model.BucketId"
-               asp-route-fileName="@item.Name">@item.CustomName @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime.LocalDateTime - @FormatSize(item.Size)</a>
-        </div>
-    }
+    <div class="content">
+        <details open class="always-open-details">
+            <summary><span>@Model.BucketName</span></summary>
+            @foreach (var item in Model.Items)
+            {
+                <div class="file-line">
+                    <a asp-controller="File" asp-action="GetFile"
+                       asp-route-bucketName="@Model.BucketId"
+                       asp-route-fileName="@item.Name">@item.CustomName @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime.LocalDateTime - @FormatSize(item.Size)</a>
+                </div>
+            }
+        </details>
+    </div>
 }
 else
 {

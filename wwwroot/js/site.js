@@ -20,3 +20,12 @@
 function GetAntiForgeryToken() {
     return document.querySelector('input[name="__RequestVerificationToken"]').value;
 }
+
+document.querySelectorAll(".always-open-details").forEach((details) => {
+    details.querySelector('summary').onclick = (e) => {
+        if (details.open) {
+            e.preventDefault();
+            details.open = true;
+        }
+    };
+});

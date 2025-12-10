@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Minio;
-using WebReader.Background;
 using WebReader.Configuration;
 using WebReader.Data;
 using WebReader.Repositories;
@@ -55,7 +54,7 @@ builder.Services.AddScoped<UserReadingRepository>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login";
+        options.LoginPath = "/Account/SignIn";
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
         options.Cookie.HttpOnly = true;

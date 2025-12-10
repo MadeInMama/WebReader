@@ -8,8 +8,7 @@ public class Bucket : BaseEntity
 
     [MaxLength(256)] public string? CustomName { get; init; }
 
-    //TODO: roles helper (GetAllRoles, CompareRoles, ...)
-    public IEnumerable<RoleType> AccessRoles { get; init; } = [RoleType.Admin, RoleType.User];
+    public IEnumerable<RoleType> AccessRoles { get; init; } = [Enum.GetValues<RoleType>().Min()];
     public bool IsHidden { get; set; }
     public bool IsAvailable { get; set; }
 
