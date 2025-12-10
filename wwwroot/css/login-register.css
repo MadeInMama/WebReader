@@ -2,8 +2,9 @@ main {
     justify-content: center;
 }
 
-.title {
-    margin-bottom: 1em;
+form {
+    width: var(--max-width);
+    max-width: 20em;
 }
 
 .username-password-container {
@@ -13,9 +14,11 @@ main {
     margin-bottom: 1em;
 }
 
+
 .username-password-container > input {
-    width: 20em;
-    max-width: var(--max-width);
+    display: block;
+    width: 100%;
+    max-width: 20em;
     font-size: 1em;
     padding: 0.5em 1em;
 }
@@ -25,6 +28,10 @@ main {
 }
 
 .remember-me > label {
+    font-size: 1em;
+}
+
+.remember-me > input {
     font-size: 1em;
 }
 
