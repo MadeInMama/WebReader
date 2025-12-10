@@ -50,7 +50,7 @@ builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 
-builder.Services.AddHostedService<UpdateFilesFromS3>();
+// builder.Services.AddHostedService<UpdateFilesFromS3>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

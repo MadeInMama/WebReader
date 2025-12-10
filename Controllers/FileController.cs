@@ -100,7 +100,7 @@ public class FileController(
             f => f.File!.Bucket!)).ToList();
 
         var res = readings
-            .GroupBy(reading => reading.File?.Bucket?.CustomName)
+            .GroupBy(reading => reading.File?.Bucket?.Name) //TODO: to custom name
             .ToDictionary(reading => reading.Key!, reading => reading
                 .OrderByDescending(f => f.UpdatedDate)
                 .Select(r => new AllFilesReadingItem
