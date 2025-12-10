@@ -2,6 +2,8 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-height: calc(100vh - 6em);
+    margin-bottom: 3em;
 }
 
 .pdf-canvas-container {
