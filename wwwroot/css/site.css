@@ -109,7 +109,12 @@ html, body {
 header {
     position: sticky;
     top: 0;
-    top: env(safe-area-inset-top, 0);
+}
+
+@media (hover: none) and (pointer: coarse) {
+    header {
+        bottom: min(env(safe-area-inset-top), 0);
+    }
 }
 
 header, main, footer {
@@ -191,8 +196,13 @@ main {
 footer {
     position: fixed;
     bottom: 0;
-    bottom: env(safe-area-inset-bottom, 0);
     visibility: hidden;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    footer {
+        bottom: min(env(safe-area-inset-bottom), 0);
+    }
 }
 
 button {
