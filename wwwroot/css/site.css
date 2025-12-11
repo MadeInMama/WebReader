@@ -80,6 +80,13 @@ html {
     overflow-y: scroll;
 }
 
+html, body {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
 /* Desktop styles (min-width: 1024px) */
 @media (width < 1000px) {
     :root {
@@ -102,9 +109,16 @@ html {
     }
 }
 
+@media only screen {
+    body, html {
+        min-height: 100dvh;
+        min-width: 100dvw;
+    }
+}
+
 header {
     top: 0;
-    top: env(safe-area-inset-bottom, 0);
+    top: env(safe-area-inset-top, 0);
 }
 
 header, main, footer {
