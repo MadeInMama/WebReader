@@ -1,6 +1,6 @@
 ﻿isFullscreenNow = () => !!document.fullscreenElement;
 
-let enterFullscreenBtn, exitFullscreenBtn, fullscreenContainer, isFullscreen = isFullscreenNow();
+let enterFullscreenBtn, exitFullscreenBtn, fullscreenContainer, headerElement, isFullscreen = isFullscreenNow();
 
 checkFullscreenSupport = () => {
     if (("ontouchstart" in document.documentElement)) {
@@ -11,40 +11,53 @@ checkFullscreenSupport = () => {
 }
 
 execOnFullscreenEnter = () => {
+    headerElement.style.display = "none";
     enterFullscreenBtn.style.display = "none";
     exitFullscreenBtn.style.display = "block";
+    isFullscreen = true;
 }
 
 execOnFullscreenExit = () => {
     exitFullscreenBtn.style.display = "none";
     enterFullscreenBtn.style.display = "block";
+    headerElement.style.display = "flex";
+    isFullscreen = false;
 }
 
 enterFullscreenMode = () => {
     document.documentElement.requestFullscreen().then(_ => {
         execOnFullscreenEnter();
-        isFullscreen = true;
     });
 }
 
 exitFullscreenMode = () => {
     document.exitFullscreen().then(_ => {
         execOnFullscreenExit();
-        isFullscreen = false;
     });
 }
 
-changeFullscreenMode = () => {
-    if (isFullscreen) {
+function changeFullscreenModeCustom(pIsFullscreen) {
+    if (pIsFullscreen) {
         exitFullscreenMode();
     } else {
         enterFullscreenMode();
     }
 }
 
+function changeFullscreenMode() {
+    changeFullscreenModeCustom(isFullscreen);
+}
+
 window.addEventListener("load", () => initFullscreenControl());
+document.addEventListener("fullscreenchange", () => {
+    if (isFullscreenNow() !== isFullscreen) {
+        isFullscreenNow() ? execOnFullscreenEnter() : execOnFullscreenExit();
+    }
+});
 
 function initFullscreenControl() {
+    console.log("fullscreenControl");
+    headerElement = document.querySelector("header");
     fullscreenContainer = document.querySelector("#fullscreen-container");
     enterFullscreenBtn = document.querySelector("#enter-fullscreen-btn");
     exitFullscreenBtn = document.querySelector("#exit-fullscreen-btn");
