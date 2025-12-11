@@ -56,7 +56,6 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 function initFullscreenControl() {
-    console.log("fullscreenControl");
     headerElement = document.querySelector("header");
     fullscreenContainer = document.querySelector("#fullscreen-container");
     enterFullscreenBtn = document.querySelector("#enter-fullscreen-btn");
