@@ -1,10 +1,9 @@
 ﻿isFullscreenNow = () => !!document.fullscreenElement;
-isTouchSupported = () => ("ontouchstart" in document.documentElement);
 
 let enterFullscreenBtn, exitFullscreenBtn, fullscreenContainer, isFullscreen = isFullscreenNow();
 
 checkFullscreenSupport = () => {
-    if (isTouchSupported()) {
+    if (("ontouchstart" in document.documentElement)) {
         fullscreenContainer.style.display = "none";
         return false;
     }
