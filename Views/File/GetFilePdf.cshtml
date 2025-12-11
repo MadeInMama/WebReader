@@ -17,7 +17,9 @@
 @section Footer
 {
     <div class="controls">
-        <div class="spacer controls-start"></div>
+        <div class="spacer controls-start">
+            @await Html.PartialAsync("_FullscreenControl")
+        </div>
         <div class="controls-center">
             <button class="prev-page"></button>
             <span class="preview-page">0/0</span>

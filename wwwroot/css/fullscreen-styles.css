@@ -1,0 +1,22 @@
+﻿.fullscreen-container {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+}
+
+#enter-fullscreen-btn,
+#exit-fullscreen-btn {
+    height: 2em;
+    width: 2em;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+}
+
+#enter-fullscreen-btn {
+    background-image: url("../icons/fullscreen-svgrepo-com.svg");
+}
+
+#exit-fullscreen-btn {
+    background-image: url("../icons/fullscreen-exit-svgrepo-com.svg");
+}

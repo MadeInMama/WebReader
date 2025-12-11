@@ -1,0 +1,47 @@
+﻿isFullscreenNow = () => !!document.fullscreenElement;
+
+let enterFullscreenBtn, exitFullscreenBtn, isFullscreen = isFullscreenNow();
+
+execOnFullscreenEnter = () => {
+    enterFullscreenBtn.style.display = "none";
+    exitFullscreenBtn.style.display = "block";
+}
+
+execOnFullscreenExit = () => {
+    exitFullscreenBtn.style.display = "none";
+    enterFullscreenBtn.style.display = "block";
+}
+
+enterFullscreenMode = () => {
+    document.documentElement.requestFullscreen().then(_ => {
+        execOnFullscreenEnter();
+        isFullscreen = true;
+    });
+}
+
+exitFullscreenMode = () => {
+    document.exitFullscreen().then(_ => {
+        execOnFullscreenExit();
+        isFullscreen = false;
+    });
+}
+
+changeFullscreenMode = () => {
+    if (isFullscreen) {
+        exitFullscreenMode();
+    } else {
+        enterFullscreenMode();
+    }
+}
+
+window.addEventListener("load", () => initFullscreenControl());
+
+function initFullscreenControl() {
+    enterFullscreenBtn = document.querySelector("#enter-fullscreen-btn");
+    exitFullscreenBtn = document.querySelector("#exit-fullscreen-btn");
+
+    enterFullscreenBtn.onclick = () => changeFullscreenMode();
+    exitFullscreenBtn.onclick = () => changeFullscreenMode();
+
+    isFullscreen ? execOnFullscreenEnter() : execOnFullscreenExit();
+}

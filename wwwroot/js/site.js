@@ -1,4 +1,4 @@
-﻿window.onload = () => {
+﻿window.addEventListener("load", () => {
     // const header = document.querySelector('header');
     // const main = document.querySelector('main');
     const footer = document.querySelector('footer');
@@ -14,7 +14,7 @@
         // main.style.marginBottom = "0";
     }
     // main.style.minHeight = `calc(100vh - ${reservedSize}px)`;
-};
+});
 
 function GetAntiForgeryToken() {
     return document.querySelector('input[name="__RequestVerificationToken"]').value;
