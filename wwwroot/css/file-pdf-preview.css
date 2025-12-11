@@ -2,9 +2,14 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: calc(100vh - 6em);
-    min-height: calc(100dvh - 6em);
     margin-bottom: 3em;
+    min-height: calc(100vh - 6em);
+}
+
+@media (hover: none) and (pointer: coarse) {
+    main {
+        min-height: calc(100dvh - 6em);
+    }
 }
 
 .pdf-canvas-container {

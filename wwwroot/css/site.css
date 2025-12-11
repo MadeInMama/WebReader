@@ -107,6 +107,7 @@ html, body {
 }
 
 header {
+    position: sticky;
     top: 0;
     top: env(safe-area-inset-top, 0);
 }
@@ -116,7 +117,6 @@ header, main, footer {
 }
 
 header, footer {
-    position: fixed;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -174,7 +174,7 @@ header > div > ul > li > a:hover::after {
     header > div > ul > li > a::after {
         display: none;
     }
-    
+
     body, html {
         min-height: 100dvh;
         min-width: 100dvw;
@@ -182,17 +182,14 @@ header > div > ul > li > a:hover::after {
 }
 
 main {
-    margin-top: 3em;
-    margin-bottom: 0;
     display: flex;
     align-items: center;
     justify-content: start;
     flex-direction: column;
-    min-height: calc(100vh - 3em);
-    min-height: calc(100dvh - 3em);
 }
 
 footer {
+    position: fixed;
     bottom: 0;
     bottom: env(safe-area-inset-bottom, 0);
     visibility: hidden;
