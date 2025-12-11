@@ -72,26 +72,18 @@ h1, h2, h3, h4, h5, h6 {
 
 
 :root {
-    --max-width: 100%;
+    --max-width: 60em;
 }
 
-
 html {
-    font-size: 22px;
+    font-size: 18px;
     overflow-y: scroll;
 }
 
-/* Tablet styles (min-width: 768px) */
-@media (min-width: 768px) {
-    html {
-        font-size: 18px;
-    }
-}
-
 /* Desktop styles (min-width: 1024px) */
-@media (min-width: 1024px) {
+@media (width < 1000px) {
     :root {
-        --max-width: 60em;
+        --max-width: 100%;
     }
 
     html {
@@ -99,10 +91,20 @@ html {
     }
 }
 
+/* Tablet styles (min-width: 768px) */
+@media (width < 700px) {
+    html {
+        font-size: 16px;
+    }
+
+    header > div > h3 {
+        display: none !important;
+    }
+}
+
 header {
     top: 0;
-    left: 0;
-    right: 0;
+    top: env(safe-area-inset-bottom, 0);
 }
 
 header, main, footer {
@@ -119,6 +121,8 @@ header, footer {
     background-color: #ffffffbf;
     backdrop-filter: blur(0.25em);
     z-index: 1000;
+    left: 0;
+    right: 0;
 }
 
 header > div, footer > div {
@@ -162,6 +166,12 @@ header > div > ul > li > a:hover::after {
     left: 0;
 }
 
+@media (hover: none) and (pointer: coarse) {
+    header > div > ul > li > a::after {
+        display: none;
+    }
+}
+
 main {
     margin-top: 3em;
     margin-bottom: 0;
@@ -170,12 +180,12 @@ main {
     justify-content: start;
     flex-direction: column;
     min-height: calc(100vh - 3em);
+    min-height: calc(100dvh - 3em);
 }
 
 footer {
     bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: env(safe-area-inset-bottom, 0);
     visibility: hidden;
 }
 
@@ -198,6 +208,7 @@ button:disabled {
     width: 2em;
     background-repeat: no-repeat;
     background-size: cover;
+    flex-shrink: 0;
 }
 
 details > summary > span {

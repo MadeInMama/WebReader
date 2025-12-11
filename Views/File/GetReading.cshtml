@@ -28,6 +28,12 @@
             left: 0;
         }
 
+        @@media (hover: none) and (pointer: coarse) {
+            summary > span:hover::after {
+                display: none;
+            }
+        }
+
         .reading-line {
             display: flex;
             justify-content: space-between;
