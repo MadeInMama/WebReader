@@ -70,7 +70,6 @@ h1, h2, h3, h4, h5, h6 {
 *::after {
 }
 
-
 :root {
     --max-width: 60em;
 }
@@ -87,7 +86,6 @@ html, body {
     margin-bottom: 0 !important;
 }
 
-/* Desktop styles (min-width: 1024px) */
 @media (width < 1000px) {
     :root {
         --max-width: 100%;
@@ -98,7 +96,6 @@ html, body {
     }
 }
 
-/* Tablet styles (min-width: 768px) */
 @media (width < 700px) {
     html {
         font-size: 16px;
@@ -106,13 +103,6 @@ html, body {
 
     header > div > h3 {
         display: none !important;
-    }
-}
-
-@media only screen {
-    body, html {
-        min-height: 100dvh;
-        min-width: 100dvw;
     }
 }
 
@@ -183,6 +173,11 @@ header > div > ul > li > a:hover::after {
 @media (hover: none) and (pointer: coarse) {
     header > div > ul > li > a::after {
         display: none;
+    }
+    
+    body, html {
+        min-height: 100dvh;
+        min-width: 100dvw;
     }
 }
 
