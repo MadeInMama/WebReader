@@ -69,8 +69,6 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-app.UsePathBase("/app");
-
 using (var scope = app.Services.CreateScope())
 {
     Console.WriteLine("Database migration started");
