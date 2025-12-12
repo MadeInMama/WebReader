@@ -2,7 +2,7 @@
   webreader:
     image: webreader
     ports:
-      - "5167:5167"
+      - "80:5167"
     build:
       context: .
       dockerfile: Dockerfile
