@@ -13,7 +13,8 @@
     <input type="hidden" asp-for="ReturnUrl"/>
 
     <div class="username-password-container">
-        <input asp-for="Username" placeholder="Username" autocomplete="username"/>
+        <input asp-for="Username" placeholder="Username" autocomplete="username" autocapitalize="off"
+               autocorrect="off" spellcheck="false"/>
         <input asp-for="Password" placeholder="Password"/>
     </div>
 
