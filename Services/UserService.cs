@@ -5,7 +5,10 @@ using WebReader.Repositories;
 
 namespace WebReader.Services;
 
-public class UserService(CustomUserRepository userRepository, BucketService bucketService)
+public class UserService(
+    CustomUserRepository userRepository,
+    BucketService bucketService,
+    UserReadingRepository userReadingRepository)
 {
     public async Task<CustomUser?> AuthenticateAsync(string username, string password)
     {
@@ -32,6 +35,22 @@ public class UserService(CustomUserRepository userRepository, BucketService buck
         await bucketService.CreatePersonalBucketAsync(entity);
 
         return entity;
+    }
+
+    public async Task DeleteUserAsync(Guid id)
+    {
+        var user = await userRepository.FirstOrDefaultAsync(
+            f => f.Id == id && f.IsActive,
+            f => f.UserReadings, f => f.Bucket);
+
+        if (user == null) return;
+
+        var userReadingTask = userReadingRepository.DeleteAllAsync(user.UserReadings.Select(f => f.Id));
+        var bucketTask = bucketService.RemoveBucketAsync(user.Bucket);
+
+        await Task.WhenAll(userReadingTask, bucketTask);
+
+        await userRepository.DeleteAsync(user.Id);
     }
 
     private static string HashPassword(string password)

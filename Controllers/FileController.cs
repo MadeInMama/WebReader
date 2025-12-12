@@ -156,9 +156,11 @@ public class FileController(
         {
             case FileType.Pdf:
                 return View("GetFilePdf", res);
+            case FileType.Fb2:
+                return View("GetFileFb2", res);
             case FileType.Txt:
             default:
-                throw new ArgumentOutOfRangeException();
+                return RedirectToAction("CustomNotFound", "Account");
         }
     }
 }

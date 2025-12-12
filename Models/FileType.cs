@@ -3,5 +3,6 @@
 public enum FileType
 {
     Pdf,
-    Txt
+    Txt,
+    Fb2
 }

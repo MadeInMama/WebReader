@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using WebReader.Helpers;
 using WebReader.Models.Dtos;
 using WebReader.Models.Entities;
 using WebReader.Services;
@@ -80,6 +81,15 @@ public class AccountController(UserService userService) : Controller
     public IActionResult CustomNotFound()
     {
         return View();
+    }
+
+    [HttpDelete]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteMe()
+    {
+        var id = User.GetUserGuid();
+        await userService.DeleteUserAsync(id);
+        return RedirectToAction("Logout", "Account");
     }
 
     private async Task<IActionResult> SetUser(CustomUser user, bool rememberMe, string? returnUrl = null)

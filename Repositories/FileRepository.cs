@@ -8,9 +8,15 @@ namespace WebReader.Repositories;
 
 public class FileRepository(ApplicationDbContext context) : IRepository<File>
 {
-    public async Task<File?> FirstOrDefaultAsync(Expression<Func<File, bool>> predicate)
+    public async Task<File?> FirstOrDefaultAsync(Expression<Func<File, bool>> predicate,
+        params Expression<Func<File, object>>[] includes)
     {
-        return await context.Files.FirstOrDefaultAsync(predicate);
+        IQueryable<File> query = context.Set<File>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        return await query.FirstOrDefaultAsync(predicate);
     }
 
     public async Task<IEnumerable<File>> AllAsync(Expression<Func<File, bool>> predicate,

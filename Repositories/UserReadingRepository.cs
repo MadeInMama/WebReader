@@ -9,9 +9,15 @@ public class UserReadingRepository(
     ApplicationDbContext context,
     IDbContextFactory<ApplicationDbContext> contextFactory) : IRepository<UserReading>
 {
-    public async Task<UserReading?> FirstOrDefaultAsync(Expression<Func<UserReading, bool>> predicate)
+    public async Task<UserReading?> FirstOrDefaultAsync(Expression<Func<UserReading, bool>> predicate,
+        params Expression<Func<UserReading, object>>[] includes)
     {
-        return await context.UserReadings.FirstOrDefaultAsync(predicate);
+        IQueryable<UserReading> query = context.Set<UserReading>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        return await query.FirstOrDefaultAsync(predicate);
     }
 
     public async Task<UserReading> AddAsync(UserReading entity)
@@ -55,10 +61,15 @@ public class UserReadingRepository(
         await Task.WhenAll(tasks);
     }
 
-    public async Task DeleteAllAsync(IEnumerable<Guid> ids)
+    public async Task DeleteAllAsync(IEnumerable<Guid>? ids)
     {
+        var idsArray = ids?.ToArray() ?? [];
+
+        if (idsArray.Length == 0)
+            return;
+
         await context.UserReadings
-            .Where(r => ids.Contains(r.Id))
+            .Where(r => idsArray.Contains(r.Id))
             .ExecuteDeleteAsync();
     }
 }

@@ -8,4 +8,8 @@ public class CustomUser : BaseEntity
     [MaxLength(256)] public string PasswordHash { get; init; } = string.Empty;
     public IEnumerable<RoleType> Roles { get; init; } = [RoleType.User];
     public bool IsActive { get; init; } = true;
+
+    public IEnumerable<UserReading> UserReadings { get; set; } = new List<UserReading>();
+
+    public Bucket? Bucket { get; set; }
 }

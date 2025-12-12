@@ -53,16 +53,19 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@latest/build/pdf.worker.min.mjs';
 
+        const url = @Html.Raw(Json.Serialize(Model.Url));
+        const decodedString = url.replace(/\\u0026/g, '&')
+
         let pdfDoc = null;
         let currentPage = @Model.Page;
         let maxPage = 1;
         let currentScale = @Model.Scale;
 
-        async function loadPdf(url, page) {
+        async function loadPdf(url) {
             pdfDoc = await pdfjsLib.getDocument(url).promise;
             maxPage = pdfDoc.numPages;
             await SetScale(currentScale);
-            await SetPage(page);
+            await SetPage(currentPage);
         }
 
         async function renderPage(num, scale) {
@@ -87,12 +90,7 @@
             });
         }
 
-        const url = @Html.Raw(Json.Serialize(Model.Url));
-        const decodedString = url.replace(/\\u0026/g, '&')
-
-        loadPdf(decodedString,
-            currentPage,
-            currentScale);
+        loadPdf(decodedString);
 
         Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
             value.onclick = () => {

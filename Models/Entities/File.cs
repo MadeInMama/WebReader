@@ -10,7 +10,7 @@ public class File : BaseEntity
     [MaxLength(256)] public string? CustomName { get; init; }
     public required FileType Type { get; set; }
     public ulong? Size { get; set; }
-    public IEnumerable<RoleType> AccessRoles { get; init; } = Enum.GetValues<RoleType>();
+    public IEnumerable<RoleType> AccessRoles { get; init; } = [Enum.GetValues<RoleType>().Min()];
     public bool IsHidden { get; set; }
     public bool IsAvailable { get; set; }
 }

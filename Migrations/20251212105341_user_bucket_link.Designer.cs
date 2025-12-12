@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebReader.Data;
@@ -11,9 +12,11 @@ using WebReader.Data;
 namespace WebReader.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251212105341_user_bucket_link")]
+    partial class user_bucket_link
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,9 +61,6 @@ namespace WebReader.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
                     b.ToTable("Buckets");
                 });
 
@@ -68,6 +68,9 @@ namespace WebReader.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BucketId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedDate")
@@ -94,6 +97,9 @@ namespace WebReader.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BucketId")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -185,13 +191,13 @@ namespace WebReader.Migrations
                     b.ToTable("UserReadings");
                 });
 
-            modelBuilder.Entity("WebReader.Models.Entities.Bucket", b =>
+            modelBuilder.Entity("WebReader.Models.Entities.CustomUser", b =>
                 {
-                    b.HasOne("WebReader.Models.Entities.CustomUser", "User")
-                        .WithOne("Bucket")
-                        .HasForeignKey("WebReader.Models.Entities.Bucket", "UserId");
+                    b.HasOne("WebReader.Models.Entities.Bucket", "Bucket")
+                        .WithOne("User")
+                        .HasForeignKey("WebReader.Models.Entities.CustomUser", "BucketId");
 
-                    b.Navigation("User");
+                    b.Navigation("Bucket");
                 });
 
             modelBuilder.Entity("WebReader.Models.Entities.File", b =>
@@ -224,10 +230,13 @@ namespace WebReader.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("WebReader.Models.Entities.Bucket", b =>
+                {
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WebReader.Models.Entities.CustomUser", b =>
                 {
-                    b.Navigation("Bucket");
-
                     b.Navigation("UserReadings");
                 });
 #pragma warning restore 612, 618

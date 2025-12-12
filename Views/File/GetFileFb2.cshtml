@@ -1,0 +1,272 @@
+﻿@model WebReader.Models.Dtos.FileViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@section Style
+{
+
+<link rel="stylesheet" href="~/css/file-fb2-preview.css" asp-append-version="true"/>
+<style>
+    .fb2-cover > img, .fb2-image-container > img {
+        width: 100%;
+        object-fit: cover;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+        max-width: 50%;
+    }
+
+    .fb2-canvas-container p {
+        text-align: justify;
+    }
+</style>
+}
+
+@section SpecialInfo
+
+{
+<h3 class="special-info-big">@Model.Title</h3>
+}
+
+<h3 class="special-info-small">@Model.Title</h3>
+
+<div class="fb2-canvas-container"
+     style="width: 100%;max-width: var(--max-width); margin-left: auto; margin-right: auto;">
+</div>
+
+@section Footer
+
+{
+@* <div class="controls"> *@
+@*     <div class="spacer controls-start"> *@
+@*         @await Html.PartialAsync("_FullscreenControl") *@
+@*     </div> *@
+@*     <div class="controls-center"> *@
+@*         <button class="prev-page"></button> *@
+@*         <span class="preview-page">0/0</span> *@
+@*         <button class="next-page"></button> *@
+@*     </div> *@
+@*     <div class="controls-end"> *@
+@*         <select class="set-scale"> *@
+@*             <option value="0.5">0.5</option> *@
+@*             <option value="0.75">0.75</option> *@
+@*             <option value="1">1</option> *@
+@*             <option value="2">2</option> *@
+@*             <option value="3">3</option> *@
+@*             <option value="4">4</option> *@
+@*             <option value="5">5</option> *@
+@*         </select> *@
+@*     </div> *@
+@* </div> *@
+}
+
+@section Scripts
+{
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script type="module">
+    const url = @Html.Raw(Json.Serialize(Model.Url));
+    const decodedString = url.replace(/\\u0026/g, '&')
+
+    async function loadFB2FromUrl(url) {
+        try {
+            const response = await fetch(url);
+            const fb2Text = await response.text();
+            renderFB2(fb2Text);
+        } catch (err) {
+            console.error('Failed to load FB2:', err);
+        }
+    }
+
+    function renderFB2(xmlString) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xmlString, 'application/xml');
+        if (doc.querySelector('parsererror')) {
+            console.error('Invalid XML');
+            return;
+        }
+
+        const imageMap = new Map();
+        doc.querySelectorAll('binary').forEach(bin => {
+            const id = bin.getAttribute('id');
+            const type = bin.getAttribute('content-type') || 'image/png';
+            const data = bin.textContent.trim();
+            if (id && data) imageMap.set(id, `data:${type};base64,${data}`);
+        });
+
+        let output = '';
+        const coverImg = doc.querySelector('coverpage image');
+        if (coverImg) {
+            const href = coverImg.getAttribute('l:href') || coverImg.getAttribute('href');
+            if (href?.startsWith('#')) {
+                const src = imageMap.get(href.slice(1));
+                if (src) output += `<div class="fb2-cover"><img src="${escapeHtml(src)}" class="fb2-cover-img" alt="Cover" /></div>`;
+            }
+        }
+
+        const body = doc.querySelector('body');
+
+        if (body) {
+            output += convertNode(body, imageMap);
+        }
+
+        document.querySelector('.fb2-canvas-container').innerHTML = output;
+    }
+
+    function convertNode(node, imageMap) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return escapeHtml(node.nodeValue);
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+        const tag = node.localName;
+        const children = () => Array.from(node.childNodes).map(n => convertNode(n, imageMap)).join('');
+
+        switch (tag) {
+            case 'p':
+                return `<p>${children()}</p>`;
+            case 'section':
+                return `<section>${children()}</section>`;
+            case 'title': {
+                const level = node.closest('section') ? 2 : 1;
+                return `<h${level}>${children()}</h${level}>`;
+            }
+            case 'image':
+            case 'img': {
+                const href = node.getAttribute('l:href') || node.getAttribute('href') || '';
+                if (href.startsWith('#')) {
+                    const src = imageMap.get(href.slice(1));
+                    if (src) return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image" /></div>`;
+                }
+                return `<div>[Image missing: ${href}]</div>`;
+            }
+            case 'poem':
+                return `<div class="poem">${children()}</div>`;
+            case 'v':
+                return `<div class="verse">${children()}</div>`;
+            case 'empty-line':
+                return `<div>&nbsp;</div>`;
+            case 'emphasis':
+                return `<em>${children()}</em>`;
+            case 'strong':
+                return `<strong>${children()}</strong>`;
+            default:
+                return children(); // fallback
+        }
+    }
+
+    function escapeHtml(str) {
+        return str?.replace(/[&<>"']/g, m =>
+            ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[m])
+        ) || '';
+    }
+
+    loadFB2FromUrl(decodedString);
+
+    // let fb2Doc = null;
+    // let currentPage = @Model.Page;
+    // let maxPage = 1;
+    // let currentScale = @Model.Scale;
+    //
+    // async function loadFb2(url) {
+    //
+    //     await SetScale(currentScale);
+    //     await SetPage(currentPage);
+    // }
+    //
+    // async function renderPage(num, scale) {
+    //
+    //
+    //     Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+    //         value.textContent = `${currentPage}/${maxPage}`;
+    //     });
+    // }
+    //
+    // loadFb2(decodedString);
+    //
+    // Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+    //     value.onclick = () => {
+    //         SetPage(--currentPage);
+    //
+    //         Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+    //             value.disabled = false;
+    //         });
+    //     };
+    // });
+    //
+    // Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+    //     value.onclick = () => {
+    //         SetPage(++currentPage);
+    //
+    //         Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+    //             value.disabled = false;
+    //         });
+    //     };
+    // });
+    //
+    // Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
+    //     value.value = currentScale;
+    //
+    //     value.onchange = (e) => {
+    //         SetScale(e.target.value);
+    //     };
+    // });
+    //
+    // async function SetPage(page) {
+    //     currentPage = clamp(page, 1, maxPage);
+    //
+    //     if (currentPage === maxPage) {
+    //         Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+    //             value.disabled = true;
+    //         });
+    //     } else if (currentPage === 1) {
+    //         Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+    //             value.disabled = true;
+    //         });
+    //     }
+    //
+    //     await renderPage(currentPage, currentScale);
+    //
+    //     window.scrollTo({
+    //         top: 0,
+    //         behavior: 'smooth'
+    //     });
+    //
+    //     SendCurrPage();
+    // }
+    //
+    // async function SetScale(scale) {
+    //     currentScale = scale;
+    //     Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
+    //         value.value = currentScale
+    //     });
+    //     document.getElementById("pdf-canvas").style.maxWidth = 5.7 * 5.5 * currentScale + "em";
+    //     await renderPage(currentPage, currentScale);
+    //
+    //     SendCurrPage();
+    // }
+    //
+    // function clamp(value, min, max) {
+    //     return Math.min(Math.max(value, min), max);
+    // }
+    //
+    // if (@Model.SendUpdateInSeconds != null && @Model.SendUpdateInSeconds > 0)
+    //     setInterval(SendCurrPage, (@Model.SendUpdateInSeconds - 10) * 1000);
+    // else setInterval(SendCurrPage, 20 * 60 * 1000);
+    //
+    // function SendCurrPage() {
+    //     axios.post('/api/FileApi/UpdatePage', {
+    //         FileId: "@Model.FileId",
+    //         UserId: "@Model.UserId",
+    //         Page: currentPage,
+    //         Scale: currentScale >= 1 ? currentScale : 1,
+    //     }, {
+    //         headers: {
+    //             'RequestVerificationToken': GetAntiForgeryToken()
+    //         },
+    //         withCredentials: true
+    //     });
+    // }
+</script>
+}

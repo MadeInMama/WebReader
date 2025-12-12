@@ -29,6 +29,18 @@
                     <a asp-controller="File" asp-action="GetReading">Reading</a>
                 </li>
                 <li>
+                    <form asp-controller="Account"
+                          asp-action="DeleteMe"
+                          method="post"
+                          style="display:inline;">
+                        <input type="hidden" name="_method" value="DELETE"/>
+                        <button type="submit"
+                                onclick="return confirm('⚠️ This will permanently delete your profile. Continue?');">
+                            Delete Profile
+                        </button>
+                    </form>
+                </li>
+                <li>
                     <a asp-controller="Account" asp-action="Logout">Logout</a>
                 </li>
             }

@@ -11,15 +11,17 @@ public class UpdateFilesFromS3(IServiceProvider services) : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await RemoveBucketsThatNotExistsInDb();
         // await BucketBackgroundProcessing();
-        await FileBackgroundProcessing();
+        // await FileBackgroundProcessing();
 
         using PeriodicTimer timer = new(PeriodTime);
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
-            // await RemoveBucketsThatNotExistsInDb();
-            // await BucketBackgroundProcessing();
-            await FileBackgroundProcessing();
+            await RemoveBucketsThatNotExistsInDb();
+        // await RemoveBucketsThatNotExistsInDb();
+        // await BucketBackgroundProcessing();
+        // await FileBackgroundProcessing();
     }
 
     public override async Task StopAsync(CancellationToken stoppingToken)

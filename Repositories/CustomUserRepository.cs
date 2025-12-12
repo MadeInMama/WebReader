@@ -7,9 +7,15 @@ namespace WebReader.Repositories;
 
 public class CustomUserRepository(ApplicationDbContext context) : IRepository<CustomUser>
 {
-    public async Task<CustomUser?> FirstOrDefaultAsync(Expression<Func<CustomUser, bool>> predicate)
+    public async Task<CustomUser?> FirstOrDefaultAsync(Expression<Func<CustomUser, bool>> predicate,
+        params Expression<Func<CustomUser, object>>[] includes)
     {
-        return await context.Users.FirstOrDefaultAsync(predicate);
+        IQueryable<CustomUser> query = context.Set<CustomUser>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        return await query.FirstOrDefaultAsync(predicate);
     }
 
     public Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate,
@@ -23,5 +29,30 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         var res = await context.Users.AddAsync(entity);
         await context.SaveChangesAsync();
         return res.Entity;
+    }
+
+    public async Task<CustomUser> UpdateAsync(CustomUser entity)
+    {
+        context.Users.Update(entity);
+        await context.SaveChangesAsync();
+        return entity;
+    }
+
+    public async Task DeleteAllAsync(IEnumerable<Guid>? ids)
+    {
+        var idsArray = ids?.ToArray() ?? [];
+
+        if (idsArray.Length == 0) return;
+
+        await context.Users
+            .Where(r => idsArray.Contains(r.Id))
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task DeleteAsync(Guid? id)
+    {
+        if (id == null) return;
+
+        await DeleteAllAsync([id.Value]);
     }
 }

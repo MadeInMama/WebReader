@@ -71,6 +71,11 @@ public class ApplicationDbContext : DbContext
             .HasIndex(f => f.Name)
             .IsUnique();
 
+        modelBuilder.Entity<CustomUser>()
+            .HasOne(f => f.Bucket)
+            .WithOne(f => f.User)
+            .HasForeignKey<Bucket>(f => f.UserId);
+
         base.OnModelCreating(modelBuilder);
     }
 

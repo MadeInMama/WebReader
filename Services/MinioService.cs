@@ -34,8 +34,10 @@ public class MinioService(IMinioClient minioClient)
         await minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName));
     }
 
-    public async Task RemoveBucketAsync(string bucketName)
+    public async Task RemoveBucketAsync(string? bucketName)
     {
+        if (bucketName == null) return;
+
         var observable = minioClient.ListObjectsEnumAsync(new ListObjectsArgs()
             .WithBucket(bucketName)
             .WithRecursive(true));
