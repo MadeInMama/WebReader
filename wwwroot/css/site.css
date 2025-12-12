@@ -96,19 +96,27 @@ html, body {
     }
 }
 
+.special-info-small {
+    display: none;
+}
+
 @media (width < 700px) {
     html {
         font-size: 16px;
     }
 
-    header > div > h3 {
+    .special-info-big {
         display: none !important;
+    }
+
+    .special-info-small {
+        display: block !important;
     }
 }
 
 header {
-    position: sticky;
     top: 0;
+    border-radius: 0 0 0.75em 0.75em;
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -118,10 +126,11 @@ header {
 }
 
 header, main, footer {
-    padding: 10px;
+    padding: 0.5em 1em;
 }
 
 header, footer {
+    position: sticky;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -130,8 +139,9 @@ header, footer {
     background-color: #ffffffbf;
     backdrop-filter: blur(0.25em);
     z-index: 1000;
-    left: 0;
-    right: 0;
+    width: 100%;
+    max-width: var(--max-width);
+    margin: 0 auto;
 }
 
 header > div, footer > div {
@@ -194,9 +204,9 @@ main {
 }
 
 footer {
-    position: fixed;
     bottom: 0;
     visibility: hidden;
+    border-radius: 0.75em 0.75em 0 0;
 }
 
 @media (hover: none) and (pointer: coarse) {

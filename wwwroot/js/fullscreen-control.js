@@ -1,6 +1,11 @@
 ﻿isFullscreenNow = () => !!document.fullscreenElement;
 
-let enterFullscreenBtn, exitFullscreenBtn, fullscreenContainer, headerElement, isFullscreen = isFullscreenNow();
+let enterFullscreenBtn,
+    exitFullscreenBtn,
+    fullscreenContainer,
+    headerElement,
+    headerDisplayValue,
+    isFullscreen = isFullscreenNow();
 
 checkFullscreenSupport = () => {
     if (("ontouchstart" in document.documentElement)) {
@@ -20,7 +25,7 @@ execOnFullscreenEnter = () => {
 execOnFullscreenExit = () => {
     exitFullscreenBtn.style.display = "none";
     enterFullscreenBtn.style.display = "block";
-    headerElement.style.display = "flex";
+    headerElement.style.display = headerDisplayValue;
     isFullscreen = false;
 }
 
@@ -57,6 +62,7 @@ document.addEventListener("fullscreenchange", () => {
 
 function initFullscreenControl() {
     headerElement = document.querySelector("header");
+    headerDisplayValue = headerElement.style.display;
     fullscreenContainer = document.querySelector("#fullscreen-container");
     enterFullscreenBtn = document.querySelector("#enter-fullscreen-btn");
     exitFullscreenBtn = document.querySelector("#exit-fullscreen-btn");

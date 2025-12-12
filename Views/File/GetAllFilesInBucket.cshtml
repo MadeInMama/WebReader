@@ -23,6 +23,13 @@
     </style>
 }
 
+@section SpecialInfo {
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
+    }
+}
+
 @if (Model.Items.Any())
 {
     <div class="content">

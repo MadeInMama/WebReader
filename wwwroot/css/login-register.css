@@ -1,5 +1,12 @@
 main {
     justify-content: center;
+    min-height: 100vh;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    main {
+        min-height: 100dvh;
+    }
 }
 
 form {

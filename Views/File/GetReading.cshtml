@@ -51,6 +51,13 @@
     </style>
 }
 
+@section SpecialInfo {
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
+    }
+}
+
 <div id="full_content">
     @foreach (var (item, index) in Model.Items.Select((item, index) => (item, index)))
     {

@@ -43,10 +43,7 @@
             }
         </ul>
 
-        @if (User.Identity is { IsAuthenticated: true })
-        {
-            <h3>Hello, @User.Identity.Name!</h3>
-        }
+        @await RenderSectionAsync("SpecialInfo", false)
     </div>
 </header>
 <main>

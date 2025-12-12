@@ -9,7 +9,11 @@
     <link rel="stylesheet" href="~/css/file-pdf-preview.css" asp-append-version="true"/>
 }
 
-<h3>@Model.Title</h3>
+@section SpecialInfo {
+    <h3 class="special-info-big">@Model.Title</h3>
+}
+
+<h3 class="special-info-small">@Model.Title</h3>
 
 <div class="pdf-canvas-container">
     <canvas id="pdf-canvas"></canvas>
