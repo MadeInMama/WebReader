@@ -24,8 +24,8 @@
   minio:
     image: minio/minio:latest
     ports:
-      - ${MINIO_POST_1}
-      - ${MINIO_POST_2}
+      - ${MINIO_PORT_1}
+      - ${MINIO_PORT_2}
     env_file:
       - ../.env_s3
     command: server /data --console-address ":9001"
