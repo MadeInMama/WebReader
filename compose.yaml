@@ -24,7 +24,7 @@
   minio:
     image: minio/minio:latest
     ports:
-      - "${PORT_1_1}:${ORT_1_2}"
+      - "${PORT_1_1}:${PORT_1_2}"
       - "${PORT_2_1}:${PORT_2_2}"
     env_file:
       - ../.env_s3
