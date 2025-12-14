@@ -24,21 +24,36 @@ public class ApplicationDbContext : DbContext
         optionsBuilder.UseSeeding((context, _) =>
         {
             if (!context.Set<CustomUser>().Any())
-                context.Set<CustomUser>().Add(new CustomUser
+            {
+                var user = context.Set<CustomUser>().Add(new CustomUser
                 {
                     Username = "test",
                     PasswordHash = HashPassword("test"),
                     Roles = [RoleType.Admin, RoleType.User]
                 });
 
+                context.SaveChanges();
+
+                context.Set<Bucket>().Add(new Bucket
+                {
+                    Name = $"personal-{user.Entity.Id}",
+                    CustomName = "Personal Bucket",
+                    UserId = user.Entity.Id
+                });
+
+                context.SaveChanges();
+            }
+
             if (!context.Set<Bucket>().Any())
+            {
                 context.Set<Bucket>().Add(new Bucket
                 {
                     Name = "mybucket",
                     CustomName = "Default Bucket"
                 });
 
-            context.SaveChanges();
+                context.SaveChanges();
+            }
 
             var bucketId = context.Set<Bucket>().First(f => f.Name.Equals("mybucket")).Id;
 

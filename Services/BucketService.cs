@@ -16,7 +16,6 @@ public class BucketService(
         {
             Name = bucketName,
             CustomName = bucketName,
-            IsAvailable = true,
             IsHidden = false,
             UserId = user.Id,
             User = user
