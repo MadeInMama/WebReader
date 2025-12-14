@@ -18,14 +18,14 @@
     env_file:
       - ../.env_pg
     ports:
-      - "${PORT_1_1}:${PORT_1_2}"
+      - "${DB_PORT_1_1}:${DB_PORT_1_2}"
     restart: always
   
   minio:
     image: minio/minio:latest
     ports:
-      - "${PORT_1_1}:${PORT_1_2}"
-      - "${PORT_2_1}:${PORT_2_2}"
+      - "${S3_PORT_1_1}:${S3_PORT_1_2}"
+      - "${S3_PORT_2_1}:${S3_PORT_2_2}"
     env_file:
       - ../.env_s3
     command: server /data --console-address ":9001"
