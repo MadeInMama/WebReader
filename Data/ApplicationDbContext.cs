@@ -44,7 +44,7 @@ public class ApplicationDbContext : DbContext
                 context.SaveChanges();
             }
 
-            if (!context.Set<Bucket>().Any())
+            if (!context.Set<Bucket>().Any(f => f.Name.Equals("mybucket")))
             {
                 context.Set<Bucket>().Add(new Bucket
                 {
