@@ -7,7 +7,7 @@
       context: .
       dockerfile: Dockerfile
     env_file:
-      - ./.env
+      - ../.env
     restart: always
     depends_on:
       - db
@@ -20,7 +20,7 @@
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     env_file:
-      - ./.env_pg
+      - ../.env_pg
     ports:
       - ${POSTGRES_PORT_1}
     restart: always
@@ -34,7 +34,7 @@
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     env_file:
-      - ./.env_s3
+      - ../.env_s3
     command: server /data --console-address ":9001"
     restart: always
   
