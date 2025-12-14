@@ -48,7 +48,48 @@ public class ApplicationDbContext : DbContext
                     BucketId = bucketId,
                     Name = "314041.pdf",
                     CustomName = "Семья Корлеоне: Пьюзо, Фалько",
-                    AccessRoles = [RoleType.User],
+                    Type = FileType.Pdf,
+                    IsHidden = false
+                }, new File
+                {
+                    BucketId = bucketId,
+                    Name = "Краткие ответы на большие вопросы [2019] Хокинг.fb2",
+                    CustomName = "Краткие ответы на большие вопросы: Хокинг",
+                    Type = FileType.Fb2,
+                    IsHidden = false
+                }, new File
+                {
+                    BucketId = bucketId,
+                    Name = "Mario_Pyuzo_-_Omerta.pdf",
+                    CustomName = "Омерта: Пьюзо",
+                    Type = FileType.Pdf,
+                    IsHidden = false
+                }, new File
+                {
+                    BucketId = bucketId,
+                    Name = "Mario_Pyuzo_-_Sitsiliets.pdf",
+                    CustomName = "Сицилиец: Пьюзо",
+                    Type = FileType.Pdf,
+                    IsHidden = false
+                }, new File
+                {
+                    BucketId = bucketId,
+                    Name = "pyuzo_krestnyy-otec_1_krestnyy-oteckw4btg178419.pdf",
+                    CustomName = "Крестный отец: Пьюзо",
+                    Type = FileType.Pdf,
+                    IsHidden = false
+                }, new File
+                {
+                    BucketId = bucketId,
+                    Name = "Vayngartner Mark Mest Krestnogo otca - BooksCafeNet.pdf",
+                    CustomName = "Месть Крестного отца: Винегарднер",
+                    Type = FileType.Pdf,
+                    IsHidden = false
+                }, new File
+                {
+                    BucketId = bucketId,
+                    Name = "Vayngartner Mark Vozvraschenie Krestnogo otca - BooksCafeNet.pdf",
+                    CustomName = "Возвращение Крестного отца: Винегарднер",
                     Type = FileType.Pdf,
                     IsHidden = false
                 });

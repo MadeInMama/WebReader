@@ -2,15 +2,10 @@
   webreader:
     image: webreader
     ports:
-      - "80:5167"
+      - ${WEBREADER_PORT_1}
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_HTTP_PORTS: 5167
-      MinioConfig__AccessKey: minioadmin
-      MinioConfig__SecretKey: minioadmin
     env_file:
       - ./.env
     restart: always
@@ -21,21 +16,25 @@
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    env_file:
+      - ./.env_pg
     ports:
-      - "5432:5432"
+      - ${POSTGRES_PORT_1}
     restart: always
   
   minio:
     image: minio/minio:latest
     ports:
-      - "9000:9000" # MinIO API and Console
-      - "9001:9001" # MinIO Browser/Console (if using separate console port)
+      - ${MINIO_POST_1}
+      - ${MINIO_POST_2}
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    env_file:
+      - ./.env_s3
     command: server /data --console-address ":9001"
     restart: always
   
