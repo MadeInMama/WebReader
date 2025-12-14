@@ -2,7 +2,7 @@
   webreader:
     image: webreader
     ports:
-      - ${WEBREADER_PORT_1}
+      - ${WEBREADER_PORT_1_1}:${WEBREADER_PORT_1_2}
     build:
       context: .
       dockerfile: Dockerfile
@@ -18,14 +18,14 @@
     env_file:
       - ../.env_pg
     ports:
-      - ${POSTGRES_PORT_1}
+      - ${POSTGRES_PORT_1_1}:${POSTGRES_PORT_1_2}
     restart: always
   
   minio:
     image: minio/minio:latest
     ports:
-      - ${MINIO_PORT_1}
-      - ${MINIO_PORT_2}
+      - ${MINIO_PORT_1_1}:${MINIO_PORT_1_2}
+      - ${MINIO_PORT_2_1}:${MINIO_PORT_2_2}
     env_file:
       - ../.env_s3
     command: server /data --console-address ":9001"
