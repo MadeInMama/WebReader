@@ -7,7 +7,7 @@ main {
 
 @media (hover: none) and (pointer: coarse) {
     main {
-        min-height: 100dvh;
+        min-height: calc(100dvh + 6em);
     }
 }
 
