@@ -118,15 +118,9 @@ html, body {
 }
 
 header {
-    top: 0;
     border-radius: 0 0 0.75em 0.75em;
     position: sticky;
-}
-
-@media (hover: none) and (pointer: coarse) {
-    header {
-        bottom: min(env(safe-area-inset-top), 0);
-    }
+    margin: 0 auto;
 }
 
 header, main, footer {
@@ -144,7 +138,6 @@ header, footer {
     z-index: 1000;
     width: 100%;
     max-width: var(--max-width);
-    margin: 0 auto;
 }
 
 header > div, footer > div {
@@ -211,17 +204,17 @@ main {
 }
 
 footer {
+    position: fixed;
     bottom: 0;
     visibility: hidden;
     border-radius: 0.75em 0.75em 0 0;
-    position: fixed;
     left: 50%;
     transform: translateX(-50%);
 }
 
 @media (hover: none) and (pointer: coarse) {
     footer {
-        bottom: min(env(safe-area-inset-bottom), 0);
+        bottom: env(safe-area-inset-bottom);
     }
 }
 
