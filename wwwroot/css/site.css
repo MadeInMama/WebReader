@@ -74,6 +74,8 @@ h1, h2, h3, h4, h5, h6 {
 
 :root {
     --max-width: 60em;
+    --background-backdrop-color: rgba(255, 255, 255, 0.65);
+    --backdrop-blur: 0.25em;
 }
 
 html {
@@ -119,8 +121,6 @@ html, body {
 
 header {
     border-radius: 0 0 0.75em 0.75em;
-    position: sticky;
-    margin: 0 auto;
     top: 0;
 }
 
@@ -129,13 +129,15 @@ header, main, footer {
 }
 
 header, footer {
+    position: sticky;
+    margin: 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 3em;
     box-shadow: 0 0 1em lightgray;
-    background-color: #ffffffbf;
-    backdrop-filter: blur(0.25em);
+    background-color: var(--background-backdrop-color);
+    backdrop-filter: blur(var(--backdrop-blur));
     z-index: 1000;
     width: 100%;
     max-width: var(--max-width);
@@ -206,18 +208,17 @@ main {
 
 footer {
     position: fixed;
-    bottom: 0;
-    visibility: hidden;
-    border-radius: 0.75em 0.75em 0 0;
     left: 50%;
     transform: translateX(-50%);
+    top: calc(100vh - 3em);
+    visibility: hidden;
+    border-radius: 0.75em 0.75em 0 0;
 }
 
 @media (hover: none) and (pointer: coarse) {
     footer {
         bottom: unset;
         top: calc(100dvh - 3em);
-        /*bottom: calc(env(safe-area-inset-bottom) - 1em);*/
     }
 }
 
@@ -234,7 +235,7 @@ button:disabled {
     opacity: 0.5;
 }
 
-.remove {
+.remove, .close {
     background-image: url("../icons/cross-circle-svgrepo-com.svg");
     height: 2em;
     width: 2em;

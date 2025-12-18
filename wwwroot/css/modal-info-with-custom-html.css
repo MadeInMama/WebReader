@@ -1,0 +1,32 @@
+.no-scroll {
+    overflow: hidden;
+}
+
+#custom-modal {
+    position: fixed;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    padding: 0.5em 1em;
+    border-radius: 1em;
+    width: fit-content;
+    max-width: var(--max-width);
+    min-width: 20em;
+    background-color: var(--background-backdrop-color);
+    backdrop-filter: blur(var(--backdrop-blur));
+    box-shadow: 0 0 1em lightgray;
+}
+
+#custom-modal-content p {
+    text-align: justify;
+}
+
+#custom-modal-content > p > em {
+    padding: 0 0.3em;
+}
+
+#close-custom-modal-btn {
+    float: right;
+    margin-top: 0.5em;
+    margin-left: 0.7em;
+}

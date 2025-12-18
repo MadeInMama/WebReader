@@ -127,7 +127,7 @@
 
             doc.querySelectorAll('body[name="notes"] > section').forEach(note => {
                 const id = note.getAttribute('id');
-                if (id && note) noteMap.set(id, convertNode(note, imageMap, false));
+                if (id && note) noteMap.set(id, new DOMParser().parseFromString(convertNode(note, imageMap, false), 'text/html').querySelector('section').innerHTML);
             });
 
             const coverImg = doc.querySelector('coverpage image');
