@@ -3,7 +3,6 @@ main {
     flex-direction: column;
     min-height: calc(100vh - 6em);
     margin-bottom: 3em;
-    background-color: red;
 }
 
 @media (hover: none) and (pointer: coarse) {
