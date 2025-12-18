@@ -95,6 +95,15 @@ html, body {
     background-color: var(--background-color);
 }
 
+html {
+
+    background-color: darkmagenta;
+}
+
+body {
+    background-color: magenta;
+}
+
 .special-info-small {
     display: none;
     text-align: center;
