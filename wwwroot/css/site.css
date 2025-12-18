@@ -121,6 +121,7 @@ header {
     border-radius: 0 0 0.75em 0.75em;
     position: sticky;
     margin: 0 auto;
+    top: 0;
 }
 
 header, main, footer {
@@ -214,7 +215,7 @@ footer {
 
 @media (hover: none) and (pointer: coarse) {
     footer {
-        bottom: env(safe-area-inset-bottom);
+        bottom: min(env(safe-area-inset-bottom), 0);
     }
 }
 

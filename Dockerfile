@@ -8,7 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["WebReader.csproj", "./"]
-RUN dotnet restore "WebReader.csproj"
+RUN dotnet restore "WebReader.csproj" --disable-parallel
 COPY . .
 WORKDIR "/src/"
 RUN dotnet build "./WebReader.csproj" -c $BUILD_CONFIGURATION -o /app/build
