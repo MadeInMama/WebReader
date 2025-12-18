@@ -14,9 +14,17 @@
 }
 
 #enter-fullscreen-btn {
-    background-image: url("../icons/fullscreen-svgrepo-com.svg");
+    background-color: var(--foreground-color);
+    mask: url("../icons/fullscreen-svgrepo-com.svg") no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url("../icons/fullscreen-svgrepo-com.svg") no-repeat center;
+    -webkit-mask-size: cover;
 }
 
 #exit-fullscreen-btn {
-    background-image: url("../icons/fullscreen-exit-svgrepo-com.svg");
+    background-color: var(--foreground-color);
+    mask: url("../icons/fullscreen-exit-svgrepo-com.svg") no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url("../icons/fullscreen-exit-svgrepo-com.svg") no-repeat center;
+    -webkit-mask-size: cover;
 }

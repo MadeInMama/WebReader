@@ -24,7 +24,11 @@
 }
 
 .prev-page, .next-page {
-    background-image: url("../icons/arrow-circle-up-svgrepo-com.svg");
+    background-color: var(--foreground-color);
+    mask: url("../icons/arrow-circle-up-svgrepo-com.svg") no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url("../icons/arrow-circle-up-svgrepo-com.svg") no-repeat center;
+    -webkit-mask-size: cover;
     height: 2em;
     width: 2em;
     background-repeat: no-repeat;

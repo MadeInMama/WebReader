@@ -27,6 +27,12 @@ form {
     max-width: 20em;
     font-size: 1em;
     padding: 0.5em 1em;
+    border-width: 0.1em;
+    border-color: var(--drop-shadow-color);
+    border-style: solid;
+    border-radius: 1em;
+    background-color: #181818;
+    box-shadow: 0 0 0.5em var(--drop-shadow-color);
 }
 
 .remember-me {
@@ -58,7 +64,11 @@ form {
 .login-btn {
     position: relative;
     display: inline-block;
-    background-image: url("../icons/log-in-3-svgrepo-com.svg");
+    background-color: var(--foreground-color);
+    mask: url("../icons/log-in-3-svgrepo-com.svg") no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url("../icons/log-in-3-svgrepo-com.svg") no-repeat center;
+    -webkit-mask-size: cover;
     height: 2em;
     width: 2em;
     background-repeat: no-repeat;
@@ -72,14 +82,18 @@ form {
     font-size: 1em;
     left: 50%;
     transform: translateX(-50%);
-    color: black;
+    color: var(--foreground-color);
     white-space: nowrap;
 }
 
 .register-btn {
     position: relative;
     display: inline-block;
-    background-image: url("../icons/user-add-svgrepo-com.svg");
+    background-color: var(--foreground-color);
+    mask: url("../icons/user-add-svgrepo-com.svg") no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url("../icons/user-add-svgrepo-com.svg") no-repeat center;
+    -webkit-mask-size: cover;
     height: 2em;
     width: 2em;
     background-repeat: no-repeat;
@@ -93,6 +107,6 @@ form {
     font-size: 1em;
     left: 50%;
     transform: translateX(-50%);
-    color: black;
+    color: var(--foreground-color);;
     white-space: nowrap;
 }

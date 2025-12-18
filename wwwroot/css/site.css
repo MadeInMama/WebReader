@@ -52,6 +52,15 @@
     font-style: normal;
 }
 
+:root {
+    --max-width: 60em;
+    --background-backdrop-color: #222222A5;
+    --backdrop-blur: 0.25em;
+    --background-color: #222;
+    --foreground-color: #ddd;
+    --drop-shadow-color: #111;
+}
+
 * {
     padding: 0;
     margin: 0;
@@ -61,6 +70,7 @@
     box-sizing: border-box;
     outline: none;
     border: none;
+    color: var(--foreground-color);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -70,12 +80,6 @@ h1, h2, h3, h4, h5, h6 {
 *,
 *::before,
 *::after {
-}
-
-:root {
-    --max-width: 60em;
-    --background-backdrop-color: rgba(255, 255, 255, 0.65);
-    --backdrop-blur: 0.25em;
 }
 
 html {
@@ -88,6 +92,7 @@ html, body {
     padding-bottom: 0 !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
+    background-color: var(--background-color);
 }
 
 @media (width < 1000px) {
@@ -135,7 +140,7 @@ header, footer {
     justify-content: center;
     align-items: center;
     height: 3em;
-    box-shadow: 0 0 1em lightgray;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
     background-color: var(--background-backdrop-color);
     backdrop-filter: blur(var(--backdrop-blur));
     z-index: 1000;
@@ -164,7 +169,7 @@ header > div > ul > li > a,
 header > div > ul > li > form > button {
     position: relative;
     display: inline-block;
-    color: black;
+    color: var(--foreground-color);;
     text-decoration: none;
 }
 
@@ -177,7 +182,7 @@ header > div > ul > li > form > button::after {
     left: 50%;
     height: 0.025em;
     display: block;
-    background: black;
+    background: var(--foreground-color);;
     transition: 300ms;
 }
 
@@ -236,7 +241,11 @@ button:disabled {
 }
 
 .remove, .close {
-    background-image: url("../icons/cross-circle-svgrepo-com.svg");
+    background-color: var(--foreground-color);
+    mask: url("../icons/cross-circle-svgrepo-com.svg") no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url("../icons/cross-circle-svgrepo-com.svg") no-repeat center;
+    -webkit-mask-size: cover;
     height: 2em;
     width: 2em;
     background-repeat: no-repeat;

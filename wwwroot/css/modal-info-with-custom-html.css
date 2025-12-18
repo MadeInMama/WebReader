@@ -14,7 +14,22 @@
     min-width: 20em;
     background-color: var(--background-backdrop-color);
     backdrop-filter: blur(var(--backdrop-blur));
-    box-shadow: 0 0 1em lightgray;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+}
+
+#custom-modal[open]::backdrop {
+    animation: fadein 150ms ease-out forwards;
+}
+
+@keyframes fadein {
+    0% {
+        opacity: 0;
+        backdrop-filter: blur(0);
+    }
+    100% {
+        opacity: 1;
+        backdrop-filter: blur(calc(var(--backdrop-blur)));
+    }
 }
 
 #custom-modal-content p {

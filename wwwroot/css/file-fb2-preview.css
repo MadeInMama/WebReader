@@ -89,7 +89,11 @@ main {
 
 .note-btn::after {
     content: '';
-    background-image: url(../icons/info-svgrepo-com.svg);
+    background-color: var(--foreground-color);
+    mask: url(../icons/info-svgrepo-com.svg) no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url(../icons/info-svgrepo-com.svg) no-repeat center;
+    -webkit-mask-size: cover;
     height: 1.8em;
     width: 1.8em;
     position: absolute;
