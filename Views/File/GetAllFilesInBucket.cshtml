@@ -20,6 +20,10 @@
             padding-left: 1.5em;
             width: 100%;
         }
+
+        .file-line:not(:first-child) {
+            margin-top: 0.5em;
+        }
     </style>
 }
 
@@ -40,7 +44,7 @@
                 <div class="file-line">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketName="@Model.BucketId"
-                       asp-route-fileName="@item.Name">@item.CustomName @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime.LocalDateTime - @FormatSize(item.Size)</a>
+                       asp-route-fileName="@item.Name">@item.CustomName@* @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime.LocalDateTime - @FormatSize(item.Size)*@</a>
                 </div>
             }
         </details>

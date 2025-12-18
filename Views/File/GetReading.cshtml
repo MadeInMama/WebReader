@@ -19,7 +19,7 @@
             left: 50%;
             height: 0.025em;
             display: block;
-            background: black;
+            background: var(--foreground-color);
             transition: 300ms;
         }
 
@@ -40,6 +40,10 @@
             align-items: center;
             padding-left: 1.5em;
             width: 100%;
+        }
+
+        .reading-line:not(:first-child) {
+            margin-top: 0.5em;
         }
 
         #full_content {
@@ -68,7 +72,7 @@
                 <div class="reading-line" id="@obj.Id">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketName="@item.Key.Name"
-                       asp-route-fileName="@obj.Name">@obj.CustomName - @obj.DateTime.LocalDateTime - @obj.Page - @FormatSize(obj.Size)</a>
+                       asp-route-fileName="@obj.Name">@obj.CustomName@* - @obj.DateTime.LocalDateTime - @obj.Page - @FormatSize(obj.Size)*@</a>
                     <button class="remove" onclick="Delete('@obj.Id')"></button>
                 </div>
             }
