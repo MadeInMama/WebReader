@@ -1,0 +1,51 @@
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.controls > .controls-start, .controls > .controls-end {
+    width: 5em;
+}
+
+.controls > .controls-center {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.controls > .controls-end {
+    display: flex;
+    gap: 10px;
+    justify-content: end;
+    align-items: center;
+}
+
+.prev-page, .next-page {
+    background-image: url("../icons/arrow-circle-up-svgrepo-com.svg");
+    height: 2em;
+    width: 2em;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.prev-page {
+    transform: rotate(-90deg);
+}
+
+.next-page {
+    transform: rotate(90deg);
+}
+
+.preview-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 5em;
+}
+
+.spacer {
+    width: 5em;
+}

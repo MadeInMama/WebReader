@@ -1,0 +1,63 @@
+﻿<link rel="stylesheet" href="~/css/modal-info-with-custom-html.css" asp-append-version="true"/>
+
+<style>
+    #myModal {
+        position: fixed;
+        top: 50%;
+        transform: translate(-50%, -50%);
+
+        padding: 1em;
+        border-radius: 1em;
+        width: fit-content;
+        max-width: calc(var(--max-width) - 1em);
+        min-width: 20em;
+        background-color: #ffffffbf;
+        backdrop-filter: blur(0.25em);
+        box-shadow: 0 0 1em lightgray;
+    }
+
+    .no-scroll {
+        overflow: hidden;
+    }
+</style>
+
+<dialog id="myModal">
+    <h2>Modal Title</h2>
+    <p>This is the content of the modal window.</p>
+    <button id="closeModal">Close</button>
+</dialog>
+
+<script src="~/js/modal-info-with-custom-html.js" asp-append-version="true"></script>
+
+<script>
+    const modal = document.getElementById('myModal');
+    const closeBtn = document.getElementById('closeModal');
+
+    function openModalClicked(html) {
+        document.body.style.marginRight = `${getBrowserScrollbarWidth()}px`;
+        modal.style.left = `calc(50% - ${getBrowserScrollbarWidth() / 2}px)`;
+        document.getElementsByTagName('html')[0].classList.add('no-scroll');
+
+        modal.innerHTML = html;
+
+        modal.showModal();
+    }
+
+    closeBtn.addEventListener('click', () => {
+        modal.close();
+        document.body.style.marginRight = '';
+        document.getElementsByTagName('html')[0].classList.remove('no-scroll');
+    });
+
+    modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+            modal.close();
+            document.body.style.marginRight = '';
+            document.getElementsByTagName('html')[0].classList.remove('no-scroll');
+        }
+    });
+
+    function getBrowserScrollbarWidth() {
+        return window.innerWidth - document.documentElement.clientWidth;
+    }
+</script>

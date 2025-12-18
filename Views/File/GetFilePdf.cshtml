@@ -6,6 +6,7 @@
 
 @section Style
 {
+    <link rel="stylesheet" href="~/css/file-common-preview.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/file-pdf-preview.css" asp-append-version="true"/>
 }
 
@@ -68,11 +69,9 @@
             await SetPage(currentPage);
         }
 
-        async function renderPage(num, scale) {
-            currentPage = num;
-
-            const page = await pdfDoc.getPage(num);
-            const viewport = page.getViewport({scale: scale * 1.5});
+        async function renderPage() {
+            const page = await pdfDoc.getPage(currentPage);
+            const viewport = page.getViewport({scale: currentScale * 1.5});
             const canvas = document.getElementById('pdf-canvas');
             const context = canvas.getContext('2d');
 
@@ -133,7 +132,7 @@
                 });
             }
 
-            await renderPage(currentPage, currentScale);
+            await renderPage();
 
             window.scrollTo({
                 top: 0,
@@ -149,7 +148,7 @@
                 value.value = currentScale
             });
             document.getElementById("pdf-canvas").style.maxWidth = 5.7 * 5.5 * currentScale + "em";
-            await renderPage(currentPage, currentScale);
+            await renderPage();
 
             SendCurrPage();
         }

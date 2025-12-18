@@ -1,0 +1,102 @@
+main {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: calc(100vh - 6em);
+    margin-bottom: 3em;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    main {
+        min-height: calc(100dvh - 6em);
+    }
+}
+
+.fb2-canvas-container {
+    max-width: calc(var(--max-width) - 1em);
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.fb2-cover > img, .fb2-image-container > img {
+    width: 100%;
+    object-fit: cover;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    max-width: 50%;
+}
+
+.fb2-canvas-container > section > p {
+    text-align: justify;
+    text-indent: 2em;
+    padding-top: 0.5em;
+}
+
+.fb2-canvas-container > section > p:first-child {
+    padding-top: 0;
+}
+
+.fb2-canvas-container p > em {
+    padding: 0 0.3em;
+}
+
+.fb2-canvas-container h1,
+.fb2-canvas-container h2,
+.fb2-canvas-container h3,
+.fb2-canvas-container h4,
+.fb2-canvas-container h5,
+.fb2-canvas-container h6 {
+    text-align: center;
+}
+
+.fb2-canvas-container h1 > *,
+.fb2-canvas-container h2 > *,
+.fb2-canvas-container h3 > *,
+.fb2-canvas-container h4 > *,
+.fb2-canvas-container h5 > *,
+.fb2-canvas-container h6 > * {
+    display: inline-block;
+}
+
+.fb2-canvas-container h1 > *:first-child,
+.fb2-canvas-container h2 > *:first-child,
+.fb2-canvas-container h3 > *:first-child,
+.fb2-canvas-container h4 > *:first-child,
+.fb2-canvas-container h5 > *:first-child,
+.fb2-canvas-container h6 > *:first-child {
+    padding-right: 0.15em;
+}
+
+.fb2-canvas-container h1 > *:last-child,
+.fb2-canvas-container h2 > *:last-child,
+.fb2-canvas-container h3 > *:last-child,
+.fb2-canvas-container h4 > *:last-child,
+.fb2-canvas-container h5 > *:last-child,
+.fb2-canvas-container h6 > *:last-child {
+    padding-left: 0.15em;
+}
+
+.fb2-canvas-container .cite-author {
+    text-align: right;
+}
+
+.note-btn {
+    position: relative;
+    margin-right: 2em;
+}
+
+.note-btn::after {
+    content: '';
+    background-image: url(../icons/info-svgrepo-com.svg);
+    height: 1.8em;
+    width: 1.8em;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-size: cover;
+    margin-right: 0.3em;
+    display: inline-block;
+    bottom: -0.6em;
+    left: 0;
+}

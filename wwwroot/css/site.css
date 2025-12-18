@@ -59,6 +59,8 @@
     font-family: "MPLUSRounded1c", sans-serif;
     font-weight: 500;
     box-sizing: border-box;
+    outline: none;
+    border: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -98,6 +100,7 @@ html, body {
 
 .special-info-small {
     display: none;
+    text-align: center;
 }
 
 @media (width < 700px) {
@@ -117,6 +120,7 @@ html, body {
 header {
     top: 0;
     border-radius: 0 0 0.75em 0.75em;
+    position: sticky;
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -130,7 +134,6 @@ header, main, footer {
 }
 
 header, footer {
-    position: sticky;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -211,6 +214,9 @@ footer {
     bottom: 0;
     visibility: hidden;
     border-radius: 0.75em 0.75em 0 0;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 @media (hover: none) and (pointer: coarse) {
