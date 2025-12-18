@@ -8,7 +8,7 @@ main {
 
 @media (hover: none) and (pointer: coarse) {
     main {
-        min-height: calc(60dvh);
+        min-height: calc(100dvh - 6em);
         background-color: red;
     }
 }
