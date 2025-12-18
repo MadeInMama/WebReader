@@ -215,7 +215,9 @@ footer {
 
 @media (hover: none) and (pointer: coarse) {
     footer {
-        bottom: calc(env(safe-area-inset-bottom) - 1em);
+        bottom: unset;
+        top: calc(100dvh - 3em);
+        /*bottom: calc(env(safe-area-inset-bottom) - 1em);*/
     }
 }
 
