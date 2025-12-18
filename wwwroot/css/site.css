@@ -232,7 +232,7 @@ footer {
 @media (hover: none) and (pointer: coarse) {
     footer {
         bottom: unset;
-        top: calc(100dvh - 6em);
+        top: calc(100dvh - 3em);
     }
 }
 
