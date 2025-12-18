@@ -208,8 +208,7 @@ header > div > ul > li > form > button:hover::after {
     }
 
     body, html {
-        min-height: 100dvh;
-        min-width: 100dvw;
+        min-height: calc(100dvh - 3em);
     }
 }
 
