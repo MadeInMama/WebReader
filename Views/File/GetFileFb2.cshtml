@@ -99,21 +99,48 @@
                 const parts = Array.from(section.querySelectorAll(":scope > *"));
                 if (parts.length <= maxPCount) return;
 
-                const fragment = doc.createDocumentFragment();
-                for (let i = 0; i < parts.length; i += maxPCount) {
-                    const chunk = parts.slice(i, i + maxPCount);
-                    const newSection = doc.createElement("section");
+                const wordCountToSlice = 2500;
+                let currWordCount = 0;
 
-                    for (const attr of section.attributes) {
-                        newSection.setAttribute(attr.name, attr.value);
+                const fragment = doc.createDocumentFragment();
+
+                let newSection = doc.createElement("section");
+                newSection.setAttribute("data-split", "true");
+                for (const attr of section.attributes) {
+                    newSection.setAttribute(attr.name, attr.value);
+                }
+
+                parts.forEach(part => {
+                    let wordCount = part.textContent.trim().split('').length;
+                    currWordCount += wordCount;
+
+                    switch (part.localName) {
+                        case "title":
+                            break;
+                        case "image":
+                            currWordCount += 50 - wordCount;
+                            break;
+                        case "cite":
+                            break;
+                        case "p":
+                            break;
+                        default:
+                            break;
                     }
 
-                    chunk.forEach(p => newSection.appendChild(p.cloneNode(true)));
+                    newSection.appendChild(part.cloneNode(true));
 
-                    newSection.setAttribute("data-split", "true");
+                    if (currWordCount > wordCountToSlice) {
+                        fragment.appendChild(newSection);
 
-                    fragment.appendChild(newSection);
-                }
+                        newSection = doc.createElement("section");
+                        newSection.setAttribute("data-split", "true");
+                        for (const attr of section.attributes) {
+                            newSection.setAttribute(attr.name, attr.value);
+                        }
+                        currWordCount = 0;
+                    }
+                });
 
                 section.parentNode.replaceChild(fragment, section);
             });
@@ -155,7 +182,7 @@
             if (node.nodeType !== Node.ELEMENT_NODE) return '';
 
             const tag = node.localName;
-            const children = () => Array.from(node.childNodes).map(n => convertNode(n, imageMap)).join('');
+            const children = () => Array.from(node.childNodes).map(n => convertNode(n, imageMap, isPage)).join('');
 
             switch (tag) {
                 case 'p':
@@ -174,7 +201,16 @@
                     const href = node.getAttribute('l:href') || node.getAttribute('href') || '';
                     if (href.startsWith('#')) {
                         const src = imageMap.get(href.slice(1));
-                        if (src) return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image" /></div>`;
+                        if (!isPage) return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image" /></div>`;
+                        else {
+                            return `<div class="fb2-image-container">
+                                            <details>
+                                                <summary><span>Image (click to toggle)</span></summary>
+                                                <img src="${escapeHtml(src)}" class="fb2-image" alt="Image not found"/>
+                                                <summary onclick='this.parentNode.removeAttribute("open")'><span>Image (click to toggle)</span></summary>
+                                            </details>
+                                        </div>`;
+                        }
                     }
                     return `<div>[Image missing: ${href}]</div>`;
                 }
@@ -183,7 +219,8 @@
                 case 'v':
                     return `<div class="verse">${children()}</div>`;
                 case 'empty-line':
-                    return `<div>&nbsp;</div>`;
+                    return '';
+                // return `<div>&nbsp;</div>`;
                 case 'emphasis':
                     return `<em>${children()}</em>`;
                 case 'strong':

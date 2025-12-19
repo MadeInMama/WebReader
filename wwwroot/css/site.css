@@ -53,12 +53,32 @@
 }
 
 :root {
+    color-scheme: light dark;
     --max-width: 60em;
-    --background-backdrop-color: #222222A5;
     --backdrop-blur: 0.25em;
+    --background-backdrop-color: #222222A5;
     --background-color: #222;
-    --foreground-color: #ddd;
+    --foreground-color: #ccc;
     --drop-shadow-color: #111;
+    --canvas-invert: 0.867;
+}
+
+img {
+    filter: brightness(0.5) !important;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --background-backdrop-color: #ddddddA5;
+        --background-color: #eee;
+        --foreground-color: #000;
+        --drop-shadow-color: #aaa;
+        --canvas-invert: 0.067;
+    }
+
+    img {
+        filter: brightness(1) !important;
+    }
 }
 
 * {
@@ -183,7 +203,7 @@ header > div > ul > li > form > button::after {
     height: 0.025em;
     display: block;
     background: var(--foreground-color);;
-    transition: 300ms;
+    transition: 150ms;
 }
 
 header > div > ul > li > a:hover::after,
@@ -230,7 +250,7 @@ button {
     border: none;
     background-color: transparent;
     opacity: 1;
-    transition: opacity 0.15s ease-in-out;
+    transition: opacity 150ms ease-in-out;
     cursor: pointer;
     font-size: 1em;
 }

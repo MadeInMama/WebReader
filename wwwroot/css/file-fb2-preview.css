@@ -18,13 +18,44 @@ main {
     margin-right: auto;
 }
 
-.fb2-cover > img, .fb2-image-container > img {
+.fb2-cover > img, .fb2-image-container > details > img {
     width: 100%;
     object-fit: cover;
     margin-left: auto;
     margin-right: auto;
     display: block;
-    max-width: 50%;
+}
+
+.fb2-image-container > details > summary {
+    text-align: center;
+}
+
+.fb2-image-container > details > summary > span {
+    cursor: pointer;
+    position: relative;
+}
+
+.fb2-image-container > details > summary > span::after {
+    position: absolute;
+    content: "";
+    width: 0;
+    bottom: 0;
+    left: 50%;
+    height: 0.025em;
+    display: block;
+    background: var(--foreground-color);
+    transition: 150ms;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .fb2-image-container > details > summary > span:hover::after {
+        display: none;
+    }
+}
+
+.fb2-image-container > details > summary > span:hover::after {
+    width: 100%;
+    left: 0;
 }
 
 .fb2-canvas-container > section > p {
