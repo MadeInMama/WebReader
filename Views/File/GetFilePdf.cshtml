@@ -32,6 +32,8 @@
             <button class="next-page"></button>
         </div>
         <div class="controls-end">
+            <div class="event-output"></div>
+
             <select class="set-scale">
                 <option value="0.5">0.5</option>
                 <option value="0.75">0.75</option>
@@ -65,8 +67,8 @@
         async function loadPdf(url) {
             pdfDoc = await pdfjsLib.getDocument(url).promise;
             maxPage = pdfDoc.numPages;
-            await SetScale(currentScale);
-            await SetPage(currentPage);
+            await SetScale(currentScale, false);
+            await SetPage(currentPage, false);
         }
 
         async function renderPage() {
@@ -119,7 +121,7 @@
             };
         });
 
-        async function SetPage(page) {
+        async function SetPage(page, send = true) {
             currentPage = clamp(page, 1, maxPage);
 
             if (currentPage === maxPage) {
@@ -139,10 +141,10 @@
                 behavior: 'smooth'
             });
 
-            SendCurrPage();
+            if (send) SendCurrPage();
         }
 
-        async function SetScale(scale) {
+        async function SetScale(scale, send = true) {
             currentScale = scale;
             Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
                 value.value = currentScale
@@ -150,7 +152,7 @@
             document.getElementById("pdf-canvas").style.maxWidth = 5.7 * 5.5 * currentScale + "em";
             await renderPage();
 
-            SendCurrPage();
+            if (send) SendCurrPage();
         }
 
         function clamp(value, min, max) {
@@ -162,17 +164,40 @@
         else setInterval(SendCurrPage, 20 * 60 * 1000);
 
         function SendCurrPage() {
-            axios.post('/api/FileApi/UpdatePage', {
-                FileId: "@Model.FileId",
-                UserId: "@Model.UserId",
-                Page: currentPage,
-                Scale: currentScale >= 1 ? currentScale : 1,
-            }, {
-                headers: {
-                    'RequestVerificationToken': GetAntiForgeryToken()
+            const config = {
+                url: '/api/FileApi/UpdatePage',
+                data: {
+                    FileId: "@Model.FileId",
+                    UserId: "@Model.UserId",
+                    Page: currentPage,
+                    Scale: currentScale >= 1 ? currentScale : 1,
                 },
-                withCredentials: true
-            });
+                options: {
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
+                },
+                beforeSend: () => {
+                    customEvent.detail.message = `<div class="waiting"></div>`;
+                    customEvent.detail.type = EventTypes.INFINITE;
+                    targetElement.dispatchEvent(customEvent);
+                }
+            };
+
+            requestQueue.enqueue(config)
+                .then(_ => {
+                    customEvent.detail.message = `<div class="success"></div>`;
+                    customEvent.detail.type = EventTypes.FROM_MILLIS;
+                    customEvent.detail.millis = 3000;
+                    targetElement.dispatchEvent(customEvent);
+                })
+                .catch(_ => {
+                    customEvent.detail.message = `<div class="error"></div>`;
+                    customEvent.detail.type = EventTypes.FROM_MILLIS;
+                    customEvent.detail.millis = 3000;
+                    targetElement.dispatchEvent(customEvent);
+                });
         }
     </script>
 }

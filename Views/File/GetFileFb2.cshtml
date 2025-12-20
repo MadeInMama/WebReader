@@ -33,18 +33,17 @@
             <span class="preview-page">0/0</span>
             <button class="next-page"></button>
         </div>
-        <div class="spacer"></div>
-        @*     <div class="controls-end"> *@
-        @*         <select class="set-scale"> *@
-        @*             <option value="0.5">0.5</option> *@
-        @*             <option value="0.75">0.75</option> *@
-        @*             <option value="1">1</option> *@
-        @*             <option value="2">2</option> *@
-        @*             <option value="3">3</option> *@
-        @*             <option value="4">4</option> *@
-        @*             <option value="5">5</option> *@
-        @*         </select> *@
-        @* </div> *@
+        <div class="controls-end">
+            <div class="event-output"></div>
+
+            <select class="set-scale">
+                <option value="0.5">0.5</option>
+                <option value="0.75">0.75</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </div>
     </div>
 }
 
@@ -52,11 +51,11 @@
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="module">
-
         const url = @Html.Raw(Json.Serialize(Model.Url));
         const decodedString = url.replace(/\\u0026/g, '&')
         let pages = [];
         let currentPage = @Model.Page;
+        let currentScale = @Model.Scale;
         let maxPage = 1;
         let imageMap = new Map();
         let noteMap = new Map();
@@ -67,7 +66,8 @@
                 const fb2Text = await response.text();
                 parseFB2(fb2Text);
                 maxPage = pages.length;
-                SetPage(currentPage);
+                SetPage(currentPage, false);
+                SetScale(currentScale, false);
             } catch (err) {
                 console.error('Failed to load FB2:', err);
             }
@@ -260,7 +260,15 @@
             };
         });
 
-        function SetPage(page) {
+        Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
+            value.value = currentScale;
+
+            value.onchange = (e) => {
+                SetScale(e.target.value);
+            };
+        });
+
+        function SetPage(page, send = true) {
             currentPage = clamp(page, 1, maxPage);
 
             if (currentPage === maxPage) {
@@ -280,7 +288,19 @@
                 behavior: 'smooth'
             });
 
-            SendCurrPage();
+            if (send) SendCurrPage();
+        }
+
+        function SetScale(scale, send = true) {
+            currentScale = scale;
+
+            Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
+                value.value = currentScale
+            });
+
+            document.querySelector(".fb2-canvas-container > section").style.fontSize = currentScale + "em";
+
+            if (send) SendCurrPage();
         }
 
         function clamp(value, min, max) {
@@ -292,19 +312,40 @@
         else setInterval(SendCurrPage, 20 * 60 * 1000);
 
         function SendCurrPage() {
-            const currentScale = 1;
-
-            axios.post('/api/FileApi/UpdatePage', {
-                FileId: "@Model.FileId",
-                UserId: "@Model.UserId",
-                Page: currentPage,
-                Scale: currentScale >= 1 ? currentScale : 1,
-            }, {
-                headers: {
-                    'RequestVerificationToken': GetAntiForgeryToken()
+            const config = {
+                url: '/api/FileApi/UpdatePage',
+                data: {
+                    FileId: "@Model.FileId",
+                    UserId: "@Model.UserId",
+                    Page: currentPage,
+                    Scale: currentScale >= 1 ? currentScale : 1,
                 },
-                withCredentials: true
-            });
+                options: {
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
+                },
+                beforeSend: () => {
+                    customEvent.detail.message = `<div class="waiting"></div>`;
+                    customEvent.detail.type = EventTypes.INFINITE;
+                    targetElement.dispatchEvent(customEvent);
+                }
+            };
+
+            requestQueue.enqueue(config)
+                .then(_ => {
+                    customEvent.detail.message = `<div class="success"></div>`;
+                    customEvent.detail.type = EventTypes.FROM_MILLIS;
+                    customEvent.detail.millis = 3000;
+                    targetElement.dispatchEvent(customEvent);
+                })
+                .catch(_ => {
+                    customEvent.detail.message = `<div class="error"></div>`;
+                    customEvent.detail.type = EventTypes.FROM_MILLIS;
+                    customEvent.detail.millis = 3000;
+                    targetElement.dispatchEvent(customEvent);
+                });
         }
     </script>
 }

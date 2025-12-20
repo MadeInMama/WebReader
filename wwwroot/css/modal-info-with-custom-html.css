@@ -19,7 +19,7 @@
 
 #custom-modal[open],
 #custom-modal[open]::backdrop {
-    animation: fadein 150ms ease-out forwards;
+    animation: fadein calc(var(--animation-time) / 2) ease-out forwards;
 }
 
 @keyframes fadein {

@@ -18,12 +18,16 @@ main {
     margin-right: auto;
 }
 
-.fb2-cover > img, .fb2-image-container > details > img {
+.fb2-cover > img,
+.fb2-image-container > details > img {
     width: 100%;
     object-fit: cover;
     margin-left: auto;
     margin-right: auto;
     display: block;
+}
+
+.fb2-image-container > details > img {
     cursor: pointer;
 }
 
