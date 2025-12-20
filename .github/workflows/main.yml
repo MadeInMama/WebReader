@@ -3,6 +3,13 @@ name: Deploy Docker
 on:
   push:
     branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch to run on'
+        required: true
+        default: "master"
+        type: string
 
 jobs:
   deploy:
