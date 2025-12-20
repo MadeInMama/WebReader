@@ -7,7 +7,7 @@
     top: 50%;
     transform: translate(-50%, -50%);
 
-    padding: 0.5em;
+    padding: 0.5em 1em;
     border-radius: 1em;
     width: fit-content;
     max-width: var(--max-width);
@@ -42,6 +42,8 @@
 }
 
 #close-custom-modal-btn {
+    position: relative;
+    left: 0.5em;
     float: right;
-    margin-left: 0.7em;
+    margin-left: 0.4em;
 }

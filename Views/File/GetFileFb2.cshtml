@@ -204,12 +204,11 @@
                         if (!isPage) return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image" /></div>`;
                         else {
                             return `<div class="fb2-image-container">
-                                            <details>
-                                                <summary><span>Image (click to toggle)</span></summary>
-                                                <img src="${escapeHtml(src)}" class="fb2-image" alt="Image not found"/>
-                                                <summary onclick='this.parentNode.removeAttribute("open")'><span>Image (click to toggle)</span></summary>
-                                            </details>
-                                        </div>`;
+                                        <details>
+                                            <summary><span>Image (click to toggle)</span></summary>
+                                            <img onclick='this.parentNode.removeAttribute("open")' src="${escapeHtml(src)}" class="fb2-image" alt="Image not found"/>
+                                        </details>
+                                    </div>`;
                         }
                     }
                     return `<div>[Image missing: ${href}]</div>`;
