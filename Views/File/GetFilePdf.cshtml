@@ -159,9 +159,9 @@
             return Math.min(Math.max(value, min), max);
         }
 
-        if (@Model.SendUpdateInSeconds != null && @Model.SendUpdateInSeconds > 0)
-            setInterval(SendCurrPage, (@Model.SendUpdateInSeconds - 10) * 1000);
-        else setInterval(SendCurrPage, 20 * 60 * 1000);
+        //if (@Model.SendUpdateInSeconds != null && @Model.SendUpdateInSeconds > 0)
+        //    setInterval(SendCurrPage, (@Model.SendUpdateInSeconds - 10) * 1000);
+        //else setInterval(SendCurrPage, 20 * 60 * 1000);
 
         function SendCurrPage() {
             const config = {
