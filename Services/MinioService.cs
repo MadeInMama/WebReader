@@ -8,20 +8,17 @@ public class MinioService(IMinioClient minioClient)
 {
     public async Task<string> GetFileUrlAsync(string bucketId, string objectName)
     {
-        var args = new PresignedGetObjectArgs()
+        var url = await minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
             .WithBucket(bucketId)
             .WithObject(objectName)
-            .WithExpiry(3600);
-
-        var url = await minioClient.PresignedGetObjectAsync(args)
-            .ConfigureAwait(false);
+            .WithExpiry(3600));
 
         return url ?? throw new Exception("Failed to get url");
     }
 
     public async Task<IEnumerable<Bucket>> ListBucketsAsync()
     {
-        return (await minioClient.ListBucketsAsync().ConfigureAwait(false)).Buckets;
+        return (await minioClient.ListBucketsAsync()).Buckets;
     }
 
     public async Task<IEnumerable<Item>> ListObjectsAsync(string bucketName)

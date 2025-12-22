@@ -4,7 +4,8 @@ public class FileViewModel
 {
     public required Guid UserId { get; init; }
     public Guid? FileId { get; init; }
-    public required string Url { get; init; }
+    public required string BucketName { get; init; }
+    public required string FileName { get; init; }
     public required int Page { get; init; }
     public required int Scale { get; init; }
     public required string Title { get; init; }

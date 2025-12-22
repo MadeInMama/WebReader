@@ -51,19 +51,47 @@
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="module">
-        const url = @Html.Raw(Json.Serialize(Model.Url));
+        const url = @Html.Raw(Json.Serialize($"/api/S3/GetAllBuckets?bucket={Model.BucketName}&objectName={Model.FileName}"));
         const decodedString = url.replace(/\\u0026/g, '&')
         let pages = [];
         let currentPage = @Model.Page;
         let currentScale = @Model.Scale;
         let maxPage = 1;
-        let imageMap = new Map();
-        let noteMap = new Map();
+        const imageMap = new Map();
+        const noteMap = new Map();
 
-        async function loadFB2(url) {
+        requestQueue.enqueue({
+            method: 'POST',
+            url: decodedString,
+            data: {},
+            options: {
+                headers: {
+                    'RequestVerificationToken': GetAntiForgeryToken()
+                },
+                withCredentials: true
+            },
+            beforeSend: () => {
+                customEvent.detail.message = `<div class="waiting"></div>`;
+                customEvent.detail.type = EventTypes.INFINITE;
+                targetElement.dispatchEvent(customEvent);
+            }
+        })
+            .then(response => {
+                loadFB2(response.data);
+                customEvent.detail.message = `<div class="success"></div>`;
+                customEvent.detail.type = EventTypes.FROM_MILLIS;
+                customEvent.detail.millis = 3000;
+                targetElement.dispatchEvent(customEvent);
+            })
+            .catch(_ => {
+                customEvent.detail.message = `<div class="error"></div>`;
+                customEvent.detail.type = EventTypes.FROM_MILLIS;
+                customEvent.detail.millis = 3000;
+                targetElement.dispatchEvent(customEvent);
+            });
+
+        function loadFB2(fb2Text) {
             try {
-                const response = await fetch(url);
-                const fb2Text = await response.text();
                 parseFB2(fb2Text);
                 maxPage = pages.length;
                 SetPage(currentPage, false);
@@ -80,8 +108,6 @@
                 value.textContent = `${currentPage}/${maxPage}`;
             });
         }
-
-        loadFB2(decodedString);
 
         function parseFB2(xmlString) {
             const parser = new DOMParser();
@@ -310,7 +336,8 @@
         }
 
         function SendCurrPage() {
-            const config = {
+            requestQueue.enqueue({
+                method: 'POST',
                 url: '/api/FileApi/UpdatePage',
                 data: {
                     FileId: "@Model.FileId",
@@ -329,9 +356,7 @@
                     customEvent.detail.type = EventTypes.INFINITE;
                     targetElement.dispatchEvent(customEvent);
                 }
-            };
-
-            requestQueue.enqueue(config)
+            })
                 .then(_ => {
                     customEvent.detail.message = `<div class="success"></div>`;
                     customEvent.detail.type = EventTypes.FROM_MILLIS;

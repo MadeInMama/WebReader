@@ -21,8 +21,15 @@
 
             try {
                 config.beforeSend();
-                const response = await axios.post(config.url, config.data, config.options);
-                await resolve(response);
+                switch (config.method) {
+                    case 'GET':
+                        await resolve(await axios.get(config.url, config.data, config.options));
+                        break;
+                    case 'POST':
+                        await resolve(await axios.post(config.url, config.data, config.options));
+                        break;
+                    default:
+                }
             } catch (error) {
                 await reject(error);
             }

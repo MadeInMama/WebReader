@@ -5,7 +5,6 @@ using WebReader.Models;
 using WebReader.Models.Dtos;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
-using WebReader.Services;
 using File = System.IO.File;
 
 namespace WebReader.Controllers;
@@ -13,7 +12,6 @@ namespace WebReader.Controllers;
 [Authorize]
 [Route("[controller]/[action]")]
 public class FileController(
-    MinioService minioService,
     BucketRepository bucketRepository,
     FileRepository fileRepository,
     UserReadingRepository readingRepository) : Controller
@@ -148,7 +146,8 @@ public class FileController(
             Page = reading?.Page ?? 1,
             Scale = reading?.Scale ?? 100,
             Title = file.CustomName ?? fileName,
-            Url = await minioService.GetFileUrlAsync(bucketName, fileName)
+            BucketName = bucketName,
+            FileName = fileName
         };
 
         switch (file.Type)
