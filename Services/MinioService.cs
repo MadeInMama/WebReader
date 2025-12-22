@@ -42,16 +42,23 @@ public class MinioService(IMinioClient minioClient)
             .WithBucket(bucketName)
             .WithRecursive(true));
 
-        var tasks = new List<Task>();
+        var objNames = new List<string>();
 
         await foreach (var item in observable)
             if (item != null)
-                tasks.Add(minioClient.RemoveObjectAsync(new RemoveObjectArgs()
-                    .WithBucket(bucketName)
-                    .WithObject(item.Key)));
+                objNames.Add(item.Key);
 
-        await Task.WhenAll(tasks);
-
+        await RemoveObjectsAsync(bucketName, objNames);
         await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(bucketName));
+    }
+
+    public async Task RemoveObjectsAsync(string? bucketName, List<string>? objectNames)
+    {
+        if (bucketName == null) return;
+        if (objectNames == null || objectNames.Count == 0) return;
+
+        await minioClient.RemoveObjectsAsync(new RemoveObjectsArgs()
+            .WithBucket(bucketName)
+            .WithObjects(objectNames));
     }
 }

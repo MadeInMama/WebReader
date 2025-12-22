@@ -35,13 +35,10 @@
             <div class="event-output"></div>
 
             <select class="set-scale">
-                <option value="0.5">0.5</option>
-                <option value="0.75">0.75</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
+                <option value="0">fixed</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
             </select>
         </div>
     </div>
@@ -73,7 +70,7 @@
 
         async function renderPage() {
             const page = await pdfDoc.getPage(currentPage);
-            const viewport = page.getViewport({scale: currentScale * 1.5});
+            const viewport = page.getViewport({scale: currentScale === 0 ? 3 : currentScale / 25});
             const canvas = document.getElementById('pdf-canvas');
             const context = canvas.getContext('2d');
 
@@ -145,11 +142,20 @@
         }
 
         async function SetScale(scale, send = true) {
-            currentScale = scale;
+            currentScale = Number.parseInt(scale);
+
             Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
                 value.value = currentScale
             });
-            document.getElementById("pdf-canvas").style.maxWidth = 5.7 * 5.5 * currentScale + "em";
+
+            if (currentScale === 0) {
+                document.querySelector("main").classList.add("max-width-set");
+                document.getElementById("pdf-canvas").style.maxWidth = "100%";
+            } else {
+                document.querySelector("main").classList.remove("max-width-set");
+                document.getElementById("pdf-canvas").style.maxWidth = currentScale + "%";
+            }
+
             await renderPage();
 
             if (send) SendCurrPage();
@@ -159,10 +165,6 @@
             return Math.min(Math.max(value, min), max);
         }
 
-        //if (@Model.SendUpdateInSeconds != null && @Model.SendUpdateInSeconds > 0)
-        //    setInterval(SendCurrPage, (@Model.SendUpdateInSeconds - 10) * 1000);
-        //else setInterval(SendCurrPage, 20 * 60 * 1000);
-
         function SendCurrPage() {
             const config = {
                 url: '/api/FileApi/UpdatePage',
@@ -170,7 +172,7 @@
                     FileId: "@Model.FileId",
                     UserId: "@Model.UserId",
                     Page: currentPage,
-                    Scale: currentScale >= 1 ? currentScale : 1,
+                    Scale: currentScale,
                 },
                 options: {
                     headers: {

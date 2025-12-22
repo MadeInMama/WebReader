@@ -8,5 +8,4 @@ public class FileViewModel
     public required int Page { get; init; }
     public required int Scale { get; init; }
     public required string Title { get; init; }
-    public int? SendUpdateInSeconds { get; init; }
 }

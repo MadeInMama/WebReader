@@ -27,15 +27,17 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
     public async Task<CustomUser> AddAsync(CustomUser entity)
     {
         var res = await context.Users.AddAsync(entity);
-        await context.SaveChangesAsync();
         return res.Entity;
     }
 
-    public async Task<CustomUser> UpdateAsync(CustomUser entity)
+    public async Task<int> SaveChangesAsync()
+    {
+        return await context.SaveChangesAsync();
+    }
+
+    public void UpdateAsync(CustomUser entity)
     {
         context.Users.Update(entity);
-        await context.SaveChangesAsync();
-        return entity;
     }
 
     public async Task DeleteAllAsync(IEnumerable<Guid>? ids)

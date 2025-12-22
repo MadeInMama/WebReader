@@ -164,7 +164,7 @@ header, footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 3em;
+    min-height: 3em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
     background-color: var(--background-backdrop-color);
     backdrop-filter: blur(var(--backdrop-blur));
@@ -188,6 +188,12 @@ header > div {
 header > div > ul {
     display: flex;
     gap: 0.5em;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+header > div > ul > li {
+    white-space: nowrap;
 }
 
 header > div > ul > li > a,
@@ -275,20 +281,10 @@ button:disabled {
     transition: opacity var(--animation-time) ease-in-out;
 }
 
-.event-output > .waiting {
+.event-output > .waiting, .in-progress {
     background-color: var(--foreground-color);
     mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
     -webkit-mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
-    animation: wait-wave var(--animation-time) linear infinite;
-}
-
-@keyframes wait-wave {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .event-output > .success {
@@ -303,7 +299,7 @@ button:disabled {
     -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
 }
 
-.remove, .close, .event-output > .waiting, .event-output > .success, .event-output > .error {
+.remove, .close, .event-output > .waiting, .event-output > .success, .event-output > .error, .in-progress {
     mask-size: cover;
     -webkit-mask-size: cover;
     height: 2em;

@@ -8,7 +8,9 @@ namespace WebReader.Services;
 public class UserService(
     CustomUserRepository userRepository,
     BucketService bucketService,
-    UserReadingRepository userReadingRepository)
+    UserReadingRepository userReadingRepository,
+    MinioService minioService,
+    BucketRepository bucketRepository)
 {
     public async Task<CustomUser?> AuthenticateAsync(string username, string password)
     {
@@ -32,7 +34,22 @@ public class UserService(
 
         var entity = await userRepository.AddAsync(user);
 
-        await bucketService.CreatePersonalBucketAsync(entity);
+        var bucketName = $"personal-{user.Id}";
+
+        var bucket = minioService.CreateBucketAsync(bucketName);
+        var bucket1 = bucketRepository.AddAsync(new Bucket
+        {
+            Name = bucketName,
+            CustomName = "Personal Bucket",
+            IsHidden = false,
+            UserId = user.Id,
+            User = user
+        });
+
+        await Task.WhenAll(bucket, bucket1);
+
+        await userRepository.SaveChangesAsync();
+        await bucketRepository.SaveChangesAsync();
 
         return entity;
     }

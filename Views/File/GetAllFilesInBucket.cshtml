@@ -13,21 +13,44 @@
             max-width: calc(var(--max-width) - 1em);
         }
 
-        .file-line {
-            display: flex;
-            justify-content: space-between;
+        .file-line > a {
+            display: grid;
+            grid-template-columns: 2em 1fr 2em 6em 4em;
+            grid-auto-rows: 2em;
             align-items: center;
-            padding-left: 1.5em;
-            width: 100%;
         }
 
-        .file-line:not(:first-child) {
-            margin-top: 0.5em;
+        .file-line > a > span {
+            overflow: hidden;
+        }
+
+        .file-line > a > .left {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+        .file-line > a > .center {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .file-line > a > .right {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+        }
+
+        .file-line > a > div > .in-progress {
+            font-size: 0.75em;
         }
     </style>
 }
 
-@section SpecialInfo {
+@section SpecialInfo
+
+{
     @if (User.Identity is { IsAuthenticated: true })
     {
         <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
@@ -39,14 +62,31 @@
     <div class="content">
         <details open class="always-open-details">
             <summary><span>@Model.BucketName</span></summary>
+            @* <div class="files-container"> *@
             @foreach (var item in Model.Items)
             {
                 <div class="file-line">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketName="@Model.BucketId"
-                       asp-route-fileName="@item.Name">@item.CustomName@* @(item.Type != null ? $"- {item.Type}" : "") - @item.DateTime.LocalDateTime - @FormatSize(item.Size)*@</a>
+                       asp-route-fileName="@item.Name">
+                        @if (item.IsReading)
+                        {
+                            <div class="center">
+                                <span class="in-progress"></span>
+                            </div>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+                        <span class="left">@item.CustomName</span>
+                        <span class="right">@item.Type.ToString().ToLower()</span>
+                        <span class="right">@item.DateTime.LocalDateTime.ToShortDateString()</span>
+                        <span class="right">@FormatSize(item.Size)</span>
+                    </a>
                 </div>
             }
+            @* </div> *@
         </details>
     </div>
 }

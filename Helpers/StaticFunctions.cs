@@ -18,4 +18,16 @@ public static class StaticFunctions
     {
         return Guid.Parse(user.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
     }
+
+    public static void AddOrAppend<T1, T2>(this Dictionary<T1, List<T2>> dict, T1 key, T2 value)
+        where T1 : notnull
+    {
+        if (!dict.TryGetValue(key, out var list))
+        {
+            list = [];
+            dict[key] = list;
+        }
+
+        list.Add(value);
+    }
 }

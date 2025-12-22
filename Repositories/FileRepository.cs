@@ -35,10 +35,14 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         throw new NotImplementedException();
     }
 
-    public async Task UpdateAllAsync(IEnumerable<File> entities)
+    public async Task<int> SaveChangesAsync()
+    {
+        return await context.SaveChangesAsync();
+    }
+
+    public void UpdateAll(IEnumerable<File> entities)
     {
         context.Files.UpdateRange(entities);
-        await context.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(string bucketName,

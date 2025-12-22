@@ -22,10 +22,15 @@ public class FileApiController(UserReadingRepository readingRepository) : Contro
             f.UserId == request.UserId && f.FileId == request.FileId);
 
         if (reading == null)
+        {
             await readingRepository.AddAsync(new UserReading
                 { FileId = request.FileId, UserId = request.UserId, Page = request.Page, Scale = request.Scale });
+            await readingRepository.SaveChangesAsync();
+        }
         else
+        {
             await readingRepository.SetCurrPageAndScaleAsync(reading.Id, request.Page, request.Scale);
+        }
 
         return Accepted();
     }

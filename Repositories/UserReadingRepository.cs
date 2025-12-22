@@ -23,8 +23,12 @@ public class UserReadingRepository(
     public async Task<UserReading> AddAsync(UserReading entity)
     {
         var res = await context.UserReadings.AddAsync(entity);
-        await context.SaveChangesAsync();
         return res.Entity;
+    }
+
+    public async Task<int> SaveChangesAsync()
+    {
+        return await context.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<UserReading>> AllAsync(Expression<Func<UserReading, bool>> predicate,

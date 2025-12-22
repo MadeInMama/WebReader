@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebReader.Helpers;
@@ -46,13 +45,19 @@ public class FileController(
 
         if (bucket == null) return RedirectToAction("AccessDenied", "Account");
 
+        var userGuid = User.GetUserGuid();
+
+        var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
+
         var res = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucketName, User.GetUserRoles()))
-            .Select(obj => new AllFilesInBucketItem
+            .Select(file => new AllFilesInBucketItem
             {
-                Name = obj.Name,
-                CustomName = obj.CustomName ?? obj.Name,
-                DateTime = obj.UpdatedDate,
-                Size = obj.Size ?? 0
+                Name = file.Name,
+                CustomName = file.CustomName ?? file.Name,
+                DateTime = file.UpdatedDate,
+                Size = file.Size ?? 0,
+                Type = file.Type,
+                IsReading = allUserReadings.Any(reading => reading.FileId == file.Id)
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.CustomName);
 
         return View(new AllFilesInBucketViewModel
@@ -136,20 +141,14 @@ public class FileController(
                                       && f.File!.Bucket!.Name == bucketName
                                       && f.File!.Name == fileName);
 
-        int? authValidSeconds = null;
-        var authProps = (await HttpContext.AuthenticateAsync()).Properties;
-        if (authProps is { ExpiresUtc: not null, IssuedUtc: not null })
-            authValidSeconds = (int)authProps.ExpiresUtc.Value.Subtract(authProps.IssuedUtc.Value).TotalSeconds;
-
         var res = new FileViewModel
         {
             UserId = userGuid,
             FileId = file.Id,
             Page = reading?.Page ?? 1,
-            Scale = reading?.Scale ?? 1,
+            Scale = reading?.Scale ?? 100,
             Title = file.CustomName ?? fileName,
-            Url = await minioService.GetFileUrlAsync(bucketName, fileName),
-            SendUpdateInSeconds = authValidSeconds
+            Url = await minioService.GetFileUrlAsync(bucketName, fileName)
         };
 
         switch (file.Type)

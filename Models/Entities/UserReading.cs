@@ -7,5 +7,5 @@ public class UserReading : BaseEntity
     public required Guid FileId { get; init; }
     public File? File { get; init; }
     public int Page { get; set; } = 1;
-    public int Scale { get; set; } = 1;
+    public int Scale { get; set; } = 100;
 }

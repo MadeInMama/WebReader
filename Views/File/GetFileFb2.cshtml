@@ -37,11 +37,11 @@
             <div class="event-output"></div>
 
             <select class="set-scale">
-                <option value="0.5">0.5</option>
-                <option value="0.75">0.75</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
+                <option value="125">125%</option>
+                <option value="150">150%</option>
             </select>
         </div>
     </div>
@@ -219,7 +219,6 @@
                     return `<div class="verse">${children()}</div>`;
                 case 'empty-line':
                     return '';
-                // return `<div>&nbsp;</div>`;
                 case 'emphasis':
                     return `<em>${children()}</em>`;
                 case 'strong':
@@ -283,6 +282,8 @@
 
             renderPage(currentPage);
 
+            SetScale(currentScale, false);
+
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
@@ -298,7 +299,8 @@
                 value.value = currentScale
             });
 
-            document.querySelector(".fb2-canvas-container > section").style.fontSize = currentScale + "em";
+            document.querySelector(".fb2-canvas-container > section").style.fontSize = currentScale / 100 + "em";
+            document.querySelector("#custom-modal").style.fontSize = currentScale / 100 + "em";
 
             if (send) SendCurrPage();
         }
@@ -307,10 +309,6 @@
             return Math.min(Math.max(value, min), max);
         }
 
-        //if (@Model.SendUpdateInSeconds != null && @Model.SendUpdateInSeconds > 0)
-        //    setInterval(SendCurrPage, (@Model.SendUpdateInSeconds - 10) * 1000);
-        //else setInterval(SendCurrPage, 20 * 60 * 1000);
-
         function SendCurrPage() {
             const config = {
                 url: '/api/FileApi/UpdatePage',
@@ -318,7 +316,7 @@
                     FileId: "@Model.FileId",
                     UserId: "@Model.UserId",
                     Page: currentPage,
-                    Scale: currentScale >= 1 ? currentScale : 1,
+                    Scale: currentScale,
                 },
                 options: {
                     headers: {

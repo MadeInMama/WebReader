@@ -13,5 +13,6 @@ public class AllFilesInBucketItem
     public required string CustomName { get; init; }
     public DateTimeOffset DateTime { get; init; }
     public ulong Size { get; init; }
-    public string? Type { get; init; }
+    public FileType Type { get; init; }
+    public bool IsReading { get; init; } = false;
 }

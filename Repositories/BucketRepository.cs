@@ -33,14 +33,17 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
     public async Task<Bucket> AddAsync(Bucket entity)
     {
         var res = await context.Buckets.AddAsync(entity);
-        await context.SaveChangesAsync();
         return res.Entity;
     }
 
-    public async Task UpdateAllAsync(IEnumerable<Bucket> entities)
+    public async Task<int> SaveChangesAsync()
+    {
+        return await context.SaveChangesAsync();
+    }
+
+    public void UpdateAll(IEnumerable<Bucket> entities)
     {
         context.Buckets.UpdateRange(entities);
-        await context.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<Bucket>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles, Guid userId)
