@@ -12,7 +12,26 @@
     depends_on:
       - db
       - minio
-  
+    networks:
+      - webreader_network
+      -
+  nginx:
+    image: nginx:alpine
+    container_name: mywebserver-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/root/Projects/nginx.conf:ro
+      - ./nginx/app.conf:/root/Projects/app.conf:ro
+      - ./certbot/conf:/etc/letsencrypt       # Certs & config
+      - ./certbot/www:/var/www/certbot        # ACME challenge dir
+    depends_on:
+      - webreader
+    networks:
+      - webreader_network
+
   db:
     image: postgres:16-alpine
     env_file:
@@ -20,7 +39,9 @@
     ports:
       - "${DB_PORT_1_1}:${DB_PORT_1_2}"
     restart: always
-  
+    networks:
+      - webreader_network
+
   minio:
     image: minio/minio:latest
     ports:
@@ -30,7 +51,9 @@
       - ../.env_s3
     command: server /data --console-address ":9001"
     restart: always
-  
+    networks:
+      - webreader_network
+
   minio-create-bucket:
     image: minio/mc:latest
     depends_on:
@@ -42,3 +65,9 @@
         /usr/bin/mc mb local/mybucket &&
         echo 'Buckets created successfully!'
       "
+    networks:
+      - webreader_network
+
+networks:
+  webreader_network:
+    driver: bridge

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Minio;
 using WebReader.Background;
@@ -70,6 +71,16 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpClient();
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -79,14 +90,16 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseExceptionHandler("/Account/CustomNotFound");
-app.UseHsts();
 
 app.UseHttpMethodOverride(new HttpMethodOverrideOptions
 {
     FormFieldName = "_method"
 });
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
+app.UseHsts();
+
 app.UseRouting();
 
 app.MapStaticAssets();
