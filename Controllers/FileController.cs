@@ -59,7 +59,12 @@ public class FileController(
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.CustomName);
 
         return View(new AllFilesInBucketViewModel
-            { BucketId = bucketName, BucketName = bucket.CustomName ?? bucketName, Items = res });
+        {
+            BucketId = bucketName,
+            BucketName = bucket.CustomName ?? bucketName,
+            IsBelongsToUser = bucket.UserId == userGuid,
+            Items = res
+        });
     }
 
     public async Task<IActionResult> GetReading()

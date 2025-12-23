@@ -22,6 +22,7 @@
 
         .file-line > a > span {
             overflow: hidden;
+            white-space: nowrap;
         }
 
         .file-line > a > .left {
@@ -61,8 +62,10 @@
 {
     <div class="content">
         <details open class="always-open-details">
-            <summary><span>@Model.BucketName</span></summary>
-            @* <div class="files-container"> *@
+            <summary>
+                <span>@Model.BucketName</span>
+                <button class="upload"></button>
+            </summary>
             @foreach (var item in Model.Items)
             {
                 <div class="file-line">
@@ -79,14 +82,13 @@
                         {
                             <span></span>
                         }
-                        <span class="left">@item.CustomName</span>
+                        <span class="left main-info-span">@item.CustomName</span>
                         <span class="right">@item.Type.ToString().ToLower()</span>
                         <span class="right">@item.DateTime.LocalDateTime.ToShortDateString()</span>
                         <span class="right">@FormatSize(item.Size)</span>
                     </a>
                 </div>
             }
-            @* </div> *@
         </details>
     </div>
 }
