@@ -3,32 +3,19 @@
     image: webreader
     ports:
       - "${PORT_1_1}:${PORT_1_2}"
+      - "${PORT_2_1}:${PORT_2_2}"
     build:
       context: .
       dockerfile: Dockerfile
     env_file:
       - ../.env
     restart: always
+    volumes:
+      - ${CHAIN}:/https/fullchain.pem:ro
+      - ${PRIVATE_KEY}:/https/privkey.pem:ro
     depends_on:
       - db
       - minio
-    networks:
-      - webreader_network
-
-  nginx:
-    image: nginx:alpine
-    container_name: mywebserver-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/root/Projects/nginx.conf:ro
-      - ./nginx/app.conf:/root/Projects/app.conf:ro
-      - ./certbot/conf:/etc/letsencrypt       # Certs & config
-      - ./certbot/www:/var/www/certbot        # ACME challenge dir
-    depends_on:
-      - webreader
     networks:
       - webreader_network
 
