@@ -14,7 +14,7 @@
       - minio
     networks:
       - webreader_network
-      -
+
   nginx:
     image: nginx:alpine
     container_name: mywebserver-nginx
