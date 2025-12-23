@@ -18,6 +18,7 @@
       - minio
     networks:
       - webreader_network
+    user: root
 
   db:
     image: postgres:16-alpine
