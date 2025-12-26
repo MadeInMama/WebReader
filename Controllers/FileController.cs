@@ -121,6 +121,7 @@ public class FileController(
                 .OrderByDescending(f => f.UpdatedDate)
                 .Select(r => new AllFilesReadingItem
                 {
+                    ReadingId = r.Id,
                     FileId = r.FileId,
                     CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
                     DateTime = r.UpdatedDate,

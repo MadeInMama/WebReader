@@ -78,12 +78,12 @@
             <summary><span>@item.Key.CustomName</span></summary>
             @foreach (var obj in item.Value)
             {
-                <div class="reading-line" id="@("RL_" + obj.FileId)">
+                <div class="reading-line" id="@("RL_" + obj.ReadingId)">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@item.Key.BucketId"
                        asp-route-fileId="@obj.FileId">@obj.CustomName@* - @obj.DateTime.LocalDateTime*@ - @obj.Page@* - @FormatSize(obj.Size)*@</a>
                     <div class="event-output">
-                        <button class="remove" onclick="Delete('@obj.FileId')"></button>
+                        <button class="remove" onclick="Delete('@obj.ReadingId')"></button>
                     </div>
                 </div>
             }

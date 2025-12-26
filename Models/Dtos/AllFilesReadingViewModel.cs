@@ -42,6 +42,7 @@ public class AllFilesReadingItemKey
 
 public class AllFilesReadingItem
 {
+    public required Guid ReadingId {get; init; }
     public required Guid FileId { get; init; }
     public required string CustomName { get; init; }
     public DateTimeOffset DateTime { get; init; }
