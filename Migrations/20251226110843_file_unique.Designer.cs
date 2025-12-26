@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebReader.Data;
@@ -11,9 +12,11 @@ using WebReader.Data;
 namespace WebReader.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251226110843_file_unique")]
+    partial class file_unique
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,9 +132,6 @@ namespace WebReader.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<Guid?>("NextPartId")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal?>("Size")
                         .HasColumnType("numeric(20,0)");
 
@@ -144,8 +144,6 @@ namespace WebReader.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BucketId");
-
-                    b.HasIndex("NextPartId");
 
                     b.HasIndex("Name", "BucketId")
                         .IsUnique();
@@ -207,13 +205,7 @@ namespace WebReader.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WebReader.Models.Entities.File", "NextPart")
-                        .WithMany()
-                        .HasForeignKey("NextPartId");
-
                     b.Navigation("Bucket");
-
-                    b.Navigation("NextPart");
                 });
 
             modelBuilder.Entity("WebReader.Models.Entities.UserReading", b =>

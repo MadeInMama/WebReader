@@ -57,4 +57,28 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                         !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any())
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketTopLevelAsync(string bucketName,
+        IEnumerable<RoleType> roles)
+    {
+        var rolesList = roles.ToList();
+
+        //TODO: temporary.
+        // var referencedIds = await context.Files
+        //     .Where(f => f.Bucket!.Name == bucketName && !f.Bucket.IsHidden &&
+        //                 f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
+        //                 !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any() &&
+        //                 f.NextPartId != null)
+        //     .Select(f => f.NextPartId!.Value)
+        //     .ToHashSetAsync();
+
+        HashSet<Guid> referencedIds = [];
+
+        return await context.Files
+            .Where(f => f.Bucket!.Name == bucketName && !f.Bucket.IsHidden &&
+                        f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
+                        !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any() &&
+                        !referencedIds.Contains(f.Id))
+            .ToListAsync();
+    }
 }

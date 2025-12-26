@@ -13,4 +13,6 @@ public class File : BaseEntity
     public IEnumerable<RoleType> AccessRoles { get; init; } = [Enum.GetValues<RoleType>().Min()];
     public bool IsHidden { get; set; }
     public bool IsAvailable { get; set; }
+    public Guid? NextPartId { get; set; }
+    public File? NextPart { get; set; }
 }

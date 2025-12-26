@@ -16,4 +16,5 @@ public class AllFilesInBucketItem
     public ulong Size { get; init; }
     public FileType Type { get; init; }
     public bool IsReading { get; init; }
+    public bool IsParted { get; init; }
 }

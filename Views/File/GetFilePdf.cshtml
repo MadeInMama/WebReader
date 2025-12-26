@@ -8,6 +8,12 @@
 {
     <link rel="stylesheet" href="~/css/file-common-preview.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/file-pdf-preview.css" asp-append-version="true"/>
+
+    <style>
+        .force-light-canvas {
+            filter: none !important;
+        }
+    </style>
 }
 
 @section SpecialInfo {
@@ -25,6 +31,7 @@
     <div class="controls">
         <div class="spacer controls-start">
             @await Html.PartialAsync("_FullscreenControl")
+            <button class="force-light-mode"></button>
         </div>
         <div class="controls-center">
             <button class="prev-page"></button>
@@ -229,5 +236,9 @@
                     targetElement.dispatchEvent(customSendCurrPageEvent);
                 });
         }
+
+        document.querySelector("button.force-light-mode").onclick = () => {
+            document.querySelector(".pdf-canvas-container").classList.toggle("force-light-canvas");
+        };
     </script>
 }

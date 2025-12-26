@@ -277,6 +277,12 @@ button:disabled {
     -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
 }
 
+.force-light-mode {
+    background-color: var(--foreground-color);
+    mask: url("../icons/dark-mode-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/dark-mode-svgrepo-com.svg") no-repeat center;
+}
+
 .upload-btn {
     background-color: var(--foreground-color);
     mask: url("../icons/upload-svgrepo-com.svg") no-repeat center;
@@ -312,7 +318,8 @@ button:disabled {
 .event-output > .success,
 .event-output > .error,
 .in-progress,
-.upload-btn {
+.upload-btn,
+.force-light-mode {
     mask-size: cover;
     -webkit-mask-size: cover;
     height: 2em;

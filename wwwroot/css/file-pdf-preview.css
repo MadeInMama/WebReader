@@ -23,6 +23,7 @@ main {
     display: grid;
     place-items: center;
     filter: invert(var(--canvas-invert));
+    transition: filter var(--animation-time);
 }
 
 #pdf-canvas {

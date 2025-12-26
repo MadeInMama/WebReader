@@ -86,6 +86,14 @@
         <input asp-for="File" type="file" required placeholder="File"/>
     </div>
 
+    @if (Model.Parts.Any())
+    {
+        <label for="prev-select">Previous File:</label>
+        <select id="prev-select" asp-for="AsPartOfId" asp-items="Model.Parts"></select>
+        <label for="prev-select">Next File:</label>
+        <select id="prev-select" asp-for="AsParentOfId" asp-items="Model.Parts"></select>
+    }
+
     <div asp-validation-summary="All"></div>
 
     <button type="submit" class="upload-btn"></button>

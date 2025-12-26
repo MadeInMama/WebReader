@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Dtos;
@@ -49,7 +50,7 @@ public class FileController(
 
         var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
 
-        var res = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()))
+        var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Name, User.GetUserRoles()))
             .Select(file => new AllFilesInBucketItem
             {
                 Id = file.Id,
@@ -57,7 +58,8 @@ public class FileController(
                 DateTime = file.UpdatedDate,
                 Size = file.Size ?? 0,
                 Type = file.Type,
-                IsReading = allUserReadings.Any(reading => reading.FileId == file.Id)
+                IsReading = allUserReadings.Any(reading => reading.FileId == file.Id),
+                IsParted = file.NextPartId.HasValue
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
 
         return View(new AllFilesInBucketViewModel
@@ -180,7 +182,22 @@ public class FileController(
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
-        return View(new UploadFileRequest { BucketId = bucketId });
+        var parts = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()))
+            .Select(f => new SelectListItem
+            {
+                Text = f.CustomName ?? f.Name,
+                Value = f.Id.ToString()
+            })
+            .ToList();
+
+        parts.Add(new SelectListItem
+        {
+            Selected = true,
+            Text = "Unselected",
+            Value = null
+        });
+
+        return View(new UploadFileRequest { BucketId = bucketId, Parts = parts });
     }
 
     [HttpPost]
@@ -221,13 +238,42 @@ public class FileController(
         }
 
         var bucket = await bucketRepository
-            .FirstOrDefaultAsync(f => f.IsAvailable &&
-                                      !f.IsHidden &&
+            .FirstOrDefaultAsync(f => f.IsAvailable && !f.IsHidden &&
                                       f.Id == request.BucketId &&
                                       f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
                                       (f.UserId == User.GetUserGuid() || f.UserId == null));
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
+
+        File? asPartOfFile, asParentOfFile;
+
+        if (request.AsPartOfId.HasValue)
+        {
+            asPartOfFile = await fileRepository.FirstOrDefaultAsync(f =>
+                f.BucketId == bucket.Id && !f.IsHidden && f.Id == request.AsPartOfId!.Value &&
+                f.AccessRoles.Intersect(User.GetUserRoles()).Any());
+
+            if (asPartOfFile == null)
+            {
+                ModelState.AddModelError(string.Empty, "Part of file not available.");
+                request.AsPartOfId = null;
+                return View(request);
+            }
+        }
+
+        if (request.AsPartOfId.HasValue)
+        {
+            asParentOfFile = await fileRepository.FirstOrDefaultAsync(f =>
+                f.BucketId == bucket.Id && !f.IsHidden && f.Id == request.AsParentOfId!.Value &&
+                f.AccessRoles.Intersect(User.GetUserRoles()).Any());
+
+            if (asParentOfFile == null)
+            {
+                ModelState.AddModelError(string.Empty, "Parent of file not available.");
+                request.AsParentOfId = null;
+                return View(request);
+            }
+        }
 
         var uploadToS3Successful = await minioService.UploadObjectAsync(bucket.Name, request.File!);
 
@@ -238,6 +284,8 @@ public class FileController(
             return View(request);
         }
 
+        //TODO: part-parent check and set
+
         await fileRepository.AddAsync(new File
         {
             BucketId = bucket.Id,
@@ -246,7 +294,8 @@ public class FileController(
             Type = fileType,
             IsAvailable = true,
             IsHidden = false,
-            Size = (ulong?)request.File.Length
+            Size = (ulong?)request.File.Length,
+            NextPartId = request.AsParentOfId
         });
 
         try

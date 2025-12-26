@@ -13,12 +13,21 @@
             max-width: calc(var(--max-width) - 1em);
         }
 
+        .file-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            min-height: 2em;
+        }
+
         .file-line > a {
             display: flex;
             justify-content: space-between;
             gap: 0.5em;
             grid-auto-rows: 2em;
             align-items: center;
+            width: 100%;
         }
 
         .file-line > a > span {
@@ -46,6 +55,10 @@
 
         .file-line > a > div > .in-progress {
             font-size: 0.75em;
+        }
+
+        .file-line:not(:last-child) {
+            margin-bottom: 0.5em;
         }
 
         .secondary-info-span {
@@ -88,7 +101,6 @@
         <details open class="always-open-details">
             <summary>
                 <span>@Model.BucketName</span>
-                <button class="upload"></button>
             </summary>
             @foreach (var item in Model.Items)
             {

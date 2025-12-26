@@ -95,6 +95,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
             bucketInDb.IsAvailable = isAvailable;
         }
 
+        //TODO: not update all
         bucketRepository.UpdateAll(allBucketsInDb);
 
         logger.LogInformation($"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Total update count {{updated}}",
