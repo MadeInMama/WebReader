@@ -42,15 +42,23 @@
             width: 100%;
         }
 
-        .reading-line:not(:first-child) {
-            margin-top: 0.5em;
+        .reading-line:not(:last-child) {
+            margin-bottom: 0.5em;
         }
 
         #full_content {
             display: flex;
             flex-direction: column;
             width: 100%;
+            gap: 0.5em;
             max-width: calc(var(--max-width) - 1em);
+        }
+
+        .event-output {
+            height: 2em;
+            width: 2em;
+            opacity: 1;
+            transition: none;
         }
     </style>
 }
@@ -69,11 +77,13 @@
             <summary><span>@item.Key.CustomName</span></summary>
             @foreach (var obj in item.Value)
             {
-                <div class="reading-line" id="@obj.Id">
+                <div class="reading-line" id="@("RL_" + obj.Id)">
                     <a asp-controller="File" asp-action="GetFile"
-                       asp-route-bucketName="@item.Key.Name"
-                       asp-route-fileName="@obj.Name">@obj.CustomName@* - @obj.DateTime.LocalDateTime - @obj.Page - @FormatSize(obj.Size)*@</a>
-                    <button class="remove" onclick="Delete('@obj.Id')"></button>
+                       asp-route-bucketId="@item.Key.Id"
+                       asp-route-fileId="@obj.Id">@obj.CustomName@* - @obj.DateTime.LocalDateTime*@ - @obj.Page@* - @FormatSize(obj.Size)*@</a>
+                    <div class="event-output">
+                        <button class="remove" onclick="Delete('@obj.Id')"></button>
+                    </div>
                 </div>
             }
         </details>
@@ -92,24 +102,55 @@
         CheckOnEmpty();
 
         async function Delete(id) {
-            try {
-                await axios.post('/api/FileApi/DeleteReading', {
+            document.querySelectorAll(".remove").forEach(el => el.disabled = true);
+
+            requestQueue.enqueue({
+                method: 'POST',
+                url: '/api/FileApi/DeleteReading',
+                data: {
                     ReadingId: id
-                }, {
+                },
+                options: {
                     headers: {
                         'RequestVerificationToken': GetAntiForgeryToken()
                     },
                     withCredentials: true
-                }).then(_ => {
-                    document.getElementById(id).remove();
-                    CheckOnEmpty();
+                },
+                beforeSend: () => {
+                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'waiting';
+                }
+            })
+                .then(_ => {
+                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'success';
+
+                    setTimeout(() => {
+                        document.getElementById(`RL_${id}`).remove();
+                        CheckOnEmpty();
+                        document.querySelectorAll(".remove").forEach(el => el.disabled = false);
+                    }, 1000);
+                })
+                .catch(_ => {
+                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'error';
+
+                    setTimeout(() => {
+                        document.querySelector(`#RL_${id} > .event-output > button`).classList = 'remove';
+                        document.querySelectorAll(".remove").forEach(el => el.disabled = false);
+                    }, 1000);
                 });
-            } catch (err) {
-                alert("Error deleting Reading");
-            }
         }
 
         function CheckOnEmpty() {
+            document.querySelectorAll("#full_content > details").forEach(el => {
+                if (el.querySelectorAll(".reading-line").length === 0) {
+                    el.style.display = "none";
+
+                    if (!document.querySelectorAll("#full_content > details").values()
+                        .some(f => f.open && f.style.display !== "none")) {
+                        document.querySelector("#full_content > details").open = true;
+                    }
+                }
+            });
+
             if (document.querySelectorAll(".reading-line").length === 0) {
                 fullContentEl.style.display = "none";
                 emptyContentEl.style.display = "flex";

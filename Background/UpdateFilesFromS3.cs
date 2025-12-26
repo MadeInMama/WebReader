@@ -1,6 +1,5 @@
 ﻿using Minio.DataModel;
 using WebReader.Helpers;
-using WebReader.Models;
 using WebReader.Repositories;
 using WebReader.Services;
 
@@ -157,7 +156,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
 
                 if (fileInS3 != null)
                 {
-                    if (Enum.TryParse<FileType>(Path.GetExtension(fileInS3.Key).Remove(0, 1), true, out var fileType))
+                    if (fileInS3.Key.TryGetFileType(out var fileType))
                     {
                         fileInDb.IsAvailable = true;
                         fileInDb.Size = fileInS3.Size;

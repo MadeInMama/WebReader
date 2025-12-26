@@ -32,7 +32,7 @@
     {
         <div class="bucket-line">
             <a asp-controller="File" asp-action="GetAllFilesInBucket"
-               asp-route-bucketName="@item.Name">@item.CustomName@* - @item.DateTime.LocalDateTime*@</a>
+               asp-route-bucketId="@item.Id">@item.CustomName@* - @item.DateTime.LocalDateTime*@</a>
         </div>
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Minio;
 using Minio.DataModel;
 using Minio.DataModel.Args;
+using Minio.Exceptions;
+using WebReader.Helpers;
 
 namespace WebReader.Services;
 
@@ -57,5 +59,41 @@ public class MinioService(IMinioClient minioClient)
         await minioClient.RemoveObjectsAsync(new RemoveObjectsArgs()
             .WithBucket(bucketName)
             .WithObjects(objectNames));
+    }
+
+    public async Task<bool> ObjectExistsAsync(string bucketName, string objectName)
+    {
+        try
+        {
+            var args = new StatObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName);
+
+            await minioClient.StatObjectAsync(args);
+
+            return true;
+        }
+        catch (ObjectNotFoundException)
+        {
+            return false;
+        }
+        catch (BucketNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> UploadObjectAsync(string bucketName, IFormFile file)
+    {
+        if (await ObjectExistsAsync(bucketName, file.FileName)) return false;
+
+        var res = await minioClient.PutObjectAsync(new PutObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(file.FileName)
+            .WithStreamData(file.OpenReadStream())
+            .WithContentType(file.ContentType)
+            .WithObjectSize(file.Length));
+
+        return res != null && res.ResponseStatusCode.IsSuccessStatusCode();
     }
 }

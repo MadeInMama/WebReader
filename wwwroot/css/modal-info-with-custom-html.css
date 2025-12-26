@@ -10,11 +10,17 @@
     padding: 0.5em 1em;
     border-radius: 1em;
     width: fit-content;
-    max-width: var(--max-width);
-    min-width: 20em;
+    max-width: calc(var(--max-width) - 2em);
+    min-width: 10em;
     background-color: var(--background-backdrop-color);
     backdrop-filter: blur(var(--backdrop-blur));
     box-shadow: 0 0 1em var(--drop-shadow-color);
+}
+
+@media (width < 700px) {
+    #custom-modal {
+        width: 100%;
+    }
 }
 
 #custom-modal[open],

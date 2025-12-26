@@ -5,7 +5,8 @@ using WebReader.Models;
 using WebReader.Models.Dtos;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
-using File = System.IO.File;
+using WebReader.Services;
+using File = WebReader.Models.Entities.File;
 
 namespace WebReader.Controllers;
 
@@ -14,7 +15,8 @@ namespace WebReader.Controllers;
 public class FileController(
     BucketRepository bucketRepository,
     FileRepository fileRepository,
-    UserReadingRepository readingRepository) : Controller
+    UserReadingRepository readingRepository,
+    MinioService minioService) : Controller
 {
     public async Task<IActionResult> GetAllBuckets()
     {
@@ -22,7 +24,7 @@ public class FileController(
             .Select(bucket =>
                 new AllBucketsItem
                 {
-                    Name = bucket.Name,
+                    Id = bucket.Id,
                     CustomName = bucket.CustomName ?? bucket.Name,
                     DateTime = bucket.CreatedDate
                 });
@@ -30,14 +32,14 @@ public class FileController(
         return View(new AllBucketsViewModel { Items = res });
     }
 
-    public async Task<IActionResult> GetAllFilesInBucket(string bucketName, string orderBy = "CustomName")
+    public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName")
     {
-        var prop = typeof(File).GetProperty(orderBy);
+        var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
 
         var bucket = await bucketRepository
             .FirstOrDefaultAsync(f => f.IsAvailable &&
                                       !f.IsHidden &&
-                                      f.Name == bucketName &&
+                                      f.Id == bucketId &&
                                       f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
                                       (f.UserId == User.GetUserGuid() || f.UserId == null));
 
@@ -47,21 +49,21 @@ public class FileController(
 
         var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
 
-        var res = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucketName, User.GetUserRoles()))
+        var res = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()))
             .Select(file => new AllFilesInBucketItem
             {
-                Name = file.Name,
-                CustomName = file.CustomName ?? file.Name,
+                Id = file.Id,
+                FileName = file.CustomName ?? file.Name,
                 DateTime = file.UpdatedDate,
                 Size = file.Size ?? 0,
                 Type = file.Type,
                 IsReading = allUserReadings.Any(reading => reading.FileId == file.Id)
-            }).OrderBy(f => prop?.GetValue(f, null) ?? f.CustomName);
+            }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
 
         return View(new AllFilesInBucketViewModel
         {
-            BucketId = bucketName,
-            BucketName = bucket.CustomName ?? bucketName,
+            Id = bucket.Id,
+            BucketName = bucket.CustomName ?? bucket.Name,
             IsBelongsToUser = bucket.UserId == userGuid,
             Items = res
         });
@@ -110,7 +112,7 @@ public class FileController(
 
         var res = readings.GroupBy(reading => new AllFilesReadingItemKey
             {
-                Name = reading.File?.Bucket?.Name!,
+                Id = reading.File!.BucketId,
                 CustomName = reading.File?.Bucket?.CustomName ?? reading.File?.Bucket?.Name!
             })
             .ToDictionary(reading => reading.Key!, reading => reading
@@ -118,7 +120,6 @@ public class FileController(
                 .Select(r => new AllFilesReadingItem
                 {
                     Id = r.Id,
-                    Name = r.File?.Name ?? "",
                     CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
                     DateTime = r.UpdatedDate,
                     Size = r.File?.Size ?? 0,
@@ -128,11 +129,11 @@ public class FileController(
         return View(new AllFilesReadingViewModel { Items = res });
     }
 
-    public async Task<IActionResult> GetFile(string bucketName, string fileName)
+    public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId)
     {
         var file = await fileRepository.FirstOrDefaultAsync(f =>
-            f.Bucket!.Name == bucketName &&
-            f.Name == fileName &&
+            f.BucketId == bucketId &&
+            f.Id == fileId &&
             f.AccessRoles.Intersect(User.GetUserRoles()).Any());
 
         if (file == null) return RedirectToAction("CustomNotFound", "Account");
@@ -141,8 +142,8 @@ public class FileController(
 
         var reading = await readingRepository
             .FirstOrDefaultAsync(f => f.UserId == userGuid
-                                      && f.File!.Bucket!.Name == bucketName
-                                      && f.File!.Name == fileName);
+                                      && f.File!.BucketId == bucketId
+                                      && f.FileId == fileId);
 
         var res = new FileViewModel
         {
@@ -150,9 +151,9 @@ public class FileController(
             FileId = file.Id,
             Page = reading?.Page ?? 1,
             Scale = reading?.Scale ?? 100,
-            Title = file.CustomName ?? fileName,
-            BucketName = bucketName,
-            FileName = fileName
+            Title = file.CustomName ?? file.Name,
+            BucketId = file.BucketId,
+            FileName = file.CustomName ?? file.Name
         };
 
         switch (file.Type)
@@ -165,5 +166,100 @@ public class FileController(
             default:
                 return RedirectToAction("CustomNotFound", "Account");
         }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> UploadFile(Guid bucketId)
+    {
+        var bucket = await bucketRepository
+            .FirstOrDefaultAsync(f => f.IsAvailable &&
+                                      !f.IsHidden &&
+                                      f.Id == bucketId &&
+                                      f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
+                                      (f.UserId == User.GetUserGuid() || f.UserId == null));
+
+        if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
+
+        return View(new UploadFileRequest { BucketId = bucketId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadFile(
+        [FromForm] UploadFileRequest request)
+    {
+        var userRoles = User.GetUserRoles();
+        var userGuid = User.GetUserGuid();
+
+        if (userRoles.Count == 0 || userGuid == Guid.Empty) return RedirectToAction("AccessDenied", "Account");
+
+        if (request.File == null || request.File.Length < 1)
+        {
+            ModelState.AddModelError(string.Empty, "File not set or empty.");
+            return View(request);
+        }
+
+        const int maxFileSize = 300 * 1024 * 1024;
+
+        if (request.File.Length > maxFileSize)
+        {
+            ModelState.AddModelError(string.Empty,
+                $"File size is too big {GlobalFunctions.FormatSize(request.File.Length)}. Max file size is {GlobalFunctions.FormatSize(maxFileSize)}");
+            return View(request);
+        }
+
+        if (string.IsNullOrEmpty(request.CustomName?.Trim()))
+        {
+            ModelState.AddModelError(string.Empty, "File Name not set.");
+            return View(request);
+        }
+
+        if (!request.File.FileName.TryGetFileType(out var fileType))
+        {
+            ModelState.AddModelError(string.Empty, "File type not specified in file name or not allowed.");
+            return View(request);
+        }
+
+        var bucket = await bucketRepository
+            .FirstOrDefaultAsync(f => f.IsAvailable &&
+                                      !f.IsHidden &&
+                                      f.Id == request.BucketId &&
+                                      f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
+                                      (f.UserId == User.GetUserGuid() || f.UserId == null));
+
+        if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
+
+        var uploadToS3Successful = await minioService.UploadObjectAsync(bucket.Name, request.File!);
+
+        if (!uploadToS3Successful)
+        {
+            ModelState.AddModelError(string.Empty,
+                "File upload failed. Try again later. Storage is not accessible now.");
+            return View(request);
+        }
+
+        await fileRepository.AddAsync(new File
+        {
+            BucketId = bucket.Id,
+            Name = request.File.FileName,
+            CustomName = request.CustomName.Trim(),
+            Type = fileType,
+            IsAvailable = true,
+            IsHidden = false,
+            Size = (ulong?)request.File.Length
+        });
+
+        try
+        {
+            await fileRepository.SaveChangesAsync();
+        }
+        catch (Exception _)
+        {
+            ModelState.AddModelError(string.Empty,
+                "File save failed. Try again later.");
+            return View(request);
+        }
+
+        return RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
     }
 }

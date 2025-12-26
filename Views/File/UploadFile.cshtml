@@ -1,0 +1,98 @@
+﻿@model WebReader.Models.Dtos.UploadFileRequest
+@{
+    ViewData["Title"] = "UPLOAD FILE";
+}
+
+@section Style
+{
+    <style>
+        main {
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        @@media (hover: none) and (pointer: coarse) {
+            main {
+                min-height: 100dvh;
+            }
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: var(--max-width);
+            max-width: 20em;
+        }
+
+        .name-file-container {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 0.5em;
+            margin-bottom: 1em;
+        }
+
+        .name-file-container > input {
+            display: block;
+            width: 100%;
+            max-width: 20em;
+            font-size: 1em;
+            padding: 0.5em 1em;
+            border-width: 0.1em;
+            border-color: var(--drop-shadow-color);
+            border-style: solid;
+            border-radius: 1em;
+            background-color: var(--background-backdrop-color);
+            box-shadow: 0 0 0.5em var(--drop-shadow-color);
+        }
+
+        .validation-summary-errors {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1em;
+        }
+
+        .upload-btn::after {
+            content: "Sign in";
+            position: absolute;
+            bottom: -1.5em;
+            font-size: 1em;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--foreground-color);
+            white-space: nowrap;
+        }
+    </style>
+}
+
+@section SpecialInfo
+
+{
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
+    }
+}
+
+<form asp-action="UploadFile" asp-controller="File" method="POST"
+      enctype="multipart/form-data">
+    <input type="hidden" asp-for="BucketId"/>
+
+    <div class="name-file-container">
+        <input asp-for="CustomName" required placeholder="File Name"
+               autocapitalize="off" autocorrect="off" spellcheck="false"/>
+
+        <input asp-for="File" type="file" required placeholder="File"/>
+    </div>
+
+    <div asp-validation-summary="All"></div>
+
+    <button type="submit" class="upload-btn"></button>
+</form>
+
+@section Scripts
+{
+    <script>
+    </script>
+}

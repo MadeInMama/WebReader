@@ -142,7 +142,7 @@ namespace WebReader.Migrations
 
                     b.HasIndex("BucketId");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("Name", "BucketId")
                         .IsUnique();
 
                     b.ToTable("Files");

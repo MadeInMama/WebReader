@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Net;
+using System.Security.Claims;
 using WebReader.Models;
 
 namespace WebReader.Helpers;
@@ -29,5 +30,16 @@ public static class StaticFunctions
         }
 
         list.Add(value);
+    }
+
+    public static bool TryGetFileType(this string source, out FileType res)
+    {
+        return Enum.TryParse(Path.GetExtension(source).Remove(0, 1), true, out res);
+    }
+
+    public static bool IsSuccessStatusCode(this HttpStatusCode statusCode)
+    {
+        var code = (int)statusCode;
+        return code is >= 200 and < 300;
     }
 }

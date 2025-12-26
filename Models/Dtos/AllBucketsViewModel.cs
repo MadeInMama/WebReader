@@ -7,7 +7,7 @@ public class AllBucketsViewModel
 
 public class AllBucketsItem
 {
-    public required string Name { get; init; }
+    public required Guid Id { get; init; }
     public required string CustomName { get; init; }
     public DateTimeOffset DateTime { get; init; }
 }

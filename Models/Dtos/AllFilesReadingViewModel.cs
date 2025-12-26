@@ -7,7 +7,7 @@ public class AllFilesReadingViewModel
 
 public class AllFilesReadingItemKey
 {
-    public required string Name { get; init; }
+    public required Guid Id { get; init; }
     public required string CustomName { get; init; }
 
     private bool Equals(AllFilesReadingItemKey? other)
@@ -15,7 +15,7 @@ public class AllFilesReadingItemKey
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
 
-        return string.Equals(Name, other.Name, StringComparison.Ordinal) &&
+        return Equals(Id, other.Id) &&
                string.Equals(CustomName, other.CustomName, StringComparison.Ordinal);
     }
 
@@ -26,7 +26,7 @@ public class AllFilesReadingItemKey
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Name, CustomName);
+        return HashCode.Combine(Id, CustomName);
     }
 
     public static bool operator ==(AllFilesReadingItemKey? left, AllFilesReadingItemKey? right)
@@ -43,7 +43,6 @@ public class AllFilesReadingItemKey
 public class AllFilesReadingItem
 {
     public required Guid Id { get; init; }
-    public required string Name { get; init; }
     public required string CustomName { get; init; }
     public DateTimeOffset DateTime { get; init; }
     public ulong Size { get; init; }

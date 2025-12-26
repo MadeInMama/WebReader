@@ -14,8 +14,9 @@
         }
 
         .file-line > a {
-            display: grid;
-            grid-template-columns: 2em 1fr 2em 6em 4em;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5em;
             grid-auto-rows: 2em;
             align-items: center;
         }
@@ -46,11 +47,34 @@
         .file-line > a > div > .in-progress {
             font-size: 0.75em;
         }
+
+        .secondary-info-span {
+            flex-grow: 0;
+        }
+
+        .main-info-span {
+            flex-grow: 1;
+        }
+
+        .in-progress-empty {
+            font-size: 0.75em;
+            height: 2em;
+            width: 2em;
+        }
+
+        .upload-btn-container {
+            margin-top: 1em;
+        }
+
+        @@media (width < 700px) {
+            .secondary-info-span {
+                display: none !important;
+            }
+        }
     </style>
 }
 
 @section SpecialInfo
-
 {
     @if (User.Identity is { IsAuthenticated: true })
     {
@@ -70,22 +94,22 @@
             {
                 <div class="file-line">
                     <a asp-controller="File" asp-action="GetFile"
-                       asp-route-bucketName="@Model.BucketId"
-                       asp-route-fileName="@item.Name">
+                       asp-route-bucketId="@Model.Id"
+                       asp-route-fileId="@item.Id">
                         @if (item.IsReading)
                         {
-                            <div class="center">
+                            <div class="center secondary-info-span">
                                 <span class="in-progress"></span>
                             </div>
                         }
                         else
                         {
-                            <span></span>
+                            <span class="in-progress-empty secondary-info-span"></span>
                         }
-                        <span class="left main-info-span">@item.CustomName</span>
-                        <span class="right">@item.Type.ToString().ToLower()</span>
-                        <span class="right">@item.DateTime.LocalDateTime.ToShortDateString()</span>
-                        <span class="right">@FormatSize(item.Size)</span>
+                        <span class="left main-info-span">@item.FileName</span>
+                        <span class="right secondary-info-span">@item.Type.ToString().ToLower()</span>
+                        <span class="right secondary-info-span">@item.DateTime.LocalDateTime.ToShortDateString()</span>
+                        <span class="right secondary-info-span">@FormatSize(item.Size)</span>
                     </a>
                 </div>
             }
@@ -95,6 +119,17 @@
 else
 {
     @await Html.PartialAsync("_EmptyDisplay")
+}
+
+@if (Model.IsBelongsToUser)
+{
+    <div class="upload-btn-container">
+        <a class="btn" asp-controller="File"
+           asp-action="UploadFile"
+           asp-route-bucketId="@Model.Id">
+            Upload File
+        </a>
+    </div>
 }
 
 @section Scripts

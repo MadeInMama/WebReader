@@ -2,7 +2,7 @@
 
 const EventTypes = {INFINITE: 1, FROM_MILLIS: 2};
 
-const customEvent = new CustomEvent('SendCurrPageEvent', {
+const customSendCurrPageEvent = new CustomEvent('SendCurrPageEvent', {
     detail: {
         message: 'Message Sent',
         type: EventTypes.FROM_MILLIS,
@@ -12,15 +12,15 @@ const customEvent = new CustomEvent('SendCurrPageEvent', {
     cancelable: true
 });
 
-let eventTimeout;
+let sendCurrPageEventTimeout;
 
 targetElement.addEventListener('SendCurrPageEvent', (event) => {
     Array.from(document.getElementsByClassName("event-output")).forEach(el => {
         el.style.opacity = '1';
         el.innerHTML = event.detail.message;
-        clearTimeout(eventTimeout);
+        clearTimeout(sendCurrPageEventTimeout);
         if (event.detail.type === EventTypes.FROM_MILLIS) {
-            eventTimeout = setTimeout(() => el.style.opacity = '0', event.detail.millis);
+            sendCurrPageEventTimeout = setTimeout(() => el.style.opacity = '0', event.detail.millis);
         }
     });
 });

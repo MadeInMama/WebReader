@@ -2,7 +2,7 @@
 
 public class AllFilesInBucketViewModel
 {
-    public required string BucketId { get; init; }
+    public required Guid Id { get; init; }
     public required string BucketName { get; init; }
     public required bool IsBelongsToUser { get; init; }
     public required IEnumerable<AllFilesInBucketItem> Items { get; init; }
@@ -10,8 +10,8 @@ public class AllFilesInBucketViewModel
 
 public class AllFilesInBucketItem
 {
-    public required string Name { get; init; }
-    public required string CustomName { get; init; }
+    public required Guid Id { get; init; }
+    public required string FileName { get; init; }
     public DateTimeOffset DateTime { get; init; }
     public ulong Size { get; init; }
     public FileType Type { get; init; }

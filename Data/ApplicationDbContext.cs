@@ -124,7 +124,7 @@ public class ApplicationDbContext : DbContext
             .HasDefaultValue(1);
 
         modelBuilder.Entity<File>()
-            .HasIndex(f => f.Name)
+            .HasIndex(f => new { f.Name, f.BucketId })
             .IsUnique();
 
         modelBuilder.Entity<CustomUser>()

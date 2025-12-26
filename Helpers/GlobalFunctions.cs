@@ -16,4 +16,9 @@ public static class GlobalFunctions
             _ => size + "B"
         };
     }
+
+    public static string FormatSize(long size)
+    {
+        return FormatSize((ulong)size);
+    }
 }

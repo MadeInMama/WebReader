@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Minio;
 using WebReader.Background;
@@ -81,6 +83,17 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = long.MaxValue;
+    options.ValueLengthLimit = int.MaxValue;
+    options.MemoryBufferThreshold = int.MaxValue;
+});
+
+builder.Services.Configure<KestrelServerOptions>(options => { options.Limits.MaxRequestBodySize = long.MaxValue; });
+
+builder.Services.Configure<IISServerOptions>(options => { options.MaxRequestBodySize = long.MaxValue; });
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -111,5 +124,11 @@ app.MapControllers();
 
 app.Map("/", () => Results.Redirect("/Home/Index"));
 app.Map("/Home", () => Results.Redirect("/Home/Index"));
+
+app.Use((context, next) =>
+{
+    context.Request.EnableBuffering();
+    return next();
+});
 
 app.Run();

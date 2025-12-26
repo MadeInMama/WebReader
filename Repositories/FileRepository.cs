@@ -30,9 +30,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         return await query.Where(predicate).ToListAsync();
     }
 
-    public Task<File> AddAsync(File entity)
+    public async Task<File> AddAsync(File entity)
     {
-        throw new NotImplementedException();
+        var res = await context.Files.AddAsync(entity);
+        return res.Entity;
     }
 
     public async Task<int> SaveChangesAsync()

@@ -270,10 +270,17 @@ button:disabled {
     opacity: 0.5;
 }
 
-.remove, .close {
+.event-output > .remove,
+.close {
     background-color: var(--foreground-color);
-    mask: url("../icons/cross-circle-svgrepo-com.svg") no-repeat center;
-    -webkit-mask: url("../icons/cross-circle-svgrepo-com.svg") no-repeat center;
+    mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+}
+
+.upload-btn {
+    background-color: var(--foreground-color);
+    mask: url("../icons/upload-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/upload-svgrepo-com.svg") no-repeat center;
 }
 
 .event-output {
@@ -299,7 +306,13 @@ button:disabled {
     -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
 }
 
-.remove, .close, .event-output > .waiting, .event-output > .success, .event-output > .error, .in-progress {
+.event-output > .remove,
+.close,
+.event-output > .waiting,
+.event-output > .success,
+.event-output > .error,
+.in-progress,
+.upload-btn {
     mask-size: cover;
     -webkit-mask-size: cover;
     height: 2em;
@@ -316,4 +329,13 @@ details > summary > span {
 
 .always-open-details {
     cursor: text;
+}
+
+a.btn {
+    padding: 0.5em 1em;
+    background-color: var(--background-backdrop-color);
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+    border-radius: 1em;
+    text-decoration: none;
+    color: var(--foreground-color);
 }
