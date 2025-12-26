@@ -112,14 +112,14 @@ public class FileController(
 
         var res = readings.GroupBy(reading => new AllFilesReadingItemKey
             {
-                Id = reading.File!.BucketId,
+                BucketId = reading.File!.BucketId,
                 CustomName = reading.File?.Bucket?.CustomName ?? reading.File?.Bucket?.Name!
             })
-            .ToDictionary(reading => reading.Key!, reading => reading
+            .ToDictionary(reading => reading.Key, reading => reading
                 .OrderByDescending(f => f.UpdatedDate)
                 .Select(r => new AllFilesReadingItem
                 {
-                    Id = r.Id,
+                    FileId = r.FileId,
                     CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
                     DateTime = r.UpdatedDate,
                     Size = r.File?.Size ?? 0,
