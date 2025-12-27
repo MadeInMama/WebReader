@@ -24,6 +24,7 @@ main {
     place-items: center;
     filter: invert(var(--canvas-invert));
     transition: filter var(--animation-time);
+    width: 100%;
 }
 
 #pdf-canvas {
