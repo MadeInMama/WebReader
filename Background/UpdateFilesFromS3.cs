@@ -2,6 +2,7 @@
 using WebReader.Helpers;
 using WebReader.Repositories;
 using WebReader.Services;
+using Bucket = WebReader.Models.Entities.Bucket;
 
 namespace WebReader.Background;
 
@@ -14,6 +15,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
         await RemoveBucketsThatNotExistsInDb(stoppingToken);
         await MakeUnavailableBucketsThatNotExistsInS3(stoppingToken);
         await RemoveFilesThatNotExistsInDb(stoppingToken);
+        await UpdateBucketData(stoppingToken);
         await UpdateFilesData(stoppingToken);
 
         using PeriodicTimer timer = new(PeriodTime);
@@ -23,6 +25,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
             await RemoveBucketsThatNotExistsInDb(stoppingToken);
             await MakeUnavailableBucketsThatNotExistsInS3(stoppingToken);
             await RemoveFilesThatNotExistsInDb(stoppingToken);
+            await UpdateBucketData(stoppingToken);
             await UpdateFilesData(stoppingToken);
         }
     }
@@ -84,19 +87,25 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
         logger.LogInformation(
             $"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Found {{count}} buckets in s3", allBucketsInS3.Count);
 
+        var toSave = new List<Bucket>();
+
         foreach (var bucketInDb in allBucketsInDb)
         {
             var isAvailable = allBucketsInS3.Exists(f => f.Name.Equals(bucketInDb.Name));
+
+            if (bucketInDb.IsAvailable == isAvailable) continue;
 
             logger.LogInformation(
                 $"{nameof(RemoveBucketsThatNotExistsInDb)}: Bucket {{bucketName}} availability will be set to {{}}",
                 bucketInDb.Name, isAvailable);
 
             bucketInDb.IsAvailable = isAvailable;
+
+            toSave.Add(bucketInDb);
         }
 
         //TODO: not update all
-        bucketRepository.UpdateAll(allBucketsInDb);
+        if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
 
         logger.LogInformation($"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Total update count {{updated}}",
             await bucketRepository.SaveChangesAsync());
@@ -133,6 +142,37 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
 
         await Task.WhenAll(tasks);
         logger.LogInformation($"Finished {nameof(RemoveFilesThatNotExistsInDb)}");
+    }
+
+    private async Task UpdateBucketData(CancellationToken stoppingToken = default)
+    {
+        logger.LogInformation($"Start {nameof(UpdateBucketData)}");
+
+        using var scope = services.CreateScope();
+        var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
+        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
+
+        var allBucketsInDb = (await bucketRepository.AllAsync(f => true)).ToList();
+
+        var toSave = new List<Bucket>();
+
+        foreach (var bucketInDb in allBucketsInDb)
+        {
+            var size = (await minioService.ListObjectsAsync(bucketInDb.Name)).ToList()
+                .Aggregate<Item, ulong>(0, (current, s) => current + s.Size);
+
+            if (size == bucketInDb.Size) continue;
+
+            bucketInDb.Size = size;
+            toSave.Add(bucketInDb);
+        }
+
+        if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
+
+        logger.LogInformation($"{nameof(UpdateBucketData)}: Total update count {{updated}}",
+            await bucketRepository.SaveChangesAsync());
+
+        logger.LogInformation($"Finished {nameof(UpdateBucketData)}");
     }
 
     private async Task UpdateFilesData(CancellationToken stoppingToken = default)

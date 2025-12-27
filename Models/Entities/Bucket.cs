@@ -14,4 +14,6 @@ public class Bucket : BaseEntity
 
     public Guid? UserId { get; init; }
     public CustomUser? User { get; init; }
+
+    public ulong? Size { get; set; }
 }

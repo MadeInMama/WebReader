@@ -42,11 +42,6 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         return await context.SaveChangesAsync();
     }
 
-    public void ClearChanges()
-    {
-        context.ChangeTracker.Clear();
-    }
-
     public File Update(File entity)
     {
         var res = context.Files.Update(entity);

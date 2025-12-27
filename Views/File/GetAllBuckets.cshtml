@@ -10,15 +10,29 @@
         .bucket-line {
             width: 100%;
             max-width: calc(var(--max-width) - 1em);
+            margin-top: 0.5em;
         }
 
-        .bucket-line:not(:first-child) {
-            margin-top: 0.5em;
+        .bucket-line > a {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5em;
+        }
+
+        .main-info-span {
+            flex-grow: 1;
+        }
+
+        .secondary-info-span {
+            flex-grow: 0;
         }
     </style>
 }
 
-@section SpecialInfo {
+@section SpecialInfo
+
+{
     @if (User.Identity is { IsAuthenticated: true })
     {
         <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
@@ -32,7 +46,11 @@
     {
         <div class="bucket-line">
             <a asp-controller="File" asp-action="GetAllFilesInBucket"
-               asp-route-bucketId="@item.Id">@item.CustomName@* - @item.DateTime.LocalDateTime*@</a>
+               asp-route-bucketId="@item.Id">
+                <span class="main-info-span">@item.CustomName</span>
+                <span class="secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
+                <span class="secondary-info-span">@FormatSize(item.Size)</span>
+            </a>
         </div>
     }
 }

@@ -30,7 +30,8 @@ public class FileController(
                 {
                     Id = bucket.Id,
                     CustomName = bucket.CustomName ?? bucket.Name,
-                    DateTime = bucket.CreatedDate
+                    DateTime = bucket.CreatedDate,
+                    Size = bucket.Size ?? 0
                 });
 
         return View(new AllBucketsViewModel { Items = res });
@@ -370,8 +371,6 @@ public class FileController(
         }
 
         //TODO: part-parent check and set
-
-        fileRepository.ClearChanges();
 
         var currentFile = new File
         {

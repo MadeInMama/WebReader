@@ -131,7 +131,8 @@
                         }
                         <span class="left main-info-span">@item.FileName @item.CurrentPartName</span>
                         <span class="right secondary-info-span">@item.Type.ToString().ToLower()</span>
-                        <span class="right secondary-info-span">@item.DateTime.LocalDateTime.ToShortDateString()</span>
+                        <span
+                            class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
                         <span class="right secondary-info-span">@FormatSize(item.Size)</span>
                     </a>
                 </div>
