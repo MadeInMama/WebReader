@@ -409,6 +409,8 @@ public class FileController(
             return View(request);
         }
 
-        return RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
+        return currentFile.NextPartId.HasValue
+            ? RedirectToAction("GetAllPartsInFile", new { bucketId = bucket.Id, fileId = currentFile.Id })
+            : RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
     }
 }
