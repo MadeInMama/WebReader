@@ -19,7 +19,7 @@ public class FileApiController(UserReadingRepository readingRepository) : Contro
             return BadRequest(ModelState);
 
         var reading = await readingRepository.FirstOrDefaultAsync(f =>
-            f.UserId == request.UserId && f.FileId == request.FileId);
+            f.UserId == request.UserId && f.FileId == request.FileId, null);
 
         if (reading == null)
         {

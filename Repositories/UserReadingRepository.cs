@@ -10,9 +10,10 @@ public class UserReadingRepository(
     IDbContextFactory<ApplicationDbContext> contextFactory) : IRepository<UserReading>
 {
     public async Task<UserReading?> FirstOrDefaultAsync(Expression<Func<UserReading, bool>> predicate,
+        ApplicationDbContext? ctx,
         params Expression<Func<UserReading, object>>[] includes)
     {
-        IQueryable<UserReading> query = context.Set<UserReading>();
+        IQueryable<UserReading> query = (ctx ?? context).Set<UserReading>();
 
         foreach (var include in includes)
             query = query.Include(include);

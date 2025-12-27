@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebReader.Data;
@@ -11,9 +12,11 @@ using WebReader.Data;
 namespace WebReader.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251227125957_file_next_part_unique")]
+    partial class file_next_part_unique
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,10 +117,6 @@ namespace WebReader.Migrations
                     b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("CurrentPartName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
                     b.Property<string>("CustomName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -149,7 +148,8 @@ namespace WebReader.Migrations
 
                     b.HasIndex("BucketId");
 
-                    b.HasIndex("NextPartId");
+                    b.HasIndex("NextPartId")
+                        .IsUnique();
 
                     b.HasIndex("Name", "BucketId")
                         .IsUnique();

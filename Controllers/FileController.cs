@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Dtos;
@@ -17,7 +19,8 @@ public class FileController(
     BucketRepository bucketRepository,
     FileRepository fileRepository,
     UserReadingRepository readingRepository,
-    MinioService minioService) : Controller
+    MinioService minioService,
+    IDbContextFactory<ApplicationDbContext> contextFactory) : Controller
 {
     public async Task<IActionResult> GetAllBuckets()
     {
@@ -37,16 +40,16 @@ public class FileController(
     {
         var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
 
+        var userGuid = User.GetUserGuid();
+
         var bucket = await bucketRepository
             .FirstOrDefaultAsync(f => f.IsAvailable &&
                                       !f.IsHidden &&
                                       f.Id == bucketId &&
                                       f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
-                                      (f.UserId == User.GetUserGuid() || f.UserId == null));
+                                      (f.UserId == userGuid || f.UserId == null), null);
 
         if (bucket == null) return RedirectToAction("AccessDenied", "Account");
-
-        var userGuid = User.GetUserGuid();
 
         var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
 
@@ -59,7 +62,8 @@ public class FileController(
                 Size = file.Size ?? 0,
                 Type = file.Type,
                 IsReading = allUserReadings.Any(reading => reading.FileId == file.Id),
-                IsParted = file.NextPartId.HasValue
+                IsParted = file.NextPartId.HasValue,
+                CurrentPartName = file.CurrentPartName
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
 
         return View(new AllFilesInBucketViewModel
@@ -67,6 +71,61 @@ public class FileController(
             Id = bucket.Id,
             BucketName = bucket.CustomName ?? bucket.Name,
             IsBelongsToUser = bucket.UserId == userGuid,
+            Items = res
+        });
+    }
+
+    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName")
+    {
+        var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
+
+        var userGuid = User.GetUserGuid();
+
+        var contextBucket = contextFactory.CreateDbContextAsync();
+        var contextFile = contextFactory.CreateDbContextAsync();
+
+        Task.WaitAll(contextBucket, contextFile);
+
+        var bucket = bucketRepository.FirstOrDefaultAsync(f => f.IsAvailable &&
+                                                               !f.IsHidden &&
+                                                               f.Id == bucketId &&
+                                                               f.AccessRoles.Intersect(User.GetUserRoles())
+                                                                   .Any() &&
+                                                               (f.UserId == userGuid || f.UserId == null),
+            contextBucket.Result);
+
+        var file = fileRepository.FirstOrDefaultAsync(f => f.IsAvailable &&
+                                                           !f.IsHidden &&
+                                                           f.Id == fileId &&
+                                                           f.AccessRoles.Intersect(User.GetUserRoles()).Any(),
+            contextFile.Result);
+
+        Task.WaitAll(bucket, file);
+
+        if (bucket.Result == null || file.Result == null)
+            return RedirectToAction("AccessDenied", "Account");
+
+        var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
+
+        var files = await fileRepository.GetAllAvailableObjectsWithPartsAsync(fileId);
+
+        var res = files.Select(f => new AllFilesInBucketItem
+        {
+            Id = f.Id,
+            FileName = f.CustomName ?? f.Name,
+            DateTime = f.UpdatedDate,
+            Size = f.Size ?? 0,
+            Type = f.Type,
+            IsReading = allUserReadings.Any(reading => reading.FileId == f.Id),
+            IsParted = f.NextPartId.HasValue,
+            CurrentPartName = f.CurrentPartName
+        }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
+
+        return View(new AllFilesInBucketViewModel
+        {
+            Id = bucket.Result.Id,
+            BucketName = bucket.Result.CustomName ?? bucket.Result.Name,
+            IsBelongsToUser = bucket.Result.UserId == userGuid,
             Items = res
         });
     }
@@ -124,6 +183,7 @@ public class FileController(
                     ReadingId = r.Id,
                     FileId = r.FileId,
                     CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
+                    CurrentPartName = r.File?.CurrentPartName,
                     DateTime = r.UpdatedDate,
                     Size = r.File?.Size ?? 0,
                     Page = r.Page
@@ -137,7 +197,7 @@ public class FileController(
         var file = await fileRepository.FirstOrDefaultAsync(f =>
             f.BucketId == bucketId &&
             f.Id == fileId &&
-            f.AccessRoles.Intersect(User.GetUserRoles()).Any());
+            f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null);
 
         if (file == null) return RedirectToAction("CustomNotFound", "Account");
 
@@ -146,7 +206,7 @@ public class FileController(
         var reading = await readingRepository
             .FirstOrDefaultAsync(f => f.UserId == userGuid
                                       && f.File!.BucketId == bucketId
-                                      && f.FileId == fileId);
+                                      && f.FileId == fileId, null);
 
         var res = new FileViewModel
         {
@@ -179,14 +239,14 @@ public class FileController(
                                       !f.IsHidden &&
                                       f.Id == bucketId &&
                                       f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
-                                      (f.UserId == User.GetUserGuid() || f.UserId == null));
+                                      (f.UserId == User.GetUserGuid() || f.UserId == null), null);
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
         var parts = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()))
             .Select(f => new SelectListItem
             {
-                Text = f.CustomName ?? f.Name,
+                Text = $"{f.CustomName ?? f.Name} {f.CurrentPartName}",
                 Value = f.Id.ToString()
             })
             .ToList();
@@ -210,6 +270,23 @@ public class FileController(
         var userGuid = User.GetUserGuid();
 
         if (userRoles.Count == 0 || userGuid == Guid.Empty) return RedirectToAction("AccessDenied", "Account");
+
+        var parts = (await fileRepository.GetAllAvailableObjectsInBucketAsync(request.BucketId, userRoles))
+            .Select(f => new SelectListItem
+            {
+                Text = $"{f.CustomName ?? f.Name} {f.CurrentPartName}",
+                Value = f.Id.ToString()
+            })
+            .ToList();
+
+        parts.Add(new SelectListItem
+        {
+            Selected = true,
+            Text = "Unselected",
+            Value = null
+        });
+
+        request.Parts = parts;
 
         if (request.File == null || request.File.Length < 1)
         {
@@ -238,21 +315,28 @@ public class FileController(
             return View(request);
         }
 
+        if (request is { AsParentOfId: not null, AsPartOfId: not null } &&
+            request.AsParentOfId.Value == request.AsPartOfId.Value)
+        {
+            ModelState.AddModelError(string.Empty, "Previous and next files can't be the same.");
+            return View(request);
+        }
+
         var bucket = await bucketRepository
             .FirstOrDefaultAsync(f => f.IsAvailable && !f.IsHidden &&
                                       f.Id == request.BucketId &&
-                                      f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
-                                      (f.UserId == User.GetUserGuid() || f.UserId == null));
+                                      f.AccessRoles.Intersect(userRoles).Any() &&
+                                      (f.UserId == userGuid || f.UserId == null), null);
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
-        File? asPartOfFile, asParentOfFile;
+        File? asPartOfFile = null, asParentOfFile = null;
 
         if (request.AsPartOfId.HasValue)
         {
             asPartOfFile = await fileRepository.FirstOrDefaultAsync(f =>
                 f.BucketId == bucket.Id && !f.IsHidden && f.Id == request.AsPartOfId!.Value &&
-                f.AccessRoles.Intersect(User.GetUserRoles()).Any());
+                f.AccessRoles.Intersect(userRoles).Any(), null);
 
             if (asPartOfFile == null)
             {
@@ -262,11 +346,11 @@ public class FileController(
             }
         }
 
-        if (request.AsPartOfId.HasValue)
+        if (request.AsParentOfId.HasValue)
         {
             asParentOfFile = await fileRepository.FirstOrDefaultAsync(f =>
                 f.BucketId == bucket.Id && !f.IsHidden && f.Id == request.AsParentOfId!.Value &&
-                f.AccessRoles.Intersect(User.GetUserRoles()).Any());
+                f.AccessRoles.Intersect(userRoles).Any(), null);
 
             if (asParentOfFile == null)
             {
@@ -287,7 +371,9 @@ public class FileController(
 
         //TODO: part-parent check and set
 
-        await fileRepository.AddAsync(new File
+        fileRepository.ClearChanges();
+
+        var currentFile = new File
         {
             BucketId = bucket.Id,
             Name = request.File.FileName,
@@ -296,8 +382,21 @@ public class FileController(
             IsAvailable = true,
             IsHidden = false,
             Size = (ulong?)request.File.Length,
-            NextPartId = request.AsParentOfId
-        });
+            NextPartId = asParentOfFile?.Id,
+            CurrentPartName = request.CurrentPartName
+        };
+
+        if (asPartOfFile != null)
+        {
+            asPartOfFile.NextPartId = currentFile.Id;
+            asPartOfFile.NextPart = currentFile;
+
+            fileRepository.Update(asPartOfFile);
+        }
+        else
+        {
+            await fileRepository.AddAsync(currentFile);
+        }
 
         try
         {
@@ -305,8 +404,9 @@ public class FileController(
         }
         catch (Exception _)
         {
-            ModelState.AddModelError(string.Empty,
-                "File save failed. Try again later.");
+            await minioService.RemoveObjectsAsync(bucket.Name, [currentFile.Name]);
+
+            ModelState.AddModelError(string.Empty, "File save failed. Try again later.");
             return View(request);
         }
 

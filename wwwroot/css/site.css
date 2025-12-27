@@ -312,6 +312,12 @@ button:disabled {
     -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
 }
 
+.parted {
+    background-color: var(--foreground-color);
+    mask: url("../icons/circular-cake-graphic-with-quarter-part-cutted-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/circular-cake-graphic-with-quarter-part-cutted-svgrepo-com.svg") no-repeat center;
+}
+
 .event-output > .remove,
 .close,
 .event-output > .waiting,
@@ -319,7 +325,8 @@ button:disabled {
 .event-output > .error,
 .in-progress,
 .upload-btn,
-.force-light-mode {
+.force-light-mode,
+.parted {
     mask-size: cover;
     -webkit-mask-size: cover;
     height: 2em;

@@ -15,4 +15,5 @@ public class File : BaseEntity
     public bool IsAvailable { get; set; }
     public Guid? NextPartId { get; set; }
     public File? NextPart { get; set; }
+    [MaxLength(256)] public string? CurrentPartName { get; set; }
 }

@@ -78,9 +78,13 @@
 <form asp-action="UploadFile" asp-controller="File" method="POST"
       enctype="multipart/form-data">
     <input type="hidden" asp-for="BucketId"/>
+    <input type="hidden" asp-for="Parts"/>
 
     <div class="name-file-container">
         <input asp-for="CustomName" required placeholder="File Name"
+               autocapitalize="off" autocorrect="off" spellcheck="false"/>
+
+        <input asp-for="CurrentPartName" required placeholder="Part Name"
                autocapitalize="off" autocorrect="off" spellcheck="false"/>
 
         <input asp-for="File" type="file" required placeholder="File"/>

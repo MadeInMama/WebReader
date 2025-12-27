@@ -1,6 +1,6 @@
 ﻿(async () => {
     // === CONFIG ===
-    const selector = 'img'; // ← Modify: e.g., 'article img', '.post img'
+    const selector = 'img.ace_mo'; // ← Modify: e.g., 'article img', '.post img'
     const minDimension = 50; // skip tiny icons (px)
     const scrollDelay = 3000; // ms to wait after scrolling
 
@@ -8,18 +8,18 @@
     console.log('⏬ Scrolling to load all images...');
     let scrolled = 0;
     const scrollInterval = setInterval(() => {
-        window.scrollBy(0, 100);
-        scrolled += 300;
-        console.log(scrolled + " | " + document.querySelector('.article_layer__content').scrollHeight * 1.5);
-        if (scrolled > document.querySelector('.article_layer__content').scrollHeight * 1.5) clearInterval(scrollInterval);
+        window.scrollBy(0, 1000);
+        scrolled += 1000;
+        console.log(scrolled + " | " + document.querySelector('main').scrollHeight);
+        if (scrolled > document.querySelector('main').scrollHeight) clearInterval(scrollInterval);
     }, 100);
-    await new Promise(r => setTimeout(r, document.querySelector('.article_layer__content').scrollHeight * 1.5 / 3));
+    await new Promise(r => setTimeout(r, document.querySelector('main').scrollHeight / 1000));
     clearInterval(scrollInterval);
     window.scrollTo(0, 0);
     await new Promise(r => setTimeout(r, 800));
 
     // === 2. Collect images ===
-    const imgs = Array.from(document.querySelector('.article_layer__content').querySelectorAll('img'))
+    const imgs = Array.from(document.querySelectorAll(selector))
         .filter(img =>
             img.src &&
             img.naturalWidth > 0 &&

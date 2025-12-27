@@ -53,7 +53,8 @@
             justify-content: flex-end;
         }
 
-        .file-line > a > div > .in-progress {
+        .file-line > a > div > .in-progress,
+        .parted {
             font-size: 0.75em;
         }
 
@@ -104,26 +105,45 @@
             </summary>
             @foreach (var item in Model.Items)
             {
-                <div class="file-line">
-                    <a asp-controller="File" asp-action="GetFile"
-                       asp-route-bucketId="@Model.Id"
-                       asp-route-fileId="@item.Id">
-                        @if (item.IsReading)
-                        {
-                            <div class="center secondary-info-span">
-                                <span class="in-progress"></span>
-                            </div>
-                        }
-                        else
-                        {
-                            <span class="in-progress-empty secondary-info-span"></span>
-                        }
-                        <span class="left main-info-span">@item.FileName</span>
-                        <span class="right secondary-info-span">@item.Type.ToString().ToLower()</span>
-                        <span class="right secondary-info-span">@item.DateTime.LocalDateTime.ToShortDateString()</span>
-                        <span class="right secondary-info-span">@FormatSize(item.Size)</span>
-                    </a>
-                </div>
+                @if (item.IsParted)
+                {
+                    <div class="file-line">
+                        <a asp-controller="File" asp-action="GetAllPartsInFile"
+                           asp-route-bucketId="@Model.Id"
+                           asp-route-fileId="@item.Id">
+                            <div class="center parted secondary-info-span"></div>
+                            <span class="left main-info-span">@item.FileName</span>
+                            <span class="right secondary-info-span">@item.Type.ToString().ToLower()</span>
+                            <span
+                                class="right secondary-info-span">@item.DateTime.LocalDateTime.ToShortDateString()</span>
+                            <span class="right secondary-info-span">@FormatSize(item.Size)</span>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="file-line">
+                        <a asp-controller="File" asp-action="GetFile"
+                           asp-route-bucketId="@Model.Id"
+                           asp-route-fileId="@item.Id">
+                            @if (item.IsReading)
+                            {
+                                <div class="center secondary-info-span">
+                                    <span class="in-progress"></span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="in-progress-empty secondary-info-span"></span>
+                            }
+                            <span class="left main-info-span">@item.FileName</span>
+                            <span class="right secondary-info-span">@item.Type.ToString().ToLower()</span>
+                            <span
+                                class="right secondary-info-span">@item.DateTime.LocalDateTime.ToShortDateString()</span>
+                            <span class="right secondary-info-span">@FormatSize(item.Size)</span>
+                        </a>
+                    </div>
+                }
             }
         </details>
     </div>

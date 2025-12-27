@@ -81,7 +81,7 @@
                 <div class="reading-line" id="@("RL_" + obj.ReadingId)">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@item.Key.BucketId"
-                       asp-route-fileId="@obj.FileId">@obj.CustomName@* - @obj.DateTime.LocalDateTime*@ - @obj.Page@* - @FormatSize(obj.Size)*@</a>
+                       asp-route-fileId="@obj.FileId">@obj.CustomName @obj.CurrentPartName @* - @obj.DateTime.LocalDateTime*@ - @obj.Page@* - @FormatSize(obj.Size)*@</a>
                     <div class="event-output">
                         <button class="remove" onclick="Delete('@obj.ReadingId')"></button>
                     </div>
@@ -104,6 +104,7 @@
 
         async function Delete(id) {
             document.querySelectorAll(".remove").forEach(el => el.disabled = true);
+            document.querySelector(`#RL_${id} > .event-output > button`).classList = 'waiting';
 
             requestQueue.enqueue({
                 method: 'POST',
@@ -118,7 +119,6 @@
                     withCredentials: true
                 },
                 beforeSend: () => {
-                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'waiting';
                 }
             })
                 .then(_ => {

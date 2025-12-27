@@ -9,9 +9,10 @@ namespace WebReader.Repositories;
 public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket>
 {
     public async Task<Bucket?> FirstOrDefaultAsync(Expression<Func<Bucket, bool>> predicate,
+        ApplicationDbContext? ctx,
         params Expression<Func<Bucket, object>>[] includes)
     {
-        IQueryable<Bucket> query = context.Set<Bucket>();
+        IQueryable<Bucket> query = (ctx ?? context).Set<Bucket>();
 
         foreach (var include in includes)
             query = query.Include(include);

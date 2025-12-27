@@ -1,0 +1,151 @@
+﻿@model WebReader.Models.Dtos.AllFilesInBucketViewModel
+@{
+    ViewData["Title"] = "FILES";
+}
+
+@section Style
+{
+    <style>
+        .content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: calc(var(--max-width) - 1em);
+        }
+
+        .file-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            min-height: 2em;
+        }
+
+        .file-line > a {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5em;
+            grid-auto-rows: 2em;
+            align-items: center;
+            width: 100%;
+        }
+
+        .file-line > a > span {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .file-line > a > .left {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+
+        .file-line > a > .center {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .file-line > a > .right {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+        }
+
+        .file-line > a > div > .in-progress {
+            font-size: 0.75em;
+        }
+
+        .file-line:not(:last-child) {
+            margin-bottom: 0.5em;
+        }
+
+        .secondary-info-span {
+            flex-grow: 0;
+        }
+
+        .main-info-span {
+            flex-grow: 1;
+        }
+
+        .in-progress-empty {
+            font-size: 0.75em;
+            height: 2em;
+            width: 2em;
+        }
+
+        .upload-btn-container {
+            margin-top: 1em;
+        }
+
+        @@media (width < 700px) {
+            .secondary-info-span {
+                display: none !important;
+            }
+        }
+    </style>
+}
+
+@section SpecialInfo
+{
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
+    }
+}
+
+@if (Model.Items.Any())
+{
+    <div class="content">
+        <details open class="always-open-details">
+            <summary>
+                <span>@Model.BucketName</span>
+            </summary>
+            @foreach (var item in Model.Items)
+            {
+                <div class="file-line">
+                    <a asp-controller="File" asp-action="GetFile"
+                       asp-route-bucketId="@Model.Id"
+                       asp-route-fileId="@item.Id">
+                        @if (item.IsReading)
+                        {
+                            <div class="center secondary-info-span">
+                                <span class="in-progress"></span>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="in-progress-empty secondary-info-span"></span>
+                        }
+                        <span class="left main-info-span">@item.FileName @item.CurrentPartName</span>
+                        <span class="right secondary-info-span">@item.Type.ToString().ToLower()</span>
+                        <span class="right secondary-info-span">@item.DateTime.LocalDateTime.ToShortDateString()</span>
+                        <span class="right secondary-info-span">@FormatSize(item.Size)</span>
+                    </a>
+                </div>
+            }
+        </details>
+    </div>
+}
+else
+{
+    @await Html.PartialAsync("_EmptyDisplay")
+}
+
+@if (Model.IsBelongsToUser)
+{
+    <div class="upload-btn-container">
+        <a class="btn" asp-controller="File"
+           asp-action="UploadFile"
+           asp-route-bucketId="@Model.Id">
+            Upload File
+        </a>
+    </div>
+}
+
+@section Scripts
+{
+    <script>
+    </script>
+}

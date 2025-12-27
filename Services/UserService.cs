@@ -14,7 +14,7 @@ public class UserService(
 {
     public async Task<CustomUser?> AuthenticateAsync(string username, string password)
     {
-        var user = await userRepository.FirstOrDefaultAsync(f => f.Username.Equals(username) && f.IsActive);
+        var user = await userRepository.FirstOrDefaultAsync(f => f.Username.Equals(username) && f.IsActive, null);
 
         if (user != null && VerifyPassword(password, user.PasswordHash)) return user;
 
@@ -23,7 +23,7 @@ public class UserService(
 
     public async Task<CustomUser?> CreateUserAsync(string username, string password)
     {
-        if (await userRepository.FirstOrDefaultAsync(f => f.Username.Equals(username)) != null)
+        if (await userRepository.FirstOrDefaultAsync(f => f.Username.Equals(username), null) != null)
             return null;
 
         var user = new CustomUser
@@ -58,6 +58,7 @@ public class UserService(
     {
         var user = await userRepository.FirstOrDefaultAsync(
             f => f.Id == id && f.IsActive,
+            null,
             f => f.UserReadings, f => f.Bucket);
 
         if (user == null) return;

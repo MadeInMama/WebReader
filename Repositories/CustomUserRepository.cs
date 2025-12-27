@@ -8,9 +8,10 @@ namespace WebReader.Repositories;
 public class CustomUserRepository(ApplicationDbContext context) : IRepository<CustomUser>
 {
     public async Task<CustomUser?> FirstOrDefaultAsync(Expression<Func<CustomUser, bool>> predicate,
+        ApplicationDbContext? ctx,
         params Expression<Func<CustomUser, object>>[] includes)
     {
-        IQueryable<CustomUser> query = context.Set<CustomUser>();
+        IQueryable<CustomUser> query = (ctx ?? context).Set<CustomUser>();
 
         foreach (var include in includes)
             query = query.Include(include);

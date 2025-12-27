@@ -17,4 +17,5 @@ public class AllFilesInBucketItem
     public FileType Type { get; init; }
     public bool IsReading { get; init; }
     public bool IsParted { get; init; }
+    public string? CurrentPartName { get; init; }
 }
