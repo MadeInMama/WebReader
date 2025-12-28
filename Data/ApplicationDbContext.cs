@@ -37,7 +37,7 @@ public class ApplicationDbContext : DbContext
                 context.Set<Bucket>().Add(new Bucket
                 {
                     Name = $"personal-{user.Entity.Id}",
-                    CustomName = "Personal Bucket",
+                    CustomName = "Personal",
                     UserId = user.Entity.Id
                 });
 
@@ -49,7 +49,7 @@ public class ApplicationDbContext : DbContext
                 context.Set<Bucket>().Add(new Bucket
                 {
                     Name = "mybucket",
-                    CustomName = "Default Bucket"
+                    CustomName = "Default"
                 });
 
                 context.SaveChanges();

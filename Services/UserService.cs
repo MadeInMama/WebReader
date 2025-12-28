@@ -40,7 +40,7 @@ public class UserService(
         var bucket1 = bucketRepository.AddAsync(new Bucket
         {
             Name = bucketName,
-            CustomName = "Personal Bucket",
+            CustomName = "Personal",
             IsHidden = false,
             UserId = user.Id,
             User = user
@@ -67,7 +67,7 @@ public class UserService(
         var bucketTask = bucketService.RemoveBucketAsync(user.Bucket);
 
         await Task.WhenAll(userReadingTask, bucketTask);
-
+//TODO: delete at once with custom query or context
         await userRepository.DeleteAsync(user.Id);
     }
 
