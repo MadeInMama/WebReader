@@ -28,6 +28,18 @@
 
 <h3 class="special-info-small">@Model.Title @Model.CurrentPartName</h3>
 
+@if (Model.NextPartId.HasValue)
+{
+    @section HeaderMenuItems {
+        <li>
+            <a asp-controller="File" asp-action="GetFile"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value">
+                Next part
+            </a>
+        </li>
+    }
+}
+
 <div class="pdf-canvas-container force-light-canvas">
     <canvas id="pdf-canvas"></canvas>
 </div>
