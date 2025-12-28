@@ -13,6 +13,12 @@
         .force-light-canvas {
             filter: none !important;
         }
+
+        @@media (prefers-color-scheme: light) {
+            .force-light-mode {
+                display: none;
+            }
+        }
     </style>
 }
 
