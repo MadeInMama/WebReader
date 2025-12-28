@@ -217,7 +217,8 @@ public class FileController(
             Scale = reading?.Scale ?? 100,
             Title = file.CustomName ?? file.Name,
             BucketId = file.BucketId,
-            FileName = file.CustomName ?? file.Name
+            FileName = file.CustomName ?? file.Name,
+            CurrentPartName = file.CurrentPartName
         };
 
         switch (file.Type)
