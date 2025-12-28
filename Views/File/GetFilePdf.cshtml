@@ -109,7 +109,7 @@
 
         async function renderPage() {
             const page = await pdfDoc.getPage(currentPage);
-            const viewport = page.getViewport({scale: currentScale === 0 ? 3 : currentScale / 25});
+            const viewport = page.getViewport({scale: currentScale === 0 ? 3 : currentScale / 33});
             const canvas = document.getElementById('pdf-canvas');
             const context = canvas.getContext('2d');
 
