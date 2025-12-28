@@ -10,4 +10,5 @@ public class FileViewModel
     public required int Scale { get; init; }
     public required string Title { get; init; }
     public string? CurrentPartName { get; init; }
+    public Guid? NextPartId { get; init; }
 }

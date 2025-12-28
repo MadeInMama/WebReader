@@ -218,7 +218,8 @@ public class FileController(
             Title = file.CustomName ?? file.Name,
             BucketId = file.BucketId,
             FileName = file.CustomName ?? file.Name,
-            CurrentPartName = file.CurrentPartName
+            CurrentPartName = file.CurrentPartName,
+            NextPartId = file.NextPartId
         };
 
         switch (file.Type)

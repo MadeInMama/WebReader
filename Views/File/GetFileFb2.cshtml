@@ -17,6 +17,19 @@
 
 <h3 class="special-info-small">@Model.Title @Model.CurrentPartName</h3>
 
+@if(Model.NextPartId.HasValue)
+{
+    @section HeaderMenuItems
+    {
+        <li>
+            <a asp-controller="File" asp-action="GetFileFb2"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId">
+                Next Part
+            </a>
+        </li>
+    }
+}
+
 @await Html.PartialAsync("_ModalInfoWithCustomHtml")
 
 <div class="fb2-canvas-container">

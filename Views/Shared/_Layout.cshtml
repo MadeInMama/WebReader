@@ -16,7 +16,7 @@
 <header>
     <div>
         <ul>
-            <li>
+            <li style="display: none;">
                 <a asp-controller="Home" asp-action="Index">Home</a>
             </li>
             @await RenderSectionAsync("HeaderMenuItems", false)
@@ -28,7 +28,7 @@
                 <li>
                     <a asp-controller="File" asp-action="GetReading">Reading</a>
                 </li>
-                <li>
+                <li style="display: none;">
                     <form asp-controller="Account"
                           asp-action="DeleteMe"
                           method="post"
