@@ -72,9 +72,9 @@
 }
 
 <div id="full_content">
-    @foreach (var (item, index) in Model.Items.Select((item, index) => (item, index)))
+    @foreach (var item in Model.Items)
     {
-        <details @(index == 0 ? "open" : "")>
+        <details open>
             <summary><span>@item.Key.CustomName</span></summary>
             @foreach (var obj in item.Value)
             {
