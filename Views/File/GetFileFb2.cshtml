@@ -98,8 +98,7 @@
             })
             .catch(_ => {
                 customSendCurrPageEvent.detail.message = `<div class="error"></div>`;
-                customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
-                customSendCurrPageEvent.detail.millis = 3000;
+                customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
                 targetElement.dispatchEvent(customSendCurrPageEvent);
             });
 
@@ -379,8 +378,7 @@
                 })
                 .catch(_ => {
                     customSendCurrPageEvent.detail.message = `<div class="error"></div>`;
-                    customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
-                    customSendCurrPageEvent.detail.millis = 3000;
+                    customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
                     targetElement.dispatchEvent(customSendCurrPageEvent);
                 });
         }
