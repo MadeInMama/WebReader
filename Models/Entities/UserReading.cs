@@ -8,4 +8,5 @@ public class UserReading : BaseEntity
     public File? File { get; init; }
     public int Page { get; set; } = 1;
     public int Scale { get; set; } = 100;
+    public bool IsDone { get; set; } = false;
 }

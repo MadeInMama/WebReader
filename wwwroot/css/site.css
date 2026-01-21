@@ -108,7 +108,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 html {
-    font-size: 16px;
+    font-size: 14px;
     overflow-y: scroll;
 }
 
@@ -131,7 +131,7 @@ html, body {
     }
 
     html {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .special-info-big {
@@ -145,7 +145,7 @@ html, body {
 
 @media (width < 700px) {
     html {
-        font-size: 20px;
+        font-size: 18px;
     }
 }
 
@@ -300,6 +300,12 @@ button:disabled {
     -webkit-mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
 }
 
+.is-done {
+    background-color: var(--foreground-color);
+    mask: url("../icons/round-done-button-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/round-done-button-svgrepo-com.svg") no-repeat center;
+}
+
 .event-output > .success {
     background-color: var(--success-foreground-color);
     mask: url("../icons/success-tick-svgrepo-com.svg") no-repeat center;
@@ -324,6 +330,7 @@ button:disabled {
 .event-output > .success,
 .event-output > .error,
 .in-progress,
+.is-done,
 .upload-btn,
 .force-light-mode,
 .parted {

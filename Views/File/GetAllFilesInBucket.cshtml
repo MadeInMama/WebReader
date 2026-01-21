@@ -65,6 +65,7 @@
         }
 
         .file-line > a > div > .in-progress,
+        .file-line > a > div > .is-done,
         .parted {
             font-size: 0.75em;
         }
@@ -136,7 +137,14 @@
                             @if (item.IsReading)
                             {
                                 <div class="center secondary-info-span">
-                                    <span class="in-progress"></span>
+                                    @if (item.IsDone)
+                                    {
+                                        <span class="is-done"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="in-progress"></span>
+                                    }
                                 </div>
                             }
                             else

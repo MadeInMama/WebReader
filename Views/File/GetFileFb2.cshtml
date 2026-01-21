@@ -17,7 +17,7 @@
 
 <h3 class="special-info-small">@Model.Title @Model.CurrentPartName</h3>
 
-@if(Model.NextPartId.HasValue)
+@if (Model.NextPartId.HasValue)
 {
     @section HeaderMenuItems
     {
@@ -259,7 +259,7 @@
                 case 'empty-line':
                     return '';
                 case 'emphasis':
-                    return `<em>${children()}</em>`;
+                    return ` <em>${children()}</em> `;
                 case 'strong':
                     return `<strong>${children()}</strong>`;
                 case 'a':
@@ -351,12 +351,13 @@
         function SendCurrPage() {
             requestQueue.enqueue({
                 method: 'POST',
-                url: '/api/FileApi/UpdatePage',
+                url: '/api/FileApi/UpdateReading',
                 data: {
                     FileId: "@Model.FileId",
                     UserId: "@Model.UserId",
                     Page: currentPage,
                     Scale: currentScale,
+                    IsLastPage: currentPage === maxPage,
                 },
                 options: {
                     headers: {

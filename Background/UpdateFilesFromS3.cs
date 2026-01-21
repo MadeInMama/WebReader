@@ -1,8 +1,10 @@
 ﻿using Minio.DataModel;
 using WebReader.Helpers;
+using WebReader.Models;
 using WebReader.Repositories;
 using WebReader.Services;
 using Bucket = WebReader.Models.Entities.Bucket;
+using File = WebReader.Models.Entities.File;
 
 namespace WebReader.Background;
 
@@ -104,7 +106,6 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
             toSave.Add(bucketInDb);
         }
 
-        //TODO: not update all
         if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
 
         logger.LogInformation($"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Total update count {{updated}}",
@@ -190,7 +191,12 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
 
         await Task.WhenAll(allFilesInS3.Values);
 
+        var toSave = new List<File>();
+
         foreach (var fileInDb in allFilesInDb)
+        {
+            var isChanged = false;
+
             if (allFilesInS3.TryGetValue(fileInDb.Bucket.Name, out var filesInS3))
             {
                 var fileInS3 = filesInS3.Result.FirstOrDefault(f => f.Key.Equals(fileInDb.Name));
@@ -199,28 +205,46 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
                 {
                     if (fileInS3.Key.TryGetFileType(out var fileType))
                     {
+                        if (!fileInDb.IsAvailable ||
+                            fileInDb.Size != fileInS3.Size ||
+                            fileInDb.Type != fileType)
+                            isChanged = true;
+
                         fileInDb.IsAvailable = true;
                         fileInDb.Size = fileInS3.Size;
                         fileInDb.Type = fileType;
                     }
                     else
                     {
+                        if (fileInDb.IsAvailable)
+                            isChanged = true;
+
                         fileInDb.IsAvailable = false;
                     }
                 }
                 else
                 {
+                    if (fileInDb.IsAvailable)
+                        isChanged = true;
+
                     fileInDb.IsAvailable = false;
                 }
             }
             else
             {
+                if (fileInDb.IsAvailable)
+                    isChanged = true;
+
                 fileInDb.IsAvailable = false;
             }
 
-        fileRepository.UpdateAll(allFilesInDb);
+            if (isChanged) toSave.Add(fileInDb);
+        }
 
-        await fileRepository.SaveChangesAsync();
+        if (toSave.Count != 0) fileRepository.UpdateAll(toSave);
+
+        logger.LogInformation($"{nameof(UpdateFilesData)}: Total update count {{updated}}",
+            await fileRepository.SaveChangesAsync());
         logger.LogInformation($"Finished {nameof(UpdateFilesData)}");
     }
 }

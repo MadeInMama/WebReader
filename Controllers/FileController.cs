@@ -55,16 +55,22 @@ public class FileController(
         var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
 
         var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Name, User.GetUserRoles()))
-            .Select(file => new AllFilesInBucketItem
+            .Select(file =>
             {
-                Id = file.Id,
-                FileName = file.CustomName ?? file.Name,
-                DateTime = file.UpdatedDate,
-                Size = file.Size ?? 0,
-                Type = file.Type,
-                IsReading = allUserReadings.Any(reading => reading.FileId == file.Id),
-                IsParted = file.NextPartId.HasValue,
-                CurrentPartName = file.CurrentPartName
+                var reading = allUserReadings.FirstOrDefault(reading => reading.FileId == file.Id);
+
+                return new AllFilesInBucketItem
+                {
+                    Id = file.Id,
+                    FileName = file.CustomName ?? file.Name,
+                    DateTime = file.UpdatedDate,
+                    Size = file.Size ?? 0,
+                    Type = file.Type,
+                    IsReading = reading != null,
+                    IsParted = file.NextPartId.HasValue,
+                    IsDone = reading?.IsDone ?? false,
+                    CurrentPartName = file.CurrentPartName
+                };
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
 
         return View(new AllFilesInBucketViewModel
@@ -110,16 +116,22 @@ public class FileController(
 
         var files = await fileRepository.GetAllAvailableObjectsWithPartsAsync(fileId);
 
-        var res = files.Select(f => new AllFilesInBucketItem
+        var res = files.Select(f =>
         {
-            Id = f.Id,
-            FileName = f.CustomName ?? f.Name,
-            DateTime = f.UpdatedDate,
-            Size = f.Size ?? 0,
-            Type = f.Type,
-            IsReading = allUserReadings.Any(reading => reading.FileId == f.Id),
-            IsParted = f.NextPartId.HasValue,
-            CurrentPartName = f.CurrentPartName
+            var reading = allUserReadings.FirstOrDefault(reading => reading.FileId == f.Id);
+
+            return new AllFilesInBucketItem
+            {
+                Id = f.Id,
+                FileName = f.CustomName ?? f.Name,
+                DateTime = f.UpdatedDate,
+                Size = f.Size ?? 0,
+                Type = f.Type,
+                IsReading = reading != null,
+                IsParted = f.NextPartId.HasValue,
+                IsDone = reading?.IsDone ?? false,
+                CurrentPartName = f.CurrentPartName
+            };
         }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
 
         return View(new AllFilesInBucketViewModel
@@ -161,13 +173,14 @@ public class FileController(
             : Task.CompletedTask;
 
         var update = readingsToUpdate.Count != 0
-            ? readingRepository.SetCurrPageAndScaleAsync(readingsToUpdate)
+            ? readingRepository.SetCurrPageAndScaleAndIsDoneAsync(readingsToUpdate)
             : Task.CompletedTask;
 
         await Task.WhenAll(delete, update);
 
         var readings = (await readingRepository.AllAsync(f => f.UserId == userGuid &&
                                                               !f.File!.IsHidden &&
+                                                              !f.IsDone &&
                                                               f.File.AccessRoles.Intersect(User.GetUserRoles()).Any(),
             f => f.File!,
             f => f.File!.Bucket!)).ToList();
@@ -228,7 +241,7 @@ public class FileController(
                 return View("GetFilePdf", res);
             case FileType.Fb2:
                 return View("GetFileFb2", res);
-            case FileType.Txt:
+            case FileType.ZipWithImg:
             default:
                 return RedirectToAction("CustomNotFound", "Account");
         }
@@ -316,6 +329,10 @@ public class FileController(
         {
             ModelState.AddModelError(string.Empty, "File type not specified in file name or not allowed.");
             return View(request);
+        }
+
+        if (fileType == FileType.ZipWithImg)
+        {
         }
 
         if (request is { AsParentOfId: not null, AsPartOfId: not null } &&

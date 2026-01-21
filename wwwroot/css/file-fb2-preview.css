@@ -77,10 +77,6 @@ main {
     padding-top: 0;
 }
 
-.fb2-canvas-container p > em {
-    padding: 0 0.3em;
-}
-
 .fb2-canvas-container h1,
 .fb2-canvas-container h2,
 .fb2-canvas-container h3,

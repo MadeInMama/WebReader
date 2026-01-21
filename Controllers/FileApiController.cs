@@ -13,7 +13,7 @@ public class FileApiController(UserReadingRepository readingRepository) : Contro
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdatePage([FromBody] UpdatePageRequest request)
+    public async Task<IActionResult> UpdateReading([FromBody] UpdateReadingRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -24,12 +24,16 @@ public class FileApiController(UserReadingRepository readingRepository) : Contro
         if (reading == null)
         {
             await readingRepository.AddAsync(new UserReading
-                { FileId = request.FileId, UserId = request.UserId, Page = request.Page, Scale = request.Scale });
+            {
+                FileId = request.FileId, UserId = request.UserId, Page = request.Page, Scale = request.Scale,
+                IsDone = request.IsLastPage
+            });
             await readingRepository.SaveChangesAsync();
         }
         else
         {
-            await readingRepository.SetCurrPageAndScaleAsync(reading.Id, request.Page, request.Scale);
+            await readingRepository.SetCurrPageAndScaleAndIsDoneAsync(reading.Id, request.Page, request.Scale,
+                request.IsLastPage);
         }
 
         return Accepted();

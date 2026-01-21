@@ -43,24 +43,26 @@ public class UserReadingRepository(
         return await query.Where(predicate).ToListAsync();
     }
 
-    public async Task SetCurrPageAndScaleAsync(Guid id, int page, int scale, ApplicationDbContext? ctx = null)
+    public async Task SetCurrPageAndScaleAndIsDoneAsync(Guid id, int page, int scale, bool isDone,
+        ApplicationDbContext? ctx = null)
     {
         await (ctx ?? context).UserReadings
             .Where(r => r.Id == id)
             .ExecuteUpdateAsync(f =>
                 f.SetProperty(e => e.Page, page)
                     .SetProperty(e => e.Scale, scale)
+                    .SetProperty(e => e.IsDone, isDone)
                     .SetProperty(e => e.UpdatedDate, DateTimeOffset.UtcNow));
     }
 
-    public async Task SetCurrPageAndScaleAsync(IEnumerable<UserReading> readings)
+    public async Task SetCurrPageAndScaleAndIsDoneAsync(IEnumerable<UserReading> readings)
     {
         var tasks = new List<Task>();
 
         foreach (var reading in readings)
         {
             var ctx = await contextFactory.CreateDbContextAsync();
-            tasks.Add(SetCurrPageAndScaleAsync(reading.Id, reading.Page, reading.Scale, ctx));
+            tasks.Add(SetCurrPageAndScaleAndIsDoneAsync(reading.Id, reading.Page, reading.Scale, reading.IsDone, ctx));
         }
 
         await Task.WhenAll(tasks);
