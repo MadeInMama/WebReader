@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -65,7 +66,7 @@ public class FileController(
                     FileName = file.CustomName ?? file.Name,
                     DateTime = file.UpdatedDate,
                     Size = file.Size ?? 0,
-                    Type = file.Type,
+                    Type = TypeHelper.FileTypeNameDict[file.Type],
                     IsReading = reading != null,
                     IsParted = file.NextPartId.HasValue,
                     IsDone = reading?.IsDone ?? false,
@@ -114,7 +115,9 @@ public class FileController(
 
         var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
 
-        var files = await fileRepository.GetAllAvailableObjectsWithPartsAsync(fileId);
+        var headedFile = await fileRepository.GetHeadedPartedObjectAsync(fileId);
+
+        var files = await fileRepository.GetAllAvailableObjectsWithPartsAsync(headedFile.Id);
 
         var res = files.Select(f =>
         {
@@ -126,7 +129,7 @@ public class FileController(
                 FileName = f.CustomName ?? f.Name,
                 DateTime = f.UpdatedDate,
                 Size = f.Size ?? 0,
-                Type = f.Type,
+                Type = TypeHelper.FileTypeNameDict[f.Type],
                 IsReading = reading != null,
                 IsParted = f.NextPartId.HasValue,
                 IsDone = reading?.IsDone ?? false,
@@ -259,7 +262,17 @@ public class FileController(
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
-        var parts = (await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()))
+        var parts = GetSelectListParts(
+            await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()));
+
+        return View(new UploadFileRequest { BucketId = bucketId, Parts = parts });
+    }
+
+    private IEnumerable<SelectListItem> GetSelectListParts(IEnumerable<File> files)
+    {
+        var parts = files
+            .OrderBy(f => f.CustomName ?? f.Name)
+            .ThenBy(f => f.CurrentPartName)
             .Select(f => new SelectListItem
             {
                 Text = $"{f.CustomName ?? f.Name} {f.CurrentPartName}",
@@ -274,7 +287,7 @@ public class FileController(
             Value = null
         });
 
-        return View(new UploadFileRequest { BucketId = bucketId, Parts = parts });
+        return parts;
     }
 
     [HttpPost]
@@ -287,20 +300,8 @@ public class FileController(
 
         if (userRoles.Count == 0 || userGuid == Guid.Empty) return RedirectToAction("AccessDenied", "Account");
 
-        var parts = (await fileRepository.GetAllAvailableObjectsInBucketAsync(request.BucketId, userRoles))
-            .Select(f => new SelectListItem
-            {
-                Text = $"{f.CustomName ?? f.Name} {f.CurrentPartName}",
-                Value = f.Id.ToString()
-            })
-            .ToList();
-
-        parts.Add(new SelectListItem
-        {
-            Selected = true,
-            Text = "Unselected",
-            Value = null
-        });
+        var parts = GetSelectListParts(
+            await fileRepository.GetAllAvailableObjectsInBucketAsync(request.BucketId, userRoles));
 
         request.Parts = parts;
 
@@ -333,6 +334,13 @@ public class FileController(
 
         if (fileType == FileType.ZipWithImg)
         {
+            var imagesCheckRes = CheckImagesInZip(request.File.OpenReadStream());
+
+            if (!imagesCheckRes.Item1)
+            {
+                ModelState.AddModelError(string.Empty, imagesCheckRes.Item2!);
+                return View(request);
+            }
         }
 
         if (request is { AsParentOfId: not null, AsPartOfId: not null } &&
@@ -431,5 +439,25 @@ public class FileController(
         return currentFile.NextPartId.HasValue
             ? RedirectToAction("GetAllPartsInFile", new { bucketId = bucket.Id, fileId = currentFile.Id })
             : RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
+    }
+
+    private (bool, string?) CheckImagesInZip(Stream fileStream)
+    {
+        using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
+        {
+            if (archive.Entries.Count == 0)
+                return (false, "Files not found.");
+
+            foreach (var entry in archive.Entries)
+            {
+                if (string.IsNullOrEmpty(entry.Name))
+                    return (false, "File name is null inside zip archive.");
+
+                if (!entry.FullName.TryGetImgType(out _))
+                    return (false, $"Can't get file type of file {entry.FullName}.");
+            }
+        }
+
+        return (true, null);
     }
 }

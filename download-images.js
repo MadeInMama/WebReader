@@ -2,7 +2,7 @@
 
 (async () => {
     // === CONFIG ===
-    const selector = 'img.ace_mo'; // ← Modify: e.g., 'article img', '.post img'
+    const selector = 'img.ab7_m5'; // ← Modify: e.g., 'article img', '.post img'
     // const minDimension = 50; // skip tiny icons (px)
     // const scrollDelay = 3000; // ms to wait after scrolling
 

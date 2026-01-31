@@ -14,7 +14,7 @@ public class AllFilesInBucketItem
     public required string FileName { get; init; }
     public DateTimeOffset DateTime { get; init; }
     public ulong Size { get; init; }
-    public FileType Type { get; init; }
+    public string? Type { get; init; }
     public bool IsReading { get; init; }
     public bool IsParted { get; init; }
     public bool IsDone { get; init; }
