@@ -315,12 +315,15 @@ button:disabled {
 .event-output > .progress-bar-inner {
     position: absolute;
     cursor: pointer;
+    pointer-events: none;
 }
 
 .event-output > .progress-bar-inner-linear {
     background-color: var(--foreground-color);
     color: transparent;
-    width: calc(60 * attr(progress%, 0) / 100);
+    /*safari not supporting*/
+    /*width: calc(60 * attr(progress%) / 100);*/
+    width: 0;
     border-radius: 0.1em;
     height: 20%;
     top: 40%;
