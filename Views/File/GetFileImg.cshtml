@@ -41,7 +41,7 @@
 }
 
 <div class="img-container force-light-canvas">
-    <img style="visibility:hidden" id="img-canvas" src="" alt="Content render error."/>
+    <img style="visibility:hidden; filter: none !important;" id="img-canvas" src="" alt="Content render error."/>
 </div>
 
 @section Footer
@@ -270,5 +270,9 @@
                     targetElement.dispatchEvent(customSendCurrPageEvent);
                 });
         }
+
+        document.querySelector("button.force-light-mode").onclick = () => {
+            document.querySelector(".img-container").classList.toggle("force-light-canvas");
+        };
     </script>
 }
