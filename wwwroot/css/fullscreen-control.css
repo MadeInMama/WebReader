@@ -10,7 +10,7 @@
     width: 2em;
     background-repeat: no-repeat;
     background-size: cover;
-
+    display: none;
 }
 
 #enter-fullscreen-btn {

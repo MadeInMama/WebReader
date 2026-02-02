@@ -7,7 +7,7 @@
 @section Style
 {
     <link rel="stylesheet" href="~/css/file-common-preview.css" asp-append-version="true"/>
-    <link rel="stylesheet" href="~/css/file-pdf-preview.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/file-img-preview.css" asp-append-version="true"/>
 
     <style>
         .force-light-canvas {
@@ -40,8 +40,8 @@
     }
 }
 
-<div class="pdf-canvas-container force-light-canvas">
-    <canvas id="pdf-canvas"></canvas>
+<div class="img-container force-light-canvas">
+    <img style="visibility:hidden" id="img-canvas" src="" alt="Content render error."/>
 </div>
 
 @section Footer
@@ -73,80 +73,80 @@
 @section Scripts
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script type="module">
-        import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs';
-
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@latest/build/pdf.worker.min.mjs';
-
         const url = @Html.Raw(Json.Serialize($"/api/S3/GetFile?bucketId={Model.BucketId}&fileId={Model.FileId}"));
         const decodedString = url.replace(/\\u0026/g, '&')
-
-        let pdfDoc = null;
+        let pages = [];
         let currentPage = @Model.Page;
-        let maxPage = 1;
         let currentScale = @Model.Scale;
+        let maxPage = 1;
 
-        requestQueue.enqueue({
-            method: 'POST',
-            url: decodedString,
-            data: {},
-            options: {
-                responseType: 'arraybuffer',
-                headers: {
-                    'RequestVerificationToken': GetAntiForgeryToken()
+        document.addEventListener('DOMContentLoaded', (event) => {
+            requestQueue.enqueue({
+                method: 'POST',
+                url: decodedString,
+                data: {},
+                options: {
+                    responseType: 'arraybuffer',
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
                 },
-                withCredentials: true
-            },
-            beforeSend: () => {
-                customSendCurrPageEvent.detail.message = `<div class="waiting"></div>`;
-                customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
-                targetElement.dispatchEvent(customSendCurrPageEvent);
-            },
-            setProgress: (val) => {
-                Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                    value.textContent = `${val}%`;
-                });
-            }
-        })
-            .then(response => {
-                loadPdf(response);
-                customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
-                customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
-                customSendCurrPageEvent.detail.millis = 3000;
-                targetElement.dispatchEvent(customSendCurrPageEvent);
+                beforeSend: () => {
+                    customSendCurrPageEvent.detail.message = `<div class="waiting"></div>`;
+                    customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
+                    targetElement.dispatchEvent(customSendCurrPageEvent);
+                },
+                setProgress: (val) => {
+                    Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                        value.textContent = `${val}%`;
+                    });
+                }
             })
-            .catch(_ => {
-                customSendCurrPageEvent.detail.message = `<div class="error"></div>`;
-                customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
-                targetElement.dispatchEvent(customSendCurrPageEvent);
-            });
+                .then(async response => {
+                    await loadImages(response);
+                    customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
+                    customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
+                    customSendCurrPageEvent.detail.millis = 3000;
+                    targetElement.dispatchEvent(customSendCurrPageEvent);
+                })
+                .catch(_ => {
+                    customSendCurrPageEvent.detail.message = `<div class="error"></div>`;
+                    customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
+                    targetElement.dispatchEvent(customSendCurrPageEvent);
+                });
+        });
 
-        async function loadPdf(data) {
-            pdfDoc = await pdfjsLib.getDocument(new Uint8Array(data)).promise;
-            maxPage = pdfDoc.numPages;
-            await SetScale(currentScale, false);
-            await SetPage(currentPage, false);
+        async function loadImages(zip) {
+            try {
+                await parseImages(zip);
+                maxPage = pages.length;
+                SetPage(currentPage, false);
+                SetScale(currentScale, false);
+            } catch (err) {
+                console.error('Failed to load ZIP:', err);
+            }
         }
 
-        async function renderPage() {
-            const page = await pdfDoc.getPage(currentPage);
-            const viewport = page.getViewport({scale: currentScale === 0 ? 3 : currentScale / 33});
-            const canvas = document.getElementById('pdf-canvas');
-            const context = canvas.getContext('2d');
-
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-            await page.render(renderContext).promise;
+        function renderPage() {
+            document.querySelector('#img-canvas').src = pages[currentPage - 1];
+            document.querySelector('#img-canvas').style.visibility = 'visible';
 
             Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
                 value.textContent = `${currentPage}/${maxPage}`;
             });
+        }
+
+        async function parseImages(zip) {
+            const zipFile = await new JSZip().loadAsync(zip);
+
+            for (const img in zipFile.files) {
+                const blob = await zipFile.files[img].async('blob');
+                const imageUrl = URL.createObjectURL(blob);
+                pages.push(imageUrl);
+            }
         }
 
         Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
@@ -177,7 +177,7 @@
             };
         });
 
-        async function SetPage(page, send = true) {
+        function SetPage(page, send = true) {
             currentPage = clamp(page, 1, maxPage);
 
             if (currentPage === maxPage) {
@@ -196,7 +196,9 @@
                 });
             }
 
-            await renderPage();
+            renderPage(currentPage);
+
+            SetScale(currentScale, false);
 
             window.scrollTo({
                 top: 0,
@@ -206,7 +208,7 @@
             if (send) SendCurrPage();
         }
 
-        async function SetScale(scale, send = true) {
+        function SetScale(scale, send = true) {
             currentScale = Number.parseInt(scale);
 
             Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
@@ -215,13 +217,11 @@
 
             if (currentScale === 0) {
                 document.querySelector("main").classList.add("max-width-set");
-                document.getElementById("pdf-canvas").style.maxWidth = "100%";
+                document.getElementById("img-canvas").style.maxWidth = "100%";
             } else {
                 document.querySelector("main").classList.remove("max-width-set");
-                document.getElementById("pdf-canvas").style.maxWidth = currentScale + "%";
+                document.getElementById("img-canvas").style.maxWidth = currentScale + "%";
             }
-
-            await renderPage();
 
             if (send) SendCurrPage();
         }
@@ -265,9 +265,5 @@
                     targetElement.dispatchEvent(customSendCurrPageEvent);
                 });
         }
-
-        document.querySelector("button.force-light-mode").onclick = () => {
-            document.querySelector(".pdf-canvas-container").classList.toggle("force-light-canvas");
-        };
     </script>
 }

@@ -245,6 +245,7 @@ public class FileController(
             case FileType.Fb2:
                 return View("GetFileFb2", res);
             case FileType.ZipWithImg:
+                return View("GetFileImg", res);
             default:
                 return RedirectToAction("CustomNotFound", "Account");
         }
@@ -266,28 +267,6 @@ public class FileController(
             await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()));
 
         return View(new UploadFileRequest { BucketId = bucketId, Parts = parts });
-    }
-
-    private IEnumerable<SelectListItem> GetSelectListParts(IEnumerable<File> files)
-    {
-        var parts = files
-            .OrderBy(f => f.CustomName ?? f.Name)
-            .ThenBy(f => f.CurrentPartName)
-            .Select(f => new SelectListItem
-            {
-                Text = $"{f.CustomName ?? f.Name} {f.CurrentPartName}",
-                Value = f.Id.ToString()
-            })
-            .ToList();
-
-        parts.Add(new SelectListItem
-        {
-            Selected = true,
-            Text = "Unselected",
-            Value = null
-        });
-
-        return parts;
     }
 
     [HttpPost]
@@ -441,7 +420,29 @@ public class FileController(
             : RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
     }
 
-    private (bool, string?) CheckImagesInZip(Stream fileStream)
+    private static IEnumerable<SelectListItem> GetSelectListParts(IEnumerable<File> files)
+    {
+        var parts = files
+            .OrderBy(f => f.CustomName ?? f.Name)
+            .ThenBy(f => f.CurrentPartName)
+            .Select(f => new SelectListItem
+            {
+                Text = $"{f.CustomName ?? f.Name} {f.CurrentPartName}",
+                Value = f.Id.ToString()
+            })
+            .ToList();
+
+        parts.Add(new SelectListItem
+        {
+            Selected = true,
+            Text = "Unselected",
+            Value = null
+        });
+
+        return parts;
+    }
+
+    private static (bool, string?) CheckImagesInZip(Stream fileStream)
     {
         using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
         {

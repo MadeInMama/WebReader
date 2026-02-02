@@ -42,9 +42,9 @@
             @await Html.PartialAsync("_FullscreenControl")
         </div>
         <div class="controls-center">
-            <button class="prev-page"></button>
+            <button disabled class="prev-page"></button>
             <span class="preview-page">0/0</span>
-            <button class="next-page"></button>
+            <button disabled class="next-page"></button>
         </div>
         <div class="controls-end">
             <div class="event-output"></div>
@@ -78,6 +78,7 @@
             url: decodedString,
             data: {},
             options: {
+                responseType: 'arraybuffer',
                 headers: {
                     'RequestVerificationToken': GetAntiForgeryToken()
                 },
@@ -87,10 +88,15 @@
                 customSendCurrPageEvent.detail.message = `<div class="waiting"></div>`;
                 customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
                 targetElement.dispatchEvent(customSendCurrPageEvent);
+            },
+            setProgress: (val) => {
+                Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                    value.textContent = `${val}%`;
+                });
             }
         })
             .then(response => {
-                loadFB2(response.data);
+                loadFB2(new TextDecoder('utf-8').decode(response));
                 customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
                 customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
                 customSendCurrPageEvent.detail.millis = 3000;
@@ -309,12 +315,18 @@
             currentPage = clamp(page, 1, maxPage);
 
             if (currentPage === maxPage) {
+                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                    value.disabled = false;
+                });
                 Array.from(document.getElementsByClassName("next-page")).forEach(value => {
                     value.disabled = true;
                 });
             } else if (currentPage === 1) {
                 Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
                     value.disabled = true;
+                });
+                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                    value.disabled = false;
                 });
             }
 
