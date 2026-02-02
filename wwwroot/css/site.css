@@ -299,19 +299,47 @@ button:disabled {
     position: relative;
 }
 
-.event-output > .waiting::after {
-    content: '';
-    top: 0;
-    width: attr(progress-width%, 0);
-    height: 100%;
-    background-color: var(--foreground-color-waiting-progress);
-    position: absolute;
-}
-
 .event-output > .waiting, .in-progress {
     background-color: var(--foreground-color);
     mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
     -webkit-mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
+}
+
+.event-output > .progress-bar {
+    background-color: var(--foreground-color);
+    mask: url("../icons/progress-0-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/progress-0-svgrepo-com.svg") no-repeat center;
+    cursor: pointer;
+}
+
+.event-output > .progress-bar-inner {
+    position: absolute;
+    cursor: pointer;
+}
+
+.event-output > .progress-bar-inner-linear {
+    background-color: var(--foreground-color);
+    color: transparent;
+    width: calc(60 * attr(progress%, 0) / 100);
+    border-radius: 0.1em;
+    height: 20%;
+    top: 40%;
+    left: 20%;
+}
+
+.event-output > .progress-bar-inner-text {
+    background-color: transparent;
+    color: var(--foreground-color);
+    font-size: 0.75em;
+    height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-weight: 800;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .is-done {
@@ -347,7 +375,8 @@ button:disabled {
 .is-done,
 .upload-btn,
 .force-light-mode,
-.parted {
+.parted,
+.event-output > .progress-bar {
     mask-size: cover;
     -webkit-mask-size: cover;
     height: 2em;

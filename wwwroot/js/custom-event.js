@@ -24,3 +24,17 @@ targetElement.addEventListener('SendCurrPageEvent', (event) => {
         }
     });
 });
+
+Array.from(document.getElementsByClassName("event-output")).forEach(value => {
+    value.onclick = (e) => {
+        e.currentTarget.childNodes.forEach(node => {
+            if (node.classList.contains('progress-bar-inner-linear')) {
+                node.classList.remove('progress-bar-inner-linear');
+                node.classList.add('progress-bar-inner-text');
+            } else if (node.classList.contains('progress-bar-inner-text')) {
+                node.classList.remove('progress-bar-inner-text');
+                node.classList.add('progress-bar-inner-linear');
+            }
+        });
+    };
+});
