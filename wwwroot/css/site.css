@@ -57,8 +57,10 @@
     --max-width: 60em;
     --backdrop-blur: 0.25em;
     --background-backdrop-color: #222222A5;
+    --background-backdrop-color-sub: #222222A5;
     --background-color: #222;
     --foreground-color: #ccc;
+    --foreground-color-waiting-progress: #045778;
     --success-foreground-color: #047857;
     --error-foreground-color: #B91C1C;
     --drop-shadow-color: #111;
@@ -73,8 +75,10 @@ img {
 @media (prefers-color-scheme: light) {
     :root {
         --background-backdrop-color: #ddddddA5;
+        --background-backdrop-color-sub: #e9e9e9a5;
         --background-color: #eee;
         --foreground-color: #000;
+        --foreground-color-waiting-progress: #1081B9;
         --success-foreground-color: #10B981;
         --error-foreground-color: #EF4444;
         --drop-shadow-color: #aaa;
@@ -292,6 +296,16 @@ button:disabled {
 .event-output {
     opacity: 0;
     transition: opacity var(--animation-time) ease-in-out;
+    position: relative;
+}
+
+.event-output > .waiting::after {
+    content: '';
+    top: 0;
+    width: attr(progress-width%, 0);
+    height: 100%;
+    background-color: var(--foreground-color-waiting-progress);
+    position: absolute;
 }
 
 .event-output > .waiting, .in-progress {

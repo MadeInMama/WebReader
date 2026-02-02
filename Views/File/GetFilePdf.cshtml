@@ -104,8 +104,8 @@
                 targetElement.dispatchEvent(customSendCurrPageEvent);
             },
             setProgress: (val) => {
-                Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                    value.textContent = `${val}%`;
+                Array.from(document.getElementsByClassName("waiting")).forEach(value => {
+                    value.setAttribute('progress-width', val);
                 });
             }
         })
