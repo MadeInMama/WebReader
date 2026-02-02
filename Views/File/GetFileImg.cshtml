@@ -82,42 +82,40 @@
         let currentScale = @Model.Scale;
         let maxPage = 1;
 
-        document.addEventListener('DOMContentLoaded', (event) => {
-            requestQueue.enqueue({
-                method: 'POST',
-                url: decodedString,
-                data: {},
-                options: {
-                    responseType: 'arraybuffer',
-                    headers: {
-                        'RequestVerificationToken': GetAntiForgeryToken()
-                    },
-                    withCredentials: true
+        requestQueue.enqueue({
+            method: 'POST',
+            url: decodedString,
+            data: {},
+            options: {
+                responseType: 'arraybuffer',
+                headers: {
+                    'RequestVerificationToken': GetAntiForgeryToken()
                 },
-                beforeSend: () => {
-                    customSendCurrPageEvent.detail.message = `<div class="waiting"></div>`;
-                    customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
-                    targetElement.dispatchEvent(customSendCurrPageEvent);
-                },
-                setProgress: (val) => {
-                    Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                        value.textContent = `${val}%`;
-                    });
-                }
-            })
-                .then(async response => {
-                    await loadImages(response);
-                    customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
-                    customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
-                    customSendCurrPageEvent.detail.millis = 3000;
-                    targetElement.dispatchEvent(customSendCurrPageEvent);
-                })
-                .catch(_ => {
-                    customSendCurrPageEvent.detail.message = `<div class="error"></div>`;
-                    customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
-                    targetElement.dispatchEvent(customSendCurrPageEvent);
+                withCredentials: true
+            },
+            beforeSend: () => {
+                customSendCurrPageEvent.detail.message = `<div class="waiting"></div>`;
+                customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
+                targetElement.dispatchEvent(customSendCurrPageEvent);
+            },
+            setProgress: (val) => {
+                Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                    value.textContent = `${val}%`;
                 });
-        });
+            }
+        })
+            .then(async response => {
+                await loadImages(response);
+                customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
+                customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
+                customSendCurrPageEvent.detail.millis = 3000;
+                targetElement.dispatchEvent(customSendCurrPageEvent);
+            })
+            .catch(_ => {
+                customSendCurrPageEvent.detail.message = `<div class="error"></div>`;
+                customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
+                targetElement.dispatchEvent(customSendCurrPageEvent);
+            });
 
         async function loadImages(zip) {
             try {
@@ -190,6 +188,13 @@
             } else if (currentPage === 1) {
                 Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
                     value.disabled = true;
+                });
+                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                    value.disabled = false;
+                });
+            } else {
+                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                    value.disabled = false;
                 });
                 Array.from(document.getElementsByClassName("next-page")).forEach(value => {
                     value.disabled = false;

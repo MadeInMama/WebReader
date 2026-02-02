@@ -64,6 +64,7 @@
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="module">
+        const fileId = '@Html.Raw($"{Model.BucketId}{Model.FileId}")';
         const url = @Html.Raw(Json.Serialize($"/api/S3/GetFile?bucketId={Model.BucketId}&fileId={Model.FileId}"));
         const decodedString = url.replace(/\\u0026/g, '&')
         let pages = [];
@@ -72,6 +73,10 @@
         let maxPage = 1;
         const imageMap = new Map();
         const noteMap = new Map();
+
+        const inMemory = localStorage.getItem(fileId);
+
+        if (inMemory) loadFB2(inMemory, true);
 
         requestQueue.enqueue({
             method: 'POST',
@@ -90,13 +95,17 @@
                 targetElement.dispatchEvent(customSendCurrPageEvent);
             },
             setProgress: (val) => {
-                Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                    value.textContent = `${val}%`;
-                });
+                if (!inMemory) {
+                    Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                        value.textContent = `${val}%`;
+                    });
+                }
             }
         })
             .then(response => {
-                loadFB2(new TextDecoder('utf-8').decode(response));
+                const data = new TextDecoder('utf-8').decode(response);
+                loadFB2(data, false);
+                localStorage.setItem(fileId, data);
                 customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
                 customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
                 customSendCurrPageEvent.detail.millis = 3000;
@@ -108,8 +117,9 @@
                 targetElement.dispatchEvent(customSendCurrPageEvent);
             });
 
-        function loadFB2(fb2Text) {
+        function loadFB2(fb2Text, fromLocal) {
             try {
+                if (!fromLocal && inMemory === fb2Text) return;
                 parseFB2(fb2Text);
                 maxPage = pages.length;
                 SetPage(currentPage, false);
@@ -128,6 +138,10 @@
         }
 
         function parseFB2(xmlString) {
+            pages = [];
+            imageMap.clear();
+            noteMap.clear();
+
             const parser = new DOMParser();
             const doc = parser.parseFromString(xmlString, 'application/xml');
             if (doc.querySelector('parsererror')) {
@@ -324,6 +338,13 @@
             } else if (currentPage === 1) {
                 Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
                     value.disabled = true;
+                });
+                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                    value.disabled = false;
+                });
+            } else {
+                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                    value.disabled = false;
                 });
                 Array.from(document.getElementsByClassName("next-page")).forEach(value => {
                     value.disabled = false;
