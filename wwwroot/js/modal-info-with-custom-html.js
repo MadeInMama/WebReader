@@ -6,6 +6,7 @@ function openModalClicked(html) {
     modal.style.left = `calc(50% - ${getBrowserScrollbarWidth() / 2}px)`;
     document.querySelector('footer').style.left = `calc(50% - ${getBrowserScrollbarWidth() / 2}px)`;
     document.querySelector('html').classList.add('no-scroll');
+    document.querySelector('body').classList.add('no-scroll');
 
     modalContent.innerHTML = '<button id="close-custom-modal-btn" class="close"></button>';
 
@@ -25,6 +26,7 @@ function closeModal() {
     document.body.style.marginRight = '';
     document.querySelector('footer').style.left = '';
     document.querySelector('html').classList.remove('no-scroll');
+    document.querySelector('body').classList.remove('no-scroll');
 }
 
 function getBrowserScrollbarWidth() {
