@@ -45,12 +45,6 @@ function onNoScrollApplied() {
     window.ontouchmove = function (e) {
         e.preventDefault();
     }
-    header.onscroll = function (e) {
-        e.preventDefault();
-    }
-    header.ontouchmove = function (e) {
-        e.preventDefault();
-    }
 }
 
 function onNoScrollRemoved() {
@@ -70,12 +64,6 @@ function onNoScrollRemoved() {
     window.ontouchmove = function (e) {
         return true;
     }
-    header.onscroll = function (e) {
-        return true;
-    }
-    header.ontouchmove = function (e) {
-        return true;
-    }
 }
 
 headerToggleBtn.onclick = (e) => {
@@ -83,7 +71,21 @@ headerToggleBtn.onclick = (e) => {
 
     if (header.classList.contains('opened')) {
         onNoScrollApplied();
+
+        header.onscroll = function (e) {
+            e.preventDefault();
+        }
+        header.ontouchmove = function (e) {
+            e.preventDefault();
+        }
     } else {
         onNoScrollRemoved();
+
+        header.onscroll = function (e) {
+            return true;
+        }
+        header.ontouchmove = function (e) {
+            return true;
+        }
     }
 };

@@ -4,6 +4,13 @@ const modalContent = document.getElementById('custom-modal-content');
 function openModalClicked(html) {
     onNoScrollApplied();
 
+    modal.onscroll = function (e) {
+        e.preventDefault();
+    }
+    modal.ontouchmove = function (e) {
+        e.preventDefault();
+    }
+
     modal.style.left = `calc(50% - ${getBrowserScrollbarWidth() / 2}px)`;
 
     modalContent.innerHTML = '<button id="close-custom-modal-btn" class="close"></button>';
@@ -21,5 +28,13 @@ modal.onclick = (event) => {
 
 function closeModal() {
     modal.close();
+
     onNoScrollRemoved();
+
+    modal.onscroll = function (e) {
+        return true;
+    }
+    modal.ontouchmove = function (e) {
+        return true;
+    }
 }
