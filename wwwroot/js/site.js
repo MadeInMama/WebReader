@@ -23,16 +23,13 @@ document.querySelectorAll(".always-open-details").forEach((details) => {
 const header = document.querySelector('header');
 const headerToggleBtn = document.querySelector('.header-toggle');
 const htmlElement = document.querySelector('html');
-const bodyElement = document.querySelector('body');
 
 headerToggleBtn.onclick = (e) => {
     header.classList.toggle('opened');
 
     if (header.classList.contains('opened')) {
         htmlElement.classList.add('no-scroll');
-        bodyElement.classList.add('no-scroll');
     } else {
         htmlElement.classList.remove('no-scroll');
-        bodyElement.classList.remove('no-scroll');
     }
 };
