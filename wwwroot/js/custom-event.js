@@ -25,31 +25,15 @@ targetElement.addEventListener('SendCurrPageEvent', (event) => {
     });
 });
 
-setInterval(() => {
-    Array.from(document.getElementsByClassName("event-output")).forEach(value => {
-        value.childNodes.forEach(node => {
-            if (node.classList.contains('progress-bar-inner-linear')) {
-                node.style.width = `${60 * node.getAttribute("progress") / 100}%`;
-            } else if (node.classList.contains('progress-bar-inner-text')) {
-                node.style.width = '100%';
-                node.innerHTML = node.getAttribute("progress");
-            }
-        });
-    });
-}, 50);
-
 Array.from(document.getElementsByClassName("event-output")).forEach(value => {
     value.onclick = (e) => {
-        e.currentTarget.childNodes.forEach(node => {
+        Array.from(e.currentTarget.children).forEach(node => {
             if (node.classList.contains('progress-bar-inner-linear')) {
-                node.classList.remove('progress-bar-inner-linear');
-                node.classList.add('progress-bar-inner-text');
-                node.style.width = `${60 * node.getAttribute("progress") / 100}%`;
-            } else if (node.classList.contains('progress-bar-inner-text')) {
-                node.classList.remove('progress-bar-inner-text');
-                node.classList.add('progress-bar-inner-linear');
-                node.style.width = '100%';
-                node.innerHTML = node.getAttribute("progress");
+                node.style.visibility = node.style.visibility === 'hidden' ? 'visible' : 'hidden';
+            }
+
+            if (node.classList.contains('progress-bar-inner-text')) {
+                node.style.visibility = node.style.visibility === 'hidden' ? 'visible' : 'hidden';
             }
         });
     };
