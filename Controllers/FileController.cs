@@ -239,7 +239,8 @@ public class FileController(
             PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
                 f.BucketId == bucketId &&
                 f.NextPartId == file.Id &&
-                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null))?.Id
+                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null))?.Id,
+            Settings = file.Settings
         };
 
         return file.Type switch

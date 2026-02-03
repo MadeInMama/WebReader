@@ -18,21 +18,13 @@ builder.Configuration.GetRequiredSection(nameof(DbConfig)).Bind(dbConfig);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(
         dbConfig.ConnectionString!,
-        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
-            5,
-            TimeSpan.FromSeconds(30),
-            null
-        )
+        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(30), null)
     )
 );
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
         options.UseNpgsql(
             dbConfig.ConnectionString!,
-            npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
-                5,
-                TimeSpan.FromSeconds(30),
-                null
-            )
+            npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(30), null)
         ),
     ServiceLifetime.Scoped
 );

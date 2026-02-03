@@ -94,7 +94,7 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                            WITH RECURSIVE find_head AS (
                                SELECT "Id","BucketId","Name","CustomName","Type","Size",
                                       "AccessRoles","IsHidden","IsAvailable","CreatedDate",
-                                      "UpdatedDate","NextPartId","CurrentPartName",1 AS depth
+                                      "UpdatedDate","NextPartId","CurrentPartName","Settings",1 AS depth
                                FROM "Files"
                                WHERE "Id" = {0}
 
@@ -102,7 +102,7 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
 
                                SELECT f."Id",f."BucketId",f."Name",f."CustomName",f."Type",f."Size",
                                       f."AccessRoles",f."IsHidden",f."IsAvailable",f."CreatedDate",
-                                      f."UpdatedDate",f."NextPartId",f."CurrentPartName", fh.depth + 1
+                                      f."UpdatedDate",f."NextPartId",f."CurrentPartName",f."Settings", fh.depth + 1
                                FROM "Files" f
                                         INNER JOIN find_head fh ON f."NextPartId" = fh."Id"
                                WHERE fh.depth < 100000

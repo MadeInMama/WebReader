@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebReader.Data;
@@ -12,9 +13,11 @@ using WebReader.Data;
 namespace WebReader.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260203164926_file_settings")]
+    partial class file_settings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -141,7 +144,6 @@ namespace WebReader.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<IDictionary<string, string>>("Settings")
-                        .IsRequired()
                         .HasColumnType("jsonb");
 
                     b.Property<decimal?>("Size")

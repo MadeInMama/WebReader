@@ -1,4 +1,6 @@
-﻿namespace WebReader.Models.Dtos;
+﻿using System.Text.Json;
+
+namespace WebReader.Models.Dtos;
 
 public class FileViewModel
 {
@@ -12,4 +14,5 @@ public class FileViewModel
     public string? CurrentPartName { get; init; }
     public Guid? NextPartId { get; init; }
     public Guid? PrevPartId { get; init; }
+    public JsonDocument Settings { get; set; } = JsonDocument.Parse("{}");
 }

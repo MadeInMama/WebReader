@@ -126,6 +126,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<File>()
             .HasIndex(f => new { f.Name, f.BucketId })
             .IsUnique();
+        modelBuilder.Entity<File>()
+            .Property(f => f.Settings)
+            .HasColumnType("jsonb");
 
         modelBuilder.Entity<CustomUser>()
             .HasOne(f => f.Bucket)

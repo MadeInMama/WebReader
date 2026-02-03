@@ -8,18 +8,6 @@
 {
     <link rel="stylesheet" href="~/css/file-common-preview.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/file-img-preview.css" asp-append-version="true"/>
-
-    <style>
-        .force-light-canvas {
-            filter: none !important;
-        }
-
-        @@media (prefers-color-scheme: light) {
-            .force-light-mode {
-                display: none;
-            }
-        }
-    </style>
 }
 
 @section SpecialInfo {
@@ -64,8 +52,8 @@
     }
 }
 
-<div class="img-container force-light-canvas">
-    <img style="visibility:hidden; filter: none !important;" id="img-canvas" src="" alt="Content render error."/>
+<div class="img-container">
+    <img style="visibility:hidden;" id="img-canvas" src="" alt="Content render error."/>
 </div>
 
 @section Footer
@@ -73,7 +61,7 @@
     <div class="controls">
         <div class="spacer controls-start">
             @await Html.PartialAsync("_FullscreenControl")
-            <button class="force-light-mode"></button>
+            <div class="settings-container"></div>
         </div>
         <div class="controls-center">
             <button disabled class="prev-page"></button>
@@ -98,6 +86,7 @@
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="~/js/settings.js"></script>
     <script type="module">
         const url = @Html.Raw(Json.Serialize($"/api/S3/GetFile?bucketId={Model.BucketId}&fileId={Model.FileId}"));
         const decodedString = url.replace(/\\u0026/g, '&')
@@ -105,6 +94,10 @@
         let currentPage = @Model.Page;
         let currentScale = @Model.Scale;
         let maxPage = 1;
+
+        setSettings(
+            document.querySelector(".settings-container"),
+            JSON.parse('@Html.Raw(Model.Settings.RootElement)'));
 
         requestQueue.enqueue({
             method: 'POST',
@@ -302,9 +295,5 @@
                     targetElement.dispatchEvent(customSendCurrPageEvent);
                 });
         }
-
-        document.querySelector("button.force-light-mode").onclick = () => {
-            document.querySelector(".img-container").classList.toggle("force-light-canvas");
-        };
     </script>
 }

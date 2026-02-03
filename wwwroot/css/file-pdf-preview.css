@@ -22,7 +22,6 @@ main {
     flex-grow: 1;
     display: grid;
     place-items: center;
-    filter: invert(var(--canvas-invert));
     transition: filter var(--animation-time);
     width: 100%;
 }
