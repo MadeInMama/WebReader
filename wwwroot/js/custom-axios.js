@@ -65,6 +65,7 @@ async function updateProgress(response, progressSetter) {
     const contentLength = response.headers.get('Content-Length');
     const total = contentLength ? parseInt(contentLength, 10) : 0;
     let loaded = 0;
+    let progress = 0;
 
     const reader = response.body.getReader();
     const chunks = [];
@@ -78,7 +79,10 @@ async function updateProgress(response, progressSetter) {
 
         if (total) {
             const percent = Math.min(99, Math.round((loaded / total) * 100));
-            if (progressSetter !== undefined) progressSetter(percent);
+            if (progressSetter !== undefined && progress !== percent) {
+                progress = percent;
+                progressSetter(percent);
+            }
         }
     }
 
