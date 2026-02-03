@@ -29,7 +29,31 @@ headerToggleBtn.onclick = (e) => {
 
     if (header.classList.contains('opened')) {
         htmlElement.classList.add('no-scroll');
+        document.onscroll = function (e) {
+            e.preventDefault();
+        }
+        document.ontouchmove = function (e) {
+            e.preventDefault();
+        }
+        window.onscroll = function (e) {
+            e.preventDefault();
+        }
+        window.ontouchmove = function (e) {
+            e.preventDefault();
+        }
     } else {
         htmlElement.classList.remove('no-scroll');
+        document.onscroll = function (e) {
+            return true;
+        }
+        document.ontouchmove = function (e) {
+            return true;
+        }
+        window.onscroll = function (e) {
+            return true;
+        }
+        window.ontouchmove = function (e) {
+            return true;
+        }
     }
 };
