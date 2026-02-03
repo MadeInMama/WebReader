@@ -1,4 +1,7 @@
-﻿const footer = document.querySelector('footer');
+﻿const htmlElement = document.querySelector('html');
+const header = document.querySelector('header');
+const headerToggleBtn = document.querySelector('.header-toggle');
+const footer = document.querySelector('footer');
 
 if (footer.childNodes.length > 0 &&
     footer.innerHTML.replace(/\s+/g, '').length > 0) {
@@ -11,6 +14,10 @@ function GetAntiForgeryToken() {
     return document.querySelector('input[name="__RequestVerificationToken"]').value;
 }
 
+function getBrowserScrollbarWidth() {
+    return window.innerWidth - document.documentElement.clientWidth;
+}
+
 document.querySelectorAll(".always-open-details").forEach((details) => {
     details.querySelector('summary').onclick = (e) => {
         if (details.open) {
@@ -20,52 +27,63 @@ document.querySelectorAll(".always-open-details").forEach((details) => {
     };
 });
 
-const header = document.querySelector('header');
-const headerToggleBtn = document.querySelector('.header-toggle');
-const htmlElement = document.querySelector('html');
+function onNoScrollApplied() {
+    const defWidth = getBrowserScrollbarWidth();
+    htmlElement.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(htmlElement).paddingRight)}px`;
+    htmlElement.classList.add('no-scroll');
+    header.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(header).paddingRight)}px`;
+    footer.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(footer).paddingRight)}px`;
+    document.onscroll = function (e) {
+        e.preventDefault();
+    }
+    document.ontouchmove = function (e) {
+        e.preventDefault();
+    }
+    window.onscroll = function (e) {
+        e.preventDefault();
+    }
+    window.ontouchmove = function (e) {
+        e.preventDefault();
+    }
+    header.onscroll = function (e) {
+        e.preventDefault();
+    }
+    header.ontouchmove = function (e) {
+        e.preventDefault();
+    }
+}
+
+function onNoScrollRemoved() {
+    htmlElement.classList.remove('no-scroll');
+    htmlElement.style.removeProperty('padding-right');
+    header.style.removeProperty('padding-right');
+    footer.style.removeProperty('padding-right');
+    document.onscroll = function (e) {
+        return true;
+    }
+    document.ontouchmove = function (e) {
+        return true;
+    }
+    window.onscroll = function (e) {
+        return true;
+    }
+    window.ontouchmove = function (e) {
+        return true;
+    }
+    header.onscroll = function (e) {
+        return true;
+    }
+    header.ontouchmove = function (e) {
+        return true;
+    }
+}
 
 headerToggleBtn.onclick = (e) => {
     header.classList.toggle('opened');
 
     if (header.classList.contains('opened')) {
-        htmlElement.classList.add('no-scroll');
-        document.onscroll = function (e) {
-            e.preventDefault();
-        }
-        document.ontouchmove = function (e) {
-            e.preventDefault();
-        }
-        window.onscroll = function (e) {
-            e.preventDefault();
-        }
-        window.ontouchmove = function (e) {
-            e.preventDefault();
-        }
-        header.onscroll = function (e) {
-            e.preventDefault();
-        }
-        header.ontouchmove = function (e) {
-            e.preventDefault();
-        }
+        onNoScrollApplied();
     } else {
-        htmlElement.classList.remove('no-scroll');
-        document.onscroll = function (e) {
-            return true;
-        }
-        document.ontouchmove = function (e) {
-            return true;
-        }
-        window.onscroll = function (e) {
-            return true;
-        }
-        window.ontouchmove = function (e) {
-            return true;
-        }
-        header.onscroll = function (e) {
-            return true;
-        }
-        header.ontouchmove = function (e) {
-            return true;
-        }
+        onNoScrollRemoved();
     }
 };

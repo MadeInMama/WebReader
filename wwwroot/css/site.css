@@ -438,7 +438,7 @@ a.btn {
         gap: 1em;
         grid-template-columns: auto 1fr auto;
         grid-template-rows: 2em auto;
-        transition: height var(--animation-time), border-radius var(--animation-time);
+        transition: height var(--animation-time) ease-in-out, border-radius var(--animation-time) ease-in-out;
         transition-delay: var(--animation-time);
     }
 
@@ -459,7 +459,7 @@ a.btn {
         grid-column: 1 / 4;
         justify-content: center;
         opacity: 0;
-        transition: opacity var(--animation-time);
+        transition: opacity var(--animation-time) ease-in-out;
     }
 
     header.opened > div {
