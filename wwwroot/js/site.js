@@ -29,10 +29,10 @@ document.querySelectorAll(".always-open-details").forEach((details) => {
 
 function onNoScrollApplied() {
     const defWidth = getBrowserScrollbarWidth();
-    htmlElement.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(htmlElement).paddingRight)}px`;
+    htmlElement.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(htmlElement).paddingRight) - 1}px`;
     htmlElement.classList.add('no-scroll');
-    header.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(header).paddingRight)}px`;
-    footer.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(footer).paddingRight)}px`;
+    header.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(header).paddingRight) - 1}px`;
+    footer.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(footer).paddingRight) - 1}px`;
     document.onscroll = function (e) {
         e.preventDefault();
     }

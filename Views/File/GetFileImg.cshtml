@@ -29,6 +29,15 @@
 <h3 class="special-info-small">@Model.Title @Model.CurrentPartName</h3>
 
 @section HeaderMenuItems {
+    @if (Model.PrevPartId.HasValue)
+    {
+        <li>
+            <a asp-controller="File" asp-action="GetFile"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value">
+                Previous part
+            </a>
+        </li>
+    }
     @if (Model.NextPartId.HasValue)
     {
         <li>
