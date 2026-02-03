@@ -18,6 +18,12 @@ function openModalClicked(html) {
     window.ontouchmove = function (e) {
         e.preventDefault();
     }
+    modal.onscroll = function (e) {
+        e.preventDefault();
+    }
+    modal.ontouchmove = function (e) {
+        e.preventDefault();
+    }
 
     modalContent.innerHTML = '<button id="close-custom-modal-btn" class="close"></button>';
 
@@ -47,6 +53,12 @@ function closeModal() {
         return true;
     }
     window.ontouchmove = function (e) {
+        return true;
+    }
+    modal.onscroll = function (e) {
+        return true;
+    }
+    modal.ontouchmove = function (e) {
         return true;
     }
 }

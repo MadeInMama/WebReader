@@ -41,6 +41,12 @@ headerToggleBtn.onclick = (e) => {
         window.ontouchmove = function (e) {
             e.preventDefault();
         }
+        header.onscroll = function (e) {
+            e.preventDefault();
+        }
+        header.ontouchmove = function (e) {
+            e.preventDefault();
+        }
     } else {
         htmlElement.classList.remove('no-scroll');
         document.onscroll = function (e) {
@@ -53,6 +59,12 @@ headerToggleBtn.onclick = (e) => {
             return true;
         }
         window.ontouchmove = function (e) {
+            return true;
+        }
+        header.onscroll = function (e) {
+            return true;
+        }
+        header.ontouchmove = function (e) {
             return true;
         }
     }
