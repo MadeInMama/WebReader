@@ -20,12 +20,18 @@
             <li style="display: none;">
                 <a asp-controller="Home" asp-action="Index">Home</a>
             </li>
-            @await RenderSectionAsync("HeaderMenuItems", false)
+
             @if (User.Identity is { IsAuthenticated: true })
             {
                 <li>
                     <a asp-controller="File" asp-action="GetAllBuckets">Buckets</a>
                 </li>
+            }
+
+            @await RenderSectionAsync("HeaderMenuItems", false)
+
+            @if (User.Identity is { IsAuthenticated: true })
+            {
                 <li>
                     <a asp-controller="File" asp-action="GetReading">Reading</a>
                 </li>

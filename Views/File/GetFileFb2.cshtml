@@ -17,14 +17,28 @@
 
 <h3 class="special-info-small">@Model.Title @Model.CurrentPartName</h3>
 
-@if (Model.NextPartId.HasValue)
-{
-    @section HeaderMenuItems
+@section HeaderMenuItems {
+    @if (Model.NextPartId.HasValue)
     {
         <li>
             <a asp-controller="File" asp-action="GetFile"
                asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value">
-                Next Part
+                Next part
+            </a>
+        </li>
+        <li>
+            <a asp-controller="File" asp-action="GetAllPartsInFile"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId">
+                Files
+            </a>
+        </li>
+    }
+    else
+    {
+        <li>
+            <a asp-controller="File" asp-action="GetAllFilesInBucket"
+               asp-route-bucketId="@Model.BucketId">
+                Files
             </a>
         </li>
     }
