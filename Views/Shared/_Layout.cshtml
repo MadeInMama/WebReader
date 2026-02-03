@@ -12,8 +12,9 @@
 <body>
 
 @Html.AntiForgeryToken()
-
 <header>
+    @await RenderSectionAsync("SpecialInfo", false)
+    <button class="header-toggle"></button>
     <div>
         <ul>
             <li style="display: none;">
@@ -54,8 +55,6 @@
                 </li>
             }
         </ul>
-
-        @await RenderSectionAsync("SpecialInfo", false)
     </div>
 </header>
 <main>

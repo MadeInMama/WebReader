@@ -139,7 +139,7 @@
         }
 
         function renderPage() {
-            document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1];
+            document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1] + `<div style="height: 5em;"></div>`;
 
             Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
                 value.textContent = `${currentPage}/${maxPage}`;

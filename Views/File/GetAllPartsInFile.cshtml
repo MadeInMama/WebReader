@@ -5,108 +5,105 @@
 
 @section Style
 {
-
-<style>
-    main {
-        justify-content: space-between;
-        min-height: calc(100vh - 6em);
-    }
-
-    @@media (hover: none) and (pointer: coarse) {
+    <style>
         main {
-            min-height: calc(100dvh - 6em);
+            justify-content: space-between;
+            min-height: calc(100vh - 6em);
         }
-    }
 
-    .content {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        max-width: calc(var(--max-width) - 1em);
-    }
+        @@media (hover: none) and (pointer: coarse) {
+            main {
+                min-height: calc(100dvh - 6em);
+            }
+        }
 
-    .file-line {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        min-height: 2em;
-    }
+        .content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: calc(var(--max-width) - 1em);
+        }
 
-    .file-line > a {
-        display: flex;
-        justify-content: space-between;
-        gap: 0.5em;
-        grid-auto-rows: 2em;
-        align-items: center;
-        width: 100%;
-    }
+        .file-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            min-height: 2em;
+        }
 
-    .file-line > a > span {
-        overflow: hidden;
-        white-space: nowrap;
-    }
+        .file-line > a {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5em;
+            grid-auto-rows: 2em;
+            align-items: center;
+            width: 100%;
+        }
 
-    .file-line > a > .left {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-start;
-    }
+        .file-line > a > span {
+            overflow: hidden;
+            white-space: nowrap;
+        }
 
-    .file-line > a > .center {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-    }
+        .file-line > a > .left {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+        }
 
-    .file-line > a > .right {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-    }
+        .file-line > a > .center {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
 
-    .file-line > a > div > .in-progress,
-    .file-line > a > div > .is-done {
-        font-size: 0.75em;
-    }
+        .file-line > a > .right {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+        }
 
-    .file-line:not(:last-child) {
-        margin-bottom: 0.5em;
-    }
+        .file-line > a > div > .in-progress,
+        .file-line > a > div > .is-done {
+            font-size: 0.75em;
+        }
 
-    .secondary-info-span {
-        flex-grow: 0;
-    }
+        .file-line:not(:last-child) {
+            margin-bottom: 0.5em;
+        }
 
-    .main-info-span {
-        flex-grow: 1;
-    }
-
-    .in-progress-empty {
-        font-size: 0.75em;
-        height: 2em;
-        width: 2em;
-    }
-
-    .upload-btn-container {
-        margin-top: 1em;
-    }
-
-    @@media (width < 700px) {
         .secondary-info-span {
-            display: none !important;
+            flex-grow: 0;
         }
+
+        .main-info-span {
+            flex-grow: 1;
+        }
+
+        .in-progress-empty {
+            font-size: 0.75em;
+            height: 2em;
+            width: 2em;
+        }
+
+        .upload-btn-container {
+            margin-top: 1em;
+        }
+
+        @@media (width < 700px) {
+            .secondary-info-span {
+                display: none !important;
+            }
+        }
+    </style>
+}
+
+@section SpecialInfo {
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
     }
-</style>
-}
-
-@section SpecialInfo
-
-{
-@if (User.Identity is { IsAuthenticated: true })
-{
-    <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
-}
 }
 
 @if (Model.Items.Any())
@@ -140,7 +137,7 @@
                             <span class="in-progress-empty secondary-info-span"></span>
                         }
                         <span class="left main-info-span">@item.FileName @item.CurrentPartName</span>
-                        <span class="right secondary-info-span">@item.Type.ToString().ToLower()</span>
+                        <span class="right secondary-info-span">@item.Type?.ToLower()</span>
                         <span
                             class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
                         <span class="right secondary-info-span">@FormatSize(item.Size)</span>
@@ -168,6 +165,6 @@ else
 
 @section Scripts
 {
-<script>
-</script>
+    <script>
+    </script>
 }

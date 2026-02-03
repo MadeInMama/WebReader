@@ -238,17 +238,13 @@ public class FileController(
             NextPartId = file.NextPartId
         };
 
-        switch (file.Type)
+        return file.Type switch
         {
-            case FileType.Pdf:
-                return View("GetFilePdf", res);
-            case FileType.Fb2:
-                return View("GetFileFb2", res);
-            case FileType.ZipWithImg:
-                return View("GetFileImg", res);
-            default:
-                return RedirectToAction("CustomNotFound", "Account");
-        }
+            FileType.Pdf => View("GetFilePdf", res),
+            FileType.Fb2 => View("GetFileFb2", res),
+            FileType.ZipWithImg => View("GetFileImg", res),
+            _ => RedirectToAction("CustomNotFound", "Account")
+        };
     }
 
     [HttpGet]
