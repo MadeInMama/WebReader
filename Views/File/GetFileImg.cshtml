@@ -53,7 +53,7 @@
 }
 
 <div class="img-container">
-    <img style="visibility:hidden;" id="img-canvas" src="" alt="Content render error."/>
+    <img style="opacity:0;transition: opacity 300ms ease-in-out" id="img-canvas" src="" alt="Content render error."/>
 </div>
 
 @section Footer
@@ -155,7 +155,9 @@
 
         function renderPage() {
             document.querySelector('#img-canvas').src = pages[currentPage - 1];
-            document.querySelector('#img-canvas').style.visibility = 'visible';
+            document.querySelector('#img-canvas').style.opacity = '1';
+
+            executeSettingsUpdate();
 
             Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
                 value.textContent = `${currentPage}/${maxPage}`;
@@ -226,14 +228,14 @@
                 });
             }
 
-            renderPage(currentPage);
-
             SetScale(currentScale, false);
 
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
             });
+
+            renderPage(currentPage);
 
             if (send) SendCurrPage();
         }
@@ -294,6 +296,14 @@
                     customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
                     targetElement.dispatchEvent(customSendCurrPageEvent);
                 });
+        }
+
+        setInterval(() => {
+            document.querySelector(".background-cover-container").style.height = `${document.querySelector("#img-canvas").height + footer.scrollHeight + header.scrollHeight - 1}px`;
+        }, 100);
+
+        function executeSettingsUpdate() {
+            document.querySelector(".background-cover").style.backgroundImage = `url(${pages[currentPage - 1]})`;
         }
     </script>
 }
