@@ -203,6 +203,11 @@
         });
 
         function SetPage(page, send = true) {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
             currentPage = clamp(page, 1, maxPage);
 
             if (currentPage === maxPage) {
@@ -229,11 +234,6 @@
             }
 
             SetScale(currentScale, false);
-
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
 
             renderPage(currentPage);
 
