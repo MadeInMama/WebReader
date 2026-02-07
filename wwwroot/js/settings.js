@@ -13,6 +13,8 @@
         }
     }
 
+    settings.backgroundCover = false;
+
     if (settings.backgroundCover !== undefined && settings.backgroundCover === true) {
         const backgroundCoverContainer = document.createElement('div');
         const backgroundCover = document.createElement('div');
