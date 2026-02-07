@@ -157,7 +157,7 @@
             document.querySelector('#img-canvas').src = pages[currentPage - 1];
             document.querySelector('#img-canvas').style.opacity = '1';
 
-            executeSettingsUpdate();
+            //executeSettingsUpdate();
 
             Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
                 value.textContent = `${currentPage}/${maxPage}`;
@@ -298,12 +298,15 @@
                 });
         }
 
-        setInterval(() => {
-            document.querySelector(".background-cover-container").style.height = `${document.querySelector("#img-canvas").height + footer.scrollHeight + header.scrollHeight - 1}px`;
-        }, 100);
+        //setInterval(() => {
+        //    document.querySelector(".background-cover-container").style.height = `${document.querySelector("#img-canvas").height + footer.scrollHeight + header.scrollHeight - 1}px`;
+        //}, 100);
 
-        function executeSettingsUpdate() {
-            document.querySelector(".background-cover").style.backgroundImage = `url(${pages[currentPage - 1]})`;
-        }
+        //function executeSettingsUpdate() {
+        //    let cover = document.querySelector(".background-cover");
+
+        //    if (cover !== undefined)
+        //        cover.style.backgroundImage = `url(${pages[currentPage - 1]})`;
+        //}
     </script>
 }
