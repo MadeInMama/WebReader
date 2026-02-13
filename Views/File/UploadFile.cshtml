@@ -87,7 +87,7 @@
         <input asp-for="CurrentPartName" required placeholder="Part Name"
                autocapitalize="off" autocorrect="off" spellcheck="false"/>
 
-        <input asp-for="File" type="file" required placeholder="File" accept=".zip, .pdf, application/fb2,.fb2"/>
+        <input asp-for="File" type="file" required/>
     </div>
 
     @if (Model.Parts.Any())
