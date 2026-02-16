@@ -50,6 +50,7 @@
             display: flex;
             flex-direction: row;
             justify-content: flex-start;
+            white-space: pre-wrap;
         }
 
         .file-line > a > .center {
@@ -75,6 +76,7 @@
 
         .secondary-info-span {
             flex-grow: 0;
+            flex-shrink: 0;
         }
 
         .main-info-span {
@@ -106,12 +108,22 @@
     }
 }
 
+@section HeaderMenuItems
+{
+    <li>
+        <a asp-controller="File" asp-action="GetAllFilesInBucket"
+           asp-route-bucketId="@Model.Id">
+            @Model.BucketName
+        </a>
+    </li>
+}
+
 @if (Model.Items.Any())
 {
     <div class="content">
         <details open class="always-open-details">
             <summary>
-                <span>@Model.BucketName</span>
+                <span>@Model.Items.First().FileName</span>
             </summary>
             @foreach (var item in Model.Items)
             {
@@ -136,7 +148,7 @@
                         {
                             <span class="in-progress-empty secondary-info-span"></span>
                         }
-                        <span class="left main-info-span">@item.FileName @item.CurrentPartName</span>
+                        <span class="left main-info-span">@item.CurrentPartName</span>
                         <span class="right secondary-info-span">@item.Type?.ToLower()</span>
                         <span
                             class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>

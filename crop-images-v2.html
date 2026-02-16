@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Multi-Select Image Cropper</title>
+    <style>
+        body {
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        /* Controls Area */
+        .controls {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button, .file-upload {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #a71d2a;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .file-upload:hover {
+            background-color: #545b62;
+        }
+
+        /* Workspace */
+        .workspace {
+            position: relative;
+            max-width: 100%;
+            overflow: auto;
+            border: 2px dashed #ccc;
+            background-color: #fff;
+            min-height: 400px;
+            min-width: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* The Image */
+        #sourceImage {
+            max-width: 100%;
+            display: block;
+            cursor: crosshair; /* Indicates cropping mode */
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* The Selection Box (while dragging) */
+        #currentSelection {
+            position: absolute;
+            border: 2px dashed #007bff;
+            background-color: rgba(0, 123, 255, 0.2);
+            pointer-events: none; /* Let clicks pass through */
+            display: none;
+        }
+
+        /* Saved Crops Markers */
+        .crop-marker {
+            position: absolute;
+            border: 2px solid #28a745;
+            background-color: rgba(40, 167, 69, 0.2);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 20px;
+            text-shadow: 0 0 3px white;
+        }
+
+        .placeholder-text {
+            color: #aaa;
+            font-size: 1.2rem;
+        }
+
+        .container {
+            pointer-events: none;
+            width: calc(100vw - 15px);
+            height: 100vh;
+            z-index: 100000;
+            position: fixed;
+        }
+
+        .vertical-line {
+            position: absolute;
+            /* Center the line initially or use top: 0, bottom: 0 for full height */
+            height: 100vh;
+            width: 1px; /* Line thickness */
+            background-color: black;
+            pointer-events: none; /* Allows mouse events to pass through the lines to the container */
+            transform: translateX(-50%); /* Centers the 1px line on the cursor X position */
+        }
+
+        .horizontal-line {
+            position: absolute;
+            /* Center the line initially or use left: 0, right: 0 for full width */
+            width: 100vw;
+            height: 1px; /* Line thickness */
+            background-color: black;
+            pointer-events: none;
+            transform: translateY(-50%); /* Centers the 1px line on the cursor Y position */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="line-container">
+    <div class="vertical-line"></div>
+    <div class="horizontal-line"></div>
+</div>
+
+<h1>Multi-Select Image Cropper</h1>
+
+<div class="controls">
+    <label class="file-upload">
+        📂 Upload Image
+        <input accept="image/*" id="imageInput" type="file">
+    </label>
+    <button class="btn-warning" disabled id="undoBtn">Undo Last</button>
+    <button class="btn-danger" disabled id="resetBtn">Clear Crops</button>
+    <button class="btn-success" disabled id="downloadBtn">Download All Crops</button>
+    <label>
+        Prefix:
+        <input id="prefix" type="text">
+    </label>
+</div>
+
+<div class="workspace" id="workspace">
+    <span class="placeholder-text">Upload an image to start</span>
+    <img id="sourceImage" style="display:none;">
+    <div id="currentSelection"></div>
+    <!-- Saved crop markers will be injected here -->
+</div>
+
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const prefixInput = document.getElementById('prefix');
+    const sourceImage = document.getElementById('sourceImage');
+    const workspace = document.getElementById('workspace');
+    const currentSelection = document.getElementById('currentSelection');
+    const undoBtn = document.getElementById('undoBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const placeholder = document.querySelector('.placeholder-text');
+
+    const verticalLine = document.querySelector('.vertical-line');
+    const horizontalLine = document.querySelector('.horizontal-line');
+
+    let isDragging = false;
+    let startX, startY;
+    let crops = []; // Stores {x, y, w, h} relative to the displayed image
+
+    // 1. Handle Image Upload
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            sourceImage.src = event.target.result;
+            sourceImage.style.display = 'block';
+            placeholder.style.display = 'none';
+            resetCrops();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // 2. Mouse Interaction (Drawing the box)
+    workspace.addEventListener('mousedown', (e) => {
+        if (!sourceImage.src) return;
+
+        // Ensure we are clicking on the image area
+        const rect = sourceImage.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+
+        isDragging = true;
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+
+        // Reset current selection visual
+        currentSelection.style.display = 'block';
+        currentSelection.style.left = startX + 'px';
+        currentSelection.style.top = startY + 'px';
+        currentSelection.style.width = '0px';
+        currentSelection.style.height = '0px';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        verticalLine.style.left = e.clientX + 'px';
+        horizontalLine.style.top = e.clientY + 'px';
+
+        if (!isDragging) return;
+
+        const rect = sourceImage.getBoundingClientRect();
+        let currentX = e.clientX - rect.left;
+        let currentY = e.clientY - rect.top;
+
+        // Calculate width/height handling negative drag (dragging up/left)
+        const width = Math.abs(currentX - startX);
+        const height = Math.abs(currentY - startY);
+        const left = Math.min(currentX, startX);
+        const top = Math.min(currentY, startY);
+
+        currentSelection.style.width = width + 'px';
+        currentSelection.style.height = height + 'px';
+        currentSelection.style.left = left + 'px';
+        currentSelection.style.top = top + 'px';
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        const width = parseInt(currentSelection.style.width);
+        const height = parseInt(currentSelection.style.height);
+
+        // Ignore tiny accidental clicks
+        if (width > 5 && height > 5) {
+            saveCrop(
+                parseInt(currentSelection.style.left),
+                parseInt(currentSelection.style.top),
+                width,
+                height
+            );
+        }
+
+        currentSelection.style.display = 'none';
+    });
+
+    // 3. Logic to Save and Visualize Crops
+    function saveCrop(x, y, w, h) {
+        crops.push({x, y, w, h});
+        renderCrops();
+        updateButtons();
+    }
+
+    function renderCrops() {
+        // Remove old markers
+        document.querySelectorAll('.crop-marker').forEach(el => el.remove());
+
+        crops.forEach((crop, index) => {
+            const marker = document.createElement('div');
+            marker.className = 'crop-marker';
+            marker.style.left = crop.x + 'px';
+            marker.style.top = crop.y + 'px';
+            marker.style.width = crop.w + 'px';
+            marker.style.height = crop.h + 'px';
+            marker.textContent = index + 1;
+            workspace.appendChild(marker);
+        });
+    }
+
+    function resetCrops() {
+        crops = [];
+        renderCrops();
+        updateButtons();
+    }
+
+    function updateButtons() {
+        const hasCrops = crops.length > 0;
+
+        resetBtn.disabled = !hasCrops;
+        undoBtn.disabled = !hasCrops;
+        downloadBtn.disabled = !hasCrops;
+    }
+
+    undoBtn.addEventListener('click', () => {
+        crops.pop(); // Remove the last added crop
+        renderCrops();
+        updateButtons();
+    });
+
+    resetBtn.addEventListener('click', resetCrops);
+
+    // 4. Download Logic using HTML5 Canvas
+    downloadBtn.addEventListener('click', () => {
+        if (crops.length === 0) return;
+
+        // Create a hidden canvas to process the image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // We need the original image dimensions, not the displayed CSS dimensions
+        const naturalWidth = sourceImage.naturalWidth;
+        const naturalHeight = sourceImage.naturalHeight;
+
+        // Calculate the scale factor (how much the image was shrunk on screen)
+        const displayWidth = sourceImage.width; // client width
+        const displayHeight = sourceImage.height; // client height
+
+        const scaleX = naturalWidth / displayWidth;
+        const scaleY = naturalHeight / displayHeight;
+
+        console.log(crops)
+
+        crops.forEach((crop, index) => {
+            setTimeout(() => {
+                // Convert screen coordinates to actual image coordinates
+                const realX = crop.x * scaleX;
+                const realY = crop.y * scaleY;
+                const realW = crop.w * scaleX;
+                const realH = crop.h * scaleY;
+
+                // Set canvas size to match the crop
+                canvas.width = realW;
+                canvas.height = realH;
+
+                // Draw the specific part of the image onto the canvas
+                ctx.drawImage(
+                    sourceImage,
+                    realX, realY, realW, realH, // Source rect
+                    0, 0, realW, realH          // Destination rect
+                );
+
+                // Trigger download
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `crop-${prefixInput.value}-${index + 1}.jpeg`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 'image/jpeg');
+            }, 1000 * index)
+        });
+    });
+
+</script>
+</body>
+</html>

@@ -34,27 +34,29 @@
                 Next part
             </a>
         </li>
+    }
+    @if (Model.PrevPartId.HasValue || Model.NextPartId.HasValue)
+    {
         <li>
             <a asp-controller="File" asp-action="GetAllPartsInFile"
                asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId">
-                Files
+                Parts
             </a>
         </li>
     }
-    else
-    {
-        <li>
-            <a asp-controller="File" asp-action="GetAllFilesInBucket"
-               asp-route-bucketId="@Model.BucketId">
-                Files
-            </a>
-        </li>
-    }
+    <li>
+        <a asp-controller="File" asp-action="GetAllFilesInBucket"
+           asp-route-bucketId="@Model.BucketId">
+            @Model.BucketName
+        </a>
+    </li>
 }
 
 <div class="img-container">
     <img style="opacity:0;transition: opacity 300ms ease-in-out" id="img-canvas" src="" alt="Content render error."/>
 </div>
+
+<div class="event-output"></div>
 
 @section Footer
 {
@@ -69,8 +71,6 @@
             <button disabled class="next-page"></button>
         </div>
         <div class="controls-end">
-            <div class="event-output"></div>
-
             <select class="set-scale">
                 <option value="0">fixed</option>
                 <option value="25">25%</option>
@@ -122,7 +122,7 @@
                     value.setAttribute('progress', val);
 
                     if (value.classList.contains('progress-bar-inner-linear')) {
-                        value.style.width = `${60 * val / 100}%`;
+                        value.style.width = `${46 * val / 100}%`;
                     } else if (value.classList.contains('progress-bar-inner-text')) {
                         value.innerHTML = val;
                     }
@@ -156,8 +156,6 @@
         function renderPage() {
             document.querySelector('#img-canvas').src = pages[currentPage - 1];
             document.querySelector('#img-canvas').style.opacity = '1';
-
-            //executeSettingsUpdate();
 
             Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
                 value.textContent = `${currentPage}/${maxPage}`;
@@ -297,16 +295,5 @@
                     targetElement.dispatchEvent(customSendCurrPageEvent);
                 });
         }
-
-        //setInterval(() => {
-        //    document.querySelector(".background-cover-container").style.height = `${document.querySelector("#img-canvas").height + footer.scrollHeight + header.scrollHeight - 1}px`;
-        //}, 100);
-
-        //function executeSettingsUpdate() {
-        //    let cover = document.querySelector(".background-cover");
-
-        //    if (cover !== undefined)
-        //        cover.style.backgroundImage = `url(${pages[currentPage - 1]})`;
-        //}
     </script>
 }

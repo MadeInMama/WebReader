@@ -35,28 +35,30 @@
                 Next part
             </a>
         </li>
+    }
+    @if (Model.PrevPartId.HasValue || Model.NextPartId.HasValue)
+    {
         <li>
             <a asp-controller="File" asp-action="GetAllPartsInFile"
                asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId">
-                Files
+                Parts
             </a>
         </li>
     }
-    else
-    {
-        <li>
-            <a asp-controller="File" asp-action="GetAllFilesInBucket"
-               asp-route-bucketId="@Model.BucketId">
-                Files
-            </a>
-        </li>
-    }
+    <li>
+        <a asp-controller="File" asp-action="GetAllFilesInBucket"
+           asp-route-bucketId="@Model.BucketId">
+            @Model.BucketName
+        </a>
+    </li>
 }
 
 @await Html.PartialAsync("_ModalInfoWithCustomHtml")
 
 <div class="fb2-canvas-container">
 </div>
+
+<div class="event-output"></div>
 
 @section Footer
 {
@@ -70,8 +72,6 @@
             <button disabled class="next-page"></button>
         </div>
         <div class="controls-end">
-            <div class="event-output"></div>
-
             <select class="set-scale">
                 <option value="50">50%</option>
                 <option value="75">75%</option>
@@ -124,7 +124,7 @@
                     value.setAttribute('progress', val);
 
                     if (value.classList.contains('progress-bar-inner-linear')) {
-                        value.style.width = `${60 * val / 100}%`;
+                        value.style.width = `${46 * val / 100}%`;
                     } else if (value.classList.contains('progress-bar-inner-text')) {
                         value.innerHTML = val;
                     }
@@ -162,7 +162,7 @@
         }
 
         function renderPage() {
-            document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1] + `<div style="height: 5em;"></div>`;
+            document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1];
 
             Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
                 value.textContent = `${currentPage}/${maxPage}`;
@@ -189,7 +189,7 @@
                 const parts = Array.from(section.querySelectorAll(":scope > *"));
                 if (parts.length <= maxPCount) return;
 
-                const wordCountToSlice = 2500;
+                const wordCountToSlice = 500;
                 let currWordCount = 0;
 
                 const fragment = doc.createDocumentFragment();

@@ -212,9 +212,10 @@ public class FileController(
     public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId)
     {
         var file = await fileRepository.FirstOrDefaultAsync(f =>
-            f.BucketId == bucketId &&
-            f.Id == fileId &&
-            f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null);
+                f.BucketId == bucketId &&
+                f.Id == fileId &&
+                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null,
+            f => f.Bucket!);
 
         if (file == null) return RedirectToAction("CustomNotFound", "Account");
 
@@ -233,6 +234,7 @@ public class FileController(
             Scale = reading?.Scale ?? 100,
             Title = file.CustomName ?? file.Name,
             BucketId = file.BucketId,
+            BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",
             FileName = file.CustomName ?? file.Name,
             CurrentPartName = file.CurrentPartName,
             NextPartId = file.NextPartId,

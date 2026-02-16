@@ -121,29 +121,6 @@ body {
     z-index: -2;
 }
 
-.background-cover-container {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    /*height: 25124px;*/
-    z-index: -1;
-    overflow: hidden;
-    opacity: 0;
-    transition: opacity var(--animation-time);
-}
-
-.background-cover {
-    width: 100%;
-    height: 100%;
-    /*background-image: url(blob:http://localhost/3315b2ad-64f9-4582-b5f6-2b349f0d98fe);*/
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    background-position: center;
-    filter: blur(1em) brightness(0.25);
-    transform: scale(1.05);
-}
-
 .special-info-big {
     text-wrap-mode: nowrap;
     overflow: hidden;
@@ -325,7 +302,7 @@ header.opened > .header-toggle {
     border-radius: 0.1em;
     height: 20%;
     top: 40%;
-    left: 20%;
+    left: 0.8em;
 }
 
 .event-output > .progress-bar-inner-text {

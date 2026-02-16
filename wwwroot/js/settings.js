@@ -12,26 +12,4 @@
             document.querySelector(`#${settings.darkView.elementId}`).classList.toggle(settings.darkView.filter);
         }
     }
-
-    settings.backgroundCover = false;
-
-    if (settings.backgroundCover !== undefined && settings.backgroundCover === true) {
-        const backgroundCoverContainer = document.createElement('div');
-        const backgroundCover = document.createElement('div');
-
-        backgroundCoverContainer.classList.add('background-cover-container');
-        backgroundCover.classList.add('background-cover');
-
-        backgroundCoverContainer.appendChild(backgroundCover);
-        document.body.prepend(backgroundCoverContainer);
-
-        const backgroundCoverBtn = document.createElement('button');
-        backgroundCoverBtn.classList.add('background-cover-toggle');
-
-        container.appendChild(backgroundCoverBtn);
-
-        backgroundCoverBtn.onclick = () => {
-            document.querySelector('.background-cover-container').classList.toggle('opacity-on');
-        }
-    }
 }

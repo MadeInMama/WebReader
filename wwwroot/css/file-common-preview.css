@@ -61,3 +61,16 @@ main {
 .spacer {
     width: 5em;
 }
+
+.event-output {
+    position: fixed;
+    left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3.75em);
+    bottom: 3.75em;
+    width: 3em;
+    height: 3em;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+    background-color: var(--background-backdrop-color);
+    backdrop-filter: blur(var(--backdrop-blur));
+    padding: 0.5em;
+    border-radius: 0.75em;
+}
