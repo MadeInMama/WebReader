@@ -21,4 +21,9 @@ public static class GlobalFunctions
     {
         return FormatSize((ulong)size);
     }
+
+    public static bool IsNullOrEmptyOrWhitespace(string? value)
+    {
+        return string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value);
+    }
 }

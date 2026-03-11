@@ -10,11 +10,22 @@
     <link rel="stylesheet" href="~/css/file-img-preview.css" asp-append-version="true"/>
 }
 
-@section SpecialInfo {
-    <h3 class="special-info-big">@Model.Title @Model.CurrentPartName</h3>
-}
+@if (IsNullOrEmptyOrWhitespace(Model.CurrentPartName))
+{
+    @section SpecialInfo {
+        <h3 class="special-info-big">@Model.Title</h3>
+    }
 
-<h3 class="special-info-small">@Model.Title @Model.CurrentPartName</h3>
+    <h3 class="special-info-small">@Model.Title</h3>
+}
+else
+{
+    @section SpecialInfo {
+        <h3 class="special-info-big">@Model.CurrentPartName</h3>
+    }
+
+    <h3 class="special-info-small">@Model.CurrentPartName</h3>
+}
 
 @section HeaderMenuItems {
     @if (Model.PrevPartId.HasValue)

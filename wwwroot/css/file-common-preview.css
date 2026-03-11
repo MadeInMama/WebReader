@@ -1,5 +1,10 @@
 main {
     padding: 0;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    min-height: calc(100vh - 6em);
+    margin-bottom: 3em;
 }
 
 .controls {
