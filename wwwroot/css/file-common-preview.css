@@ -1,3 +1,9 @@
+.max-width-set {
+    max-width: var(--max-width);
+    margin-left: auto;
+    margin-right: auto;
+}
+
 main {
     padding: 0;
     display: flex;
@@ -5,6 +11,21 @@ main {
     flex-direction: column;
     min-height: calc(100vh - 6em);
     margin-bottom: 3em;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    main {
+        min-height: calc(100dvh - 6em);
+    }
+}
+
+.common-container {
+    margin: 0 auto;
+    flex-grow: 1;
+    display: grid;
+    place-items: center;
+    transition: filter var(--animation-time);
+    width: 100%;
 }
 
 .controls {
@@ -78,4 +99,64 @@ main {
     backdrop-filter: blur(var(--backdrop-blur));
     padding: 0.5em;
     border-radius: 0.75em;
+}
+
+.big-page-nav > .prev-page-controller,
+.big-page-nav > .next-page-controller {
+    position: fixed;
+    top: 3em;
+    bottom: 3em;
+    width: calc((100vw - var(--max-width) + 2em) / 2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5em;
+}
+
+.big-page-nav > .prev-page-controller > .prev-page,
+.big-page-nav > .next-page-controller > .next-page {
+    height: 4em;
+    width: 4em;
+}
+
+.big-page-nav > .prev-page-controller {
+    left: 0;
+}
+
+.big-page-nav > .next-page-controller {
+    right: 0;
+}
+
+@media (width < 1000px) {
+    .big-page-nav > .prev-page-controller,
+    .big-page-nav > .next-page-controller {
+        width: 30vw;
+    }
+
+    .big-page-nav > .prev-page-controller > .prev-page,
+    .big-page-nav > .next-page-controller > .next-page {
+        height: 2em;
+        width: 2em;
+    }
+
+    .big-page-nav > .prev-page-controller {
+        justify-content: start;
+    }
+
+    .big-page-nav > .next-page-controller {
+        justify-content: end;
+    }
+}
+
+@media (width < 800px) {
+    .big-page-nav > .prev-page-controller,
+    .big-page-nav > .next-page-controller {
+        width: 50vw;
+    }
+
+    .big-page-nav > .prev-page-controller > .prev-page,
+    .big-page-nav > .next-page-controller > .next-page {
+        opacity: 0;
+    }
 }

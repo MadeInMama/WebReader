@@ -1,15 +1,7 @@
-@media (hover: none) and (pointer: coarse) {
-    main {
-        min-height: calc(100dvh - 6em);
-    }
-}
-
 .fb2-canvas-container {
     max-width: calc(var(--max-width) - 2em);
-    width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-top: 1em;
     padding-bottom: 10em;
 }
 
@@ -133,4 +125,10 @@
     display: inline-block;
     bottom: -0.6em;
     left: 0;
+}
+
+@media (width < 1000px) and (width > 800px) {
+    .fb2-canvas-container {
+        max-width: calc(var(--max-width) - 6em);
+    }
 }

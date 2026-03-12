@@ -1,24 +1,3 @@
-.max-width-set {
-    max-width: var(--max-width);
-    margin-left: auto;
-    margin-right: auto;
-}
-
-@media (hover: none) and (pointer: coarse) {
-    main {
-        min-height: calc(100dvh - 6em);
-    }
-}
-
-.img-container {
-    margin: 0 auto;
-    flex-grow: 1;
-    display: grid;
-    place-items: center;
-    transition: filter var(--animation-time);
-    width: 100%;
-}
-
 #img-canvas {
     width: 100%;
 }

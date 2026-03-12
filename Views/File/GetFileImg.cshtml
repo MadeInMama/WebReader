@@ -63,8 +63,17 @@ else
     </li>
 }
 
-<div class="img-container">
+<div class="img-container common-container">
     <img style="opacity:0;transition: opacity 300ms ease-in-out" id="img-canvas" src="" alt="Content render error."/>
+</div>
+
+<div class="big-page-nav">
+    <button disabled class="prev-page-controller">
+        <div class="prev-page"></div>
+    </button>
+    <button disabled class="next-page-controller">
+        <div class="next-page"></div>
+    </button>
 </div>
 
 <div class="event-output"></div>
@@ -77,9 +86,9 @@ else
             <div class="settings-container"></div>
         </div>
         <div class="controls-center">
-            <button disabled class="prev-page"></button>
+            <button disabled class="prev-page prev-page-controller"></button>
             <span class="preview-page">0/0</span>
-            <button disabled class="next-page"></button>
+            <button disabled class="next-page next-page-controller"></button>
         </div>
         <div class="controls-end">
             <select class="set-scale">
@@ -183,21 +192,21 @@ else
             }
         }
 
-        Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+        Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
             value.onclick = () => {
                 SetPage(--currentPage);
 
-                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
                     value.disabled = false;
                 });
             };
         });
 
-        Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+        Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
             value.onclick = () => {
                 SetPage(++currentPage);
 
-                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
                     value.disabled = false;
                 });
             };
@@ -220,24 +229,24 @@ else
             currentPage = clamp(page, 1, maxPage);
 
             if (currentPage === maxPage) {
-                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
                     value.disabled = false;
                 });
-                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
                     value.disabled = true;
                 });
             } else if (currentPage === 1) {
-                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
                     value.disabled = true;
                 });
-                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
                     value.disabled = false;
                 });
             } else {
-                Array.from(document.getElementsByClassName("prev-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
                     value.disabled = false;
                 });
-                Array.from(document.getElementsByClassName("next-page")).forEach(value => {
+                Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
                     value.disabled = false;
                 });
             }
