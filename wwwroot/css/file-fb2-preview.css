@@ -5,6 +5,11 @@
     padding-bottom: 10em;
 }
 
+.fb2-image-container {
+    position: relative;
+    z-index: 1000;
+}
+
 .fb2-cover > img,
 .fb2-image-container > details > img {
     width: 100%;
