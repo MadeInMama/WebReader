@@ -11,29 +11,44 @@ using WebReader.Services;
 namespace WebReader.Background.AutoDownloadNewParts;
 
 public class AutoDownloadNewPartsOmniscientReader(
-    MinioService minioService,
     ApplicationDbContext context,
-    FileUploadService fileUploadService) : IAutoDownloadNewParts
+    FileUploadService fileUploadService,
+    ILogger<AutoDownloadNewPartsOmniscientReader> logger) : IAutoDownloadNewParts
 {
     public async Task GetAndDownload(CancellationToken stoppingToken)
     {
         const string url = "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
         var bf = new BrowserFetcher();
 
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            logger.LogInformation("Detected Windows");
             bf.Browser = SupportedBrowser.Chrome;
+        }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            logger.LogInformation("Detected Linux");
             bf.Browser = SupportedBrowser.Chromium;
+        }
 
         var installed = bf.GetInstalledBrowsers().ToList();
-        foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId);
 
+        logger.LogInformation("Detected installed browsers: {join}",
+            string.Join(", ", installed.Select(f => f.GetExecutablePath())));
+
+        foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
+
+        logger.LogInformation("Download Browser");
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             await bf.DownloadAsync(BrowserTag.Stable);
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             await bf.DownloadAsync(BrowserTag.Latest);
 
         installed = bf.GetInstalledBrowsers().ToList();
+
+        logger.LogInformation("Detected installed browsers: {join}",
+            string.Join(", ", installed.Select(f => f.GetExecutablePath())));
 
         var browser = await Puppeteer.LaunchAsync(new LaunchOptions
         {
@@ -58,9 +73,12 @@ public class AutoDownloadNewPartsOmniscientReader(
             { "Referer", "https://readmanga.ru/" }
         });
 
+
+        logger.LogInformation("Go to {url}", url);
         await page.GoToAsync(url,
             new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded] });
 
+        logger.LogInformation("Waiting for page load");
         await page.WaitForSelectorAsync(".chapters", new WaitForSelectorOptions { Timeout = 0 });
 
         var html = await page.GetContentAsync();
@@ -71,6 +89,8 @@ public class AutoDownloadNewPartsOmniscientReader(
             .Where(h => !GlobalFunctions.IsNullOrEmptyOrWhitespace(h))
             .Cast<string>()
             .ToList();
+
+        logger.LogInformation("Found {links} links", links.Count);
 
         var lastStoredFile = await context.Files.Where(f => f.CustomName == "Всеведущий читатель")
             .Include(f => f.Bucket)
@@ -87,11 +107,16 @@ public class AutoDownloadNewPartsOmniscientReader(
                 var dataNum = link.Split("/").Last() == "0" ? 0 : int.Parse(link.Split("/").Last());
 
                 if (int.Parse(lastFile.CurrentPartName) >= dataNum)
+                {
+                    logger.LogInformation("Skipping {dataNum}", dataNum);
                     continue;
+                }
 
+                logger.LogInformation("Go to {link}", link);
                 await page.GoToAsync(link,
                     new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded] });
 
+                logger.LogInformation("Waiting for page load with images");
                 await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 0 });
 
                 html = await page.GetContentAsync();
@@ -99,6 +124,8 @@ public class AutoDownloadNewPartsOmniscientReader(
                 var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
                     .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
                     .ToList();
+
+                logger.LogInformation("Found {images} links", images.Count);
 
                 using var memoryStream = new MemoryStream();
 
@@ -109,6 +136,8 @@ public class AutoDownloadNewPartsOmniscientReader(
                         var src = img.GetAttribute("data-original");
                         if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
                             src = img.GetAttribute("src")!;
+
+                        logger.LogInformation("Downloading {src}", src);
 
                         var imageBytes = await new HttpClient().GetByteArrayAsync(src, stoppingToken);
 
@@ -125,6 +154,9 @@ public class AutoDownloadNewPartsOmniscientReader(
                 await memoryStream.FlushAsync(stoppingToken);
                 memoryStream.Position = 0;
 
+                logger.LogInformation("Save to db {name}",
+                    $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
+
                 var fileUploadResult = await fileUploadService.UploadFileAsync(
                     lastFile.Id,
                     null,
@@ -138,7 +170,12 @@ public class AutoDownloadNewPartsOmniscientReader(
                     dataNum.ToString()
                 );
 
-                if (!fileUploadResult.isSuccessfull) goto finish;
+                if (!fileUploadResult.isSuccessfull)
+                {
+                    logger.LogError("Error downloading {name}",
+                        $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
+                    goto finish;
+                }
 
                 lastFile = fileUploadResult.currentFile;
             }
@@ -147,6 +184,6 @@ public class AutoDownloadNewPartsOmniscientReader(
         finish:
         await browser.CloseAsync();
 
-        foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId);
+        foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
     }
 }

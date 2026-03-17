@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using PuppeteerSharp;
+using WebReader.Background.AutoDownloadNewParts;
 
 namespace WebReader.Helpers;
 
@@ -35,7 +36,8 @@ public static class BrowserProcessKiller
             }
         };
 
-    public static int KillBrowserProcesses(SupportedBrowser browser, bool force = true)
+    private static int KillBrowserProcesses(SupportedBrowser browser,
+        ILogger<AutoDownloadNewPartsOmniscientReader> logger, bool force = true)
     {
         var os = GetCurrentUserOs();
         var processNames = GetProcessNamesForBrowser(browser, os);
@@ -54,11 +56,12 @@ public static class BrowserProcessKiller
                             process.CloseMainWindow();
                         process.WaitForExit(5000);
                         killedCount++;
-                        Console.WriteLine($"Killed: {processName} (PID: {process.Id})");
+                        logger.LogInformation("Killed: {processName} (PID: {processId})", processName, process.Id);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to kill {processName} (PID: {process.Id}): {ex.Message}");
+                        logger.LogInformation("Failed to kill {processName} (PID: {processId}): {exMessage}",
+                            processName, process.Id, ex.Message);
                     }
                     finally
                     {
@@ -67,37 +70,38 @@ public static class BrowserProcessKiller
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"✗ Error finding {processName}: {ex.Message}");
+                logger.LogInformation("Error finding {processName}: {exMessage}", processName, ex.Message);
             }
 
         return killedCount;
     }
 
-    public static int KillAllBrowserProcesses(bool force = true)
+    private static int KillAllBrowserProcesses(ILogger<AutoDownloadNewPartsOmniscientReader> logger, bool force = true)
     {
-        var totalKilled = 0;
-        foreach (var browser in Enum.GetValues<SupportedBrowser>()) totalKilled += KillBrowserProcesses(browser, force);
-        return totalKilled;
+        return Enum.GetValues<SupportedBrowser>().Sum(browser => KillBrowserProcesses(browser, logger, force));
     }
 
-    public static int KillAllBrowserProcesses(bool force = true, int cleanupDelayMs = 1000)
+    private static int KillAllBrowserProcesses2(ILogger<AutoDownloadNewPartsOmniscientReader> logger, bool force = true)
     {
-        var totalKilled = KillAllBrowserProcesses(force);
+        var totalKilled = KillAllBrowserProcesses(logger, force);
 
         if (totalKilled <= 0) return totalKilled;
 
-        Console.WriteLine($"Waiting {cleanupDelayMs}ms for processes to fully terminate...");
+        const int cleanupDelayMs = 2000;
+
+        logger.LogInformation("Waiting {cleanupDelayMs}ms for processes to fully terminate...", cleanupDelayMs);
         Task.Delay(cleanupDelayMs);
 
         return totalKilled;
     }
 
-    public static void PrepareCleanBrowserEnvironment(SupportedBrowser browser)
+    public static void PrepareCleanBrowserEnvironment(ILogger<AutoDownloadNewPartsOmniscientReader> logger)
     {
-        Console.WriteLine($"Preparing clean environment for {browser}...");
+        logger.LogInformation("Preparing clean environment...");
 
-        var killed = KillAllBrowserProcesses(true, 2000);
-        Console.WriteLine($"Killed {killed} browser process(es)");
+        var killed = KillAllBrowserProcesses2(logger);
+
+        logger.LogInformation("Killed {killed} browser process(es)", killed);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) CleanupWindowsBrowserArtifacts();
     }

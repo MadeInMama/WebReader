@@ -3,6 +3,7 @@ using System.Security.Claims;
 using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Models;
 
 namespace WebReader.Helpers;
@@ -41,10 +42,10 @@ public static class StaticFunctions
         return code is >= 200 and < 300;
     }
 
-    public static void CustomUninstall(this BrowserFetcher bf, SupportedBrowser sb, Platform p, string buildId)
+    public static void CustomUninstall(this BrowserFetcher bf, SupportedBrowser sb, Platform p, string buildId,
+        ILogger<AutoDownloadNewPartsOmniscientReader> logger)
     {
-        foreach (var el in Enum.GetValues<SupportedBrowser>())
-            BrowserProcessKiller.PrepareCleanBrowserEnvironment(el);
+        BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
 
         var dir = new DirectoryInfo(GetInstallationDir());
         if (dir.Exists) dir.Delete(true);
