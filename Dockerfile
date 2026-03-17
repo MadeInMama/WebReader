@@ -1,8 +1,7 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 
-RUN rm -rf /var/lib/apt/lists/*
-
 RUN apt-get update && apt-get install -y \
+    chromium \
     libglib2.0-0 \
     libnss3 \
     libnspr4 \
@@ -17,7 +16,9 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     libgbm1 \
     libasound2 \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 USER $APP_UID
 WORKDIR /app
