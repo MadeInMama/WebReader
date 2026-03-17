@@ -1,15 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebReader.Helpers;
+using WebReader.Models;
 using WebReader.Models.Dtos;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
+using WebReader.Services;
 
 namespace WebReader.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class FileApiController(UserReadingRepository readingRepository) : Controller
+public class FileApiController(
+    UserReadingRepository readingRepository,
+    FileService fileService) : Controller
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -47,6 +52,20 @@ public class FileApiController(UserReadingRepository readingRepository) : Contro
             return BadRequest(ModelState);
 
         await readingRepository.DeleteAllAsync([request.ReadingId]);
+
+        return NoContent();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteFile([FromBody] DeleteFileRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        if (!User.GetUserRoles().Contains(RoleType.Admin)) return Forbid();
+
+        await fileService.DeleteFileAsync([request.FileId]);
 
         return NoContent();
     }

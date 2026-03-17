@@ -148,4 +148,22 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                         !referencedIds.Contains(f.Id))
             .ToListAsync();
     }
+
+    public async Task DeleteAllAsync(IEnumerable<Guid>? ids)
+    {
+        var idsArray = ids?.ToArray() ?? [];
+
+        if (idsArray.Length == 0) return;
+
+        await context.Files
+            .Where(r => idsArray.Contains(r.Id))
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task DeleteAsync(Guid? id)
+    {
+        if (id == null) return;
+
+        await DeleteAllAsync([id.Value]);
+    }
 }

@@ -42,6 +42,7 @@ builder.Services.AddScoped<BucketService>();
 builder.Services.AddScoped<MinioService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<FileUploadService>();
+builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<BucketRepository>();
 builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();

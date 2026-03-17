@@ -17,7 +17,7 @@
             }
         }
 
-        .content {
+        .full_content {
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -92,6 +92,14 @@
         .upload-btn-container {
             margin-top: 1em;
         }
+
+        .event-output {
+            height: 2em;
+            width: 2em;
+            opacity: 1;
+            transition: none;
+            margin-left: 0.5em;
+        }
     </style>
 }
 
@@ -114,14 +122,14 @@
 
 @if (Model.Items.Any())
 {
-    <div class="content">
+    <div class="full_content">
         <details open class="always-open-details">
             <summary>
                 <span>@Model.Items.First().FileName</span>
             </summary>
             @foreach (var item in Model.Items)
             {
-                <div class="file-line">
+                <div class="file-line" id="@("RL_" + item.Id)">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@Model.Id"
                        asp-route-fileId="@item.Id">
@@ -148,6 +156,9 @@
                             class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
                         <span class="right secondary-info-span">@FormatSize(item.Size)</span>
                     </a>
+                    <div class="event-output">
+                        <button class="remove" onclick="Delete('@item.Id')"></button>
+                    </div>
                 </div>
             }
         </details>
@@ -171,6 +182,70 @@ else
 
 @section Scripts
 {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        const fullContentEl = document.getElementById("full_content");
+        const emptyContentEl = document.getElementById("empty_content");
+
+        CheckOnEmpty();
+
+        async function Delete(id) {
+            document.querySelectorAll(".remove").forEach(el => el.disabled = true);
+            document.querySelector(`#RL_${id} > .event-output > button`).classList = 'waiting';
+
+            requestQueue.enqueue({
+                method: 'POST',
+                url: '/api/FileApi/DeleteFile',
+                data: {
+                    FileId: id
+                },
+                options: {
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
+                },
+                beforeSend: () => {
+                }
+            })
+                .then(_ => {
+                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'success';
+
+                    setTimeout(() => {
+                        document.getElementById(`RL_${id}`).remove();
+                        CheckOnEmpty();
+                        document.querySelectorAll(".remove").forEach(el => el.disabled = false);
+                    }, 1000);
+                })
+                .catch(_ => {
+                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'error';
+
+                    setTimeout(() => {
+                        document.querySelector(`#RL_${id} > .event-output > button`).classList = 'remove';
+                        document.querySelectorAll(".remove").forEach(el => el.disabled = false);
+                    }, 1000);
+                });
+        }
+
+        function CheckOnEmpty() {
+            document.querySelectorAll("#full_content > details").forEach(el => {
+                if (el.querySelectorAll(".reading-line").length === 0) {
+                    el.style.display = "none";
+
+                    if (!document.querySelectorAll("#full_content > details").values()
+                        .some(f => f.open && f.style.display !== "none")) {
+                        document.querySelector("#full_content > details").open = true;
+                    }
+                }
+            });
+
+            if (document.querySelectorAll(".reading-line").length === 0) {
+                fullContentEl.style.display = "none";
+                emptyContentEl.style.display = "flex";
+            } else {
+                fullContentEl.style.display = "flex";
+                emptyContentEl.style.display = "none";
+            }
+        }
     </script>
 }
