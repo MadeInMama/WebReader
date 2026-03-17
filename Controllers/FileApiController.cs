@@ -60,10 +60,9 @@ public class FileApiController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteFile([FromBody] DeleteFileRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        if (!User.GetUserRoles().Contains(RoleType.Admin)) return Forbid();
+        if (!User.GetUserRoles().Contains(RoleType.Admin)) BadRequest(ModelState);
 
         await fileService.DeleteFileAsync([request.FileId]);
 

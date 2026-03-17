@@ -17,7 +17,7 @@
             }
         }
 
-        .full_content {
+        #full_content {
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -120,54 +120,49 @@
     </li>
 }
 
-@if (Model.Items.Any())
-{
-    <div class="full_content">
-        <details open class="always-open-details">
-            <summary>
-                <span>@Model.Items.First().FileName</span>
-            </summary>
-            @foreach (var item in Model.Items)
-            {
-                <div class="file-line" id="@("RL_" + item.Id)">
-                    <a asp-controller="File" asp-action="GetFile"
-                       asp-route-bucketId="@Model.Id"
-                       asp-route-fileId="@item.Id">
-                        @if (item.IsReading)
-                        {
-                            <div class="center secondary-info-span">
-                                @if (item.IsDone)
-                                {
-                                    <span class="is-done"></span>
-                                }
-                                else
-                                {
-                                    <span class="in-progress"></span>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <span class="in-progress-empty secondary-info-span"></span>
-                        }
-                        <span class="left main-info-span">@item.CurrentPartName</span>
-                        <span class="right secondary-info-span">@item.Type?.ToLower()</span>
-                        <span
-                            class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
-                        <span class="right secondary-info-span">@FormatSize(item.Size)</span>
-                    </a>
-                    <div class="event-output">
-                        <button class="remove" onclick="Delete('@item.Id')"></button>
-                    </div>
+<div id="full_content">
+    <details open class="always-open-details">
+        <summary>
+            <span>@Model.Items.First().FileName</span>
+        </summary>
+        @foreach (var item in Model.Items)
+        {
+            <div class="file-line" id="@("RL_" + item.Id)">
+                <a asp-controller="File" asp-action="GetFile"
+                   asp-route-bucketId="@Model.Id"
+                   asp-route-fileId="@item.Id">
+                    @if (item.IsReading)
+                    {
+                        <div class="center secondary-info-span">
+                            @if (item.IsDone)
+                            {
+                                <span class="is-done"></span>
+                            }
+                            else
+                            {
+                                <span class="in-progress"></span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="in-progress-empty secondary-info-span"></span>
+                    }
+                    <span class="left main-info-span">@item.CurrentPartName</span>
+                    <span class="right secondary-info-span">@item.Type?.ToLower()</span>
+                    <span
+                        class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
+                    <span class="right secondary-info-span">@FormatSize(item.Size)</span>
+                </a>
+                <div class="event-output">
+                    <button class="remove" onclick="Delete('@item.Id')"></button>
                 </div>
-            }
-        </details>
-    </div>
-}
-else
-{
-    @await Html.PartialAsync("_EmptyDisplay")
-}
+            </div>
+        }
+    </details>
+</div>
+
+@await Html.PartialAsync("_EmptyDisplay")
 
 @if (Model.IsBelongsToUser)
 {
@@ -229,7 +224,7 @@ else
 
         function CheckOnEmpty() {
             document.querySelectorAll("#full_content > details").forEach(el => {
-                if (el.querySelectorAll(".reading-line").length === 0) {
+                if (el.querySelectorAll(".file-line").length === 0) {
                     el.style.display = "none";
 
                     if (!document.querySelectorAll("#full_content > details").values()
@@ -239,7 +234,7 @@ else
                 }
             });
 
-            if (document.querySelectorAll(".reading-line").length === 0) {
+            if (document.querySelectorAll(".file-line").length === 0) {
                 fullContentEl.style.display = "none";
                 emptyContentEl.style.display = "flex";
             } else {

@@ -18,8 +18,9 @@ public class AutoDownloadNewPartsOmniscientReader(
     public async Task GetAndDownload(CancellationToken stoppingToken)
     {
         const string url = "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
-        var bf = new BrowserFetcher();
+        const ulong maxSize = 1u * 1024u * 1024u * 1024u; //GB
 
+        var bf = new BrowserFetcher();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -73,10 +74,9 @@ public class AutoDownloadNewPartsOmniscientReader(
             { "Referer", "https://readmanga.ru/" }
         });
 
-
         logger.LogInformation("Go to {url}", url);
         await page.GoToAsync(url,
-            new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded] });
+            new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 0 });
 
         logger.LogInformation("Waiting for page load");
         await page.WaitForSelectorAsync(".chapters", new WaitForSelectorOptions { Timeout = 0 });
@@ -114,7 +114,7 @@ public class AutoDownloadNewPartsOmniscientReader(
 
                 logger.LogInformation("Go to {link}", link);
                 await page.GoToAsync(link,
-                    new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded] });
+                    new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 0 });
 
                 logger.LogInformation("Waiting for page load with images");
                 await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 0 });
@@ -178,6 +178,14 @@ public class AutoDownloadNewPartsOmniscientReader(
                 }
 
                 lastFile = fileUploadResult.currentFile;
+
+                var currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
+                    .AggregateAsync((f1, f2) => f1 + f2, stoppingToken);
+                if (maxSize < currentSize)
+                {
+                    logger.LogWarning("Max size {maxSize} has been reached {currentSize}", maxSize, currentSize);
+                    goto finish;
+                }
             }
         }
 
