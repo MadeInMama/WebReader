@@ -1,4 +1,24 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+
+RUN rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/* \
+
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
@@ -19,23 +39,6 @@ RUN dotnet publish "./WebReader.csproj" -c $BUILD_CONFIGURATION -o /app/publish 
 
 FROM base AS final
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y \
-    libglib2.0-0 \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    && rm -rf /var/lib/apt/lists/* \
 
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "WebReader.dll"]
