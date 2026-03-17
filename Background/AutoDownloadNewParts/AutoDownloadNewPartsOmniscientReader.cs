@@ -28,7 +28,10 @@ public class AutoDownloadNewPartsOmniscientReader(
         var installed = bf.GetInstalledBrowsers().ToList();
         foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId);
 
-        await bf.DownloadAsync(BrowserTag.Stable);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            await bf.DownloadAsync(BrowserTag.Stable);
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            await bf.DownloadAsync(BrowserTag.Latest);
 
         installed = bf.GetInstalledBrowsers().ToList();
 
