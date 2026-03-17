@@ -62,8 +62,6 @@ public class AutoDownloadNewPartsOmniscientReader(
 
         var html = await page.GetContentAsync();
 
-        goto finish;
-
         var links = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
             .QuerySelectorAll(".chapters > table .item-title > a")
             .Select(a => a.GetAttribute("href"))
