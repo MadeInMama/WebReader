@@ -2,12 +2,15 @@
     max-width: calc(var(--max-width) - 2em);
     margin-left: auto;
     margin-right: auto;
-    padding-bottom: 10em;
 }
 
 .fb2-image-container {
     position: relative;
     z-index: 1000;
+}
+
+.fb2-canvas-container > section {
+    padding-bottom: 10em;
 }
 
 .fb2-cover > img,
