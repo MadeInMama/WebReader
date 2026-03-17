@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Runtime.InteropServices;
 using AngleSharp.Html.Parser;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
@@ -18,6 +19,12 @@ public class AutoDownloadNewPartsOmniscientReader(
     {
         const string url = "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
         var bf = new BrowserFetcher();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            bf.Browser = SupportedBrowser.Chrome;
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            bf.Browser = SupportedBrowser.Chromium;
+
         var installed = bf.GetInstalledBrowsers().ToList();
         foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId);
 
@@ -54,6 +61,8 @@ public class AutoDownloadNewPartsOmniscientReader(
         await page.WaitForSelectorAsync(".chapters", new WaitForSelectorOptions { Timeout = 0 });
 
         var html = await page.GetContentAsync();
+
+        goto finish;
 
         var links = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
             .QuerySelectorAll(".chapters > table .item-title > a")
