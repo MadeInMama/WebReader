@@ -83,16 +83,16 @@ public class MinioService(IMinioClient minioClient)
         }
     }
 
-    public async Task<bool> UploadObjectAsync(string bucketName, IFormFile file)
+    public async Task<bool> UploadObjectAsync(string bucketName, Stream stream, string fileName, string contentType)
     {
-        if (await ObjectExistsAsync(bucketName, file.FileName)) return false;
+        if (await ObjectExistsAsync(bucketName, fileName)) return false;
 
         var res = await minioClient.PutObjectAsync(new PutObjectArgs()
             .WithBucket(bucketName)
-            .WithObject(file.FileName)
-            .WithStreamData(file.OpenReadStream())
-            .WithContentType(file.ContentType)
-            .WithObjectSize(file.Length));
+            .WithObject(fileName)
+            .WithStreamData(stream)
+            .WithContentType(contentType)
+            .WithObjectSize(stream.Length));
 
         return res != null && res.ResponseStatusCode.IsSuccessStatusCode();
     }

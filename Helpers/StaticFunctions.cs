@@ -1,5 +1,8 @@
 ﻿using System.Net;
 using System.Security.Claims;
+using PuppeteerSharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using WebReader.Models;
 
 namespace WebReader.Helpers;
@@ -36,5 +39,34 @@ public static class StaticFunctions
     {
         var code = (int)statusCode;
         return code is >= 200 and < 300;
+    }
+
+    public static void CustomUninstall(this BrowserFetcher bf, SupportedBrowser sb, Platform p, string buildId)
+    {
+        foreach (var el in Enum.GetValues<SupportedBrowser>())
+            BrowserProcessKiller.PrepareCleanBrowserEnvironment(el);
+
+        var dir = new DirectoryInfo(GetInstallationDir());
+        if (dir.Exists) dir.Delete(true);
+
+        return;
+
+        string GetInstallationDir()
+        {
+            return Path.Combine(GetBrowserRoot(), $"{p}-{buildId}");
+        }
+
+        string GetBrowserRoot()
+        {
+            return Path.Combine(bf.CacheDir, sb.ToString());
+        }
+    }
+
+    public static byte[] ConvertByteArrayToGif(byte[] sourceImageBytes)
+    {
+        using var image = Image.Load(sourceImageBytes);
+        using var outputStream = new MemoryStream();
+        image.Save(outputStream, new JpegEncoder());
+        return outputStream.ToArray();
     }
 }

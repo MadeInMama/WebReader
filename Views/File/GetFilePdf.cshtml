@@ -18,6 +18,14 @@
 
     <h3 class="special-info-small">@Model.Title</h3>
 }
+else if (int.TryParse(Model.CurrentPartName, out _))
+{
+    @section SpecialInfo {
+        <h3 class="special-info-big">@Model.Title - @Model.CurrentPartName</h3>
+    }
+
+    <h3 class="special-info-small">@Model.Title - @Model.CurrentPartName</h3>
+}
 else
 {
     @section SpecialInfo {

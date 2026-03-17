@@ -21,7 +21,8 @@ public class FileController(
     FileRepository fileRepository,
     UserReadingRepository readingRepository,
     MinioService minioService,
-    IDbContextFactory<ApplicationDbContext> contextFactory) : Controller
+    IDbContextFactory<ApplicationDbContext> contextFactory,
+    FileUploadService fileUploadService) : Controller
 {
     public async Task<IActionResult> GetAllBuckets()
     {
@@ -340,86 +341,23 @@ public class FileController(
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
-        File? asPartOfFile = null, asParentOfFile = null;
+        var uploadFileResult = await fileUploadService.UploadFileAsync(
+            request.AsPartOfId,
+            request.AsParentOfId,
+            bucket,
+            userRoles,
+            request.File.OpenReadStream(),
+            request.File.FileName,
+            request.CustomName,
+            request.File.ContentType,
+            fileType,
+            request.CurrentPartName);
 
-        if (request.AsPartOfId.HasValue)
-        {
-            asPartOfFile = await fileRepository.FirstOrDefaultAsync(f =>
-                f.BucketId == bucket.Id && !f.IsHidden && f.Id == request.AsPartOfId!.Value &&
-                f.AccessRoles.Intersect(userRoles).Any(), null);
+        if (!uploadFileResult.isSuccessfull) return View(string.Empty, uploadFileResult.errorMsg);
 
-            if (asPartOfFile == null)
-            {
-                ModelState.AddModelError(string.Empty, "Part of file not available.");
-                request.AsPartOfId = null;
-                return View(request);
-            }
-        }
-
-        if (request.AsParentOfId.HasValue)
-        {
-            asParentOfFile = await fileRepository.FirstOrDefaultAsync(f =>
-                f.BucketId == bucket.Id && !f.IsHidden && f.Id == request.AsParentOfId!.Value &&
-                f.AccessRoles.Intersect(userRoles).Any(), null);
-
-            if (asParentOfFile == null)
-            {
-                ModelState.AddModelError(string.Empty, "Parent of file not available.");
-                request.AsParentOfId = null;
-                return View(request);
-            }
-        }
-
-        var uploadToS3Successful = await minioService.UploadObjectAsync(bucket.Name, request.File!);
-
-        if (!uploadToS3Successful)
-        {
-            ModelState.AddModelError(string.Empty,
-                "File upload failed. Try again later. Storage is not accessible now.");
-            return View(request);
-        }
-
-        //TODO: part-parent check and set
-
-        var currentFile = new File
-        {
-            BucketId = bucket.Id,
-            Name = request.File.FileName,
-            CustomName = request.CustomName.Trim(),
-            Type = fileType,
-            IsAvailable = true,
-            IsHidden = false,
-            Size = (ulong?)request.File.Length,
-            NextPartId = asParentOfFile?.Id,
-            CurrentPartName = request.CurrentPartName
-        };
-
-        if (asPartOfFile != null)
-        {
-            asPartOfFile.NextPartId = currentFile.Id;
-            asPartOfFile.NextPart = currentFile;
-
-            fileRepository.Update(asPartOfFile);
-        }
-        else
-        {
-            await fileRepository.AddAsync(currentFile);
-        }
-
-        try
-        {
-            await fileRepository.SaveChangesAsync();
-        }
-        catch (Exception _)
-        {
-            await minioService.RemoveObjectsAsync(bucket.Name, [currentFile.Name]);
-
-            ModelState.AddModelError(string.Empty, "File save failed. Try again later.");
-            return View(request);
-        }
-
-        return currentFile.NextPartId.HasValue
-            ? RedirectToAction("GetAllPartsInFile", new { bucketId = bucket.Id, fileId = currentFile.Id })
+        return uploadFileResult.currentFile is { NextPartId: not null }
+            ? RedirectToAction("GetAllPartsInFile",
+                new { bucketId = bucket.Id, fileId = uploadFileResult.currentFile.Id })
             : RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
     }
 

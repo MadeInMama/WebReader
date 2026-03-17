@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Minio;
 using WebReader.Background;
+using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Configuration;
 using WebReader.Data;
 using WebReader.Repositories;
@@ -40,12 +41,16 @@ builder.Services.AddSingleton<IMinioClient>(_ => new MinioClient()
 builder.Services.AddScoped<BucketService>();
 builder.Services.AddScoped<MinioService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<FileUploadService>();
 builder.Services.AddScoped<BucketRepository>();
 builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 
+builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
+
 builder.Services.AddHostedService<UpdateFilesFromS3>();
+builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
