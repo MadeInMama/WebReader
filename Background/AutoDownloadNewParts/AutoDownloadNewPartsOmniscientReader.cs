@@ -88,10 +88,10 @@ public class AutoDownloadNewPartsOmniscientReader(
 
         logger.LogInformation("Go to {url}", url);
         await page.GoToAsync(url,
-            new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 0 });
+            new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
 
         logger.LogInformation("Waiting for page load");
-        await page.WaitForSelectorAsync(".chapters", new WaitForSelectorOptions { Timeout = 0 });
+        await page.WaitForSelectorAsync(".chapters", new WaitForSelectorOptions { Timeout = 30000 });
 
         var html = await page.GetContentAsync();
 
@@ -126,10 +126,10 @@ public class AutoDownloadNewPartsOmniscientReader(
 
                 logger.LogInformation("Go to {link}", link);
                 await page.GoToAsync(link,
-                    new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 0 });
+                    new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
 
                 logger.LogInformation("Waiting for page load with images");
-                await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 0 });
+                await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
 
                 html = await page.GetContentAsync();
 

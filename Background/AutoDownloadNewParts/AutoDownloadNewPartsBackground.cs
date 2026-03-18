@@ -4,7 +4,7 @@ public class AutoDownloadNewPartsBackground(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<AutoDownloadNewPartsBackground> logger) : BackgroundService
 {
-    private static readonly TimeSpan PeriodTime = TimeSpan.FromDays(1);
+    private static readonly TimeSpan PeriodTime = TimeSpan.FromMinutes(30);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
