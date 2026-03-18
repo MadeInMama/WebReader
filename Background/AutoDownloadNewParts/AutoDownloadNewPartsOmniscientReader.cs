@@ -214,16 +214,16 @@ public class AutoDownloadNewPartsOmniscientReader(
 
             foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
         }
-        catch (TimeoutException _)
+        catch (TimeoutException e)
         {
-            logger.LogError("Timeout has been reached");
+            logger.LogError("Timeout has been reached: {}", e.Message);
             var bf = new BrowserFetcher();
             var installed = bf.GetInstalledBrowsers().ToList();
             foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
         }
-        catch (NavigationException _)
+        catch (NavigationException e)
         {
-            logger.LogError("Navigation error has been reached");
+            logger.LogError("Navigation error has been reached: {}", e.Message);
             var bf = new BrowserFetcher();
             var installed = bf.GetInstalledBrowsers().ToList();
             foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
