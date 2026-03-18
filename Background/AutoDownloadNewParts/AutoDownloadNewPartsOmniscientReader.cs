@@ -20,6 +20,14 @@ public class AutoDownloadNewPartsOmniscientReader(
         const string url = "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
         const ulong maxSize = 1u * 1024u * 1024u * 1024u; //GB
 
+        var currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
+            .AggregateAsync((f1, f2) => f1 + f2, stoppingToken);
+        if (maxSize < currentSize)
+        {
+            logger.LogWarning("Max size {maxSize} has been reached {currentSize}", maxSize, currentSize);
+            return;
+        }
+
         var bf = new BrowserFetcher();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -179,7 +187,7 @@ public class AutoDownloadNewPartsOmniscientReader(
 
                 lastFile = fileUploadResult.currentFile;
 
-                var currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
+                currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
                     .AggregateAsync((f1, f2) => f1 + f2, stoppingToken);
                 if (maxSize < currentSize)
                 {

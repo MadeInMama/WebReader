@@ -203,7 +203,7 @@ else
 
         Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
             value.onclick = () => {
-                SetPage(--currentPage);
+                SetPage(currentPage - 1);
 
                 Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
                     value.disabled = false;
@@ -213,7 +213,7 @@ else
 
         Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
             value.onclick = () => {
-                SetPage(++currentPage);
+                SetPage(currentPage + 1);
 
                 Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
                     value.disabled = false;
@@ -230,6 +230,8 @@ else
         });
 
         async function SetPage(page, send = true) {
+            const scrollToTop = currentPage < page;
+
             currentPage = clamp(page, 1, maxPage);
 
             if (currentPage === maxPage) {
@@ -257,8 +259,10 @@ else
 
             await renderPage();
 
+            await SetScale(currentScale, false);
+
             window.scrollTo({
-                top: 0,
+                top: scrollToTop ? 0 : document.body.scrollHeight,
                 behavior: 'smooth'
             });
 

@@ -5,6 +5,7 @@
 
 @section Style
 {
+    <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
     <style>
         summary > span {
             cursor: pointer;
@@ -35,31 +36,7 @@
         }
 
         .reading-line {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             padding-left: 2em;
-            width: 100%;
-            min-height: 2em;
-        }
-
-        .reading-line:not(:last-child) {
-            margin-bottom: 0.5em;
-        }
-
-        #full_content {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            gap: 0.5em;
-            max-width: calc(var(--max-width) - 1em);
-        }
-
-        .event-output {
-            height: 2em;
-            width: 2em;
-            opacity: 1;
-            transition: none;
         }
     </style>
 }
@@ -78,7 +55,7 @@
             <summary><span>@item.Key.CustomName</span></summary>
             @foreach (var obj in item.Value)
             {
-                <div class="reading-line" id="@("RL_" + obj.ReadingId)">
+                <div class="reading-line file-line" id="@("RL_" + obj.ReadingId)">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@item.Key.BucketId"
                        asp-route-fileId="@obj.FileId">@obj.CustomName @obj.CurrentPartName @* - @obj.DateTime.LocalDateTime*@ - @obj.Page@* - @FormatSize(obj.Size)*@</a>
@@ -97,68 +74,8 @@
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        const fullContentEl = document.getElementById("full_content");
-        const emptyContentEl = document.getElementById("empty_content");
-
-        CheckOnEmpty();
-
-        async function Delete(id) {
-            document.querySelectorAll(".remove").forEach(el => el.disabled = true);
-            document.querySelector(`#RL_${id} > .event-output > button`).classList = 'waiting';
-
-            requestQueue.enqueue({
-                method: 'POST',
-                url: '/api/FileApi/DeleteReading',
-                data: {
-                    ReadingId: id
-                },
-                options: {
-                    headers: {
-                        'RequestVerificationToken': GetAntiForgeryToken()
-                    },
-                    withCredentials: true
-                },
-                beforeSend: () => {
-                }
-            })
-                .then(_ => {
-                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'success';
-
-                    setTimeout(() => {
-                        document.getElementById(`RL_${id}`).remove();
-                        CheckOnEmpty();
-                        document.querySelectorAll(".remove").forEach(el => el.disabled = false);
-                    }, 1000);
-                })
-                .catch(_ => {
-                    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'error';
-
-                    setTimeout(() => {
-                        document.querySelector(`#RL_${id} > .event-output > button`).classList = 'remove';
-                        document.querySelectorAll(".remove").forEach(el => el.disabled = false);
-                    }, 1000);
-                });
-        }
-
-        function CheckOnEmpty() {
-            document.querySelectorAll("#full_content > details").forEach(el => {
-                if (el.querySelectorAll(".reading-line").length === 0) {
-                    el.style.display = "none";
-
-                    if (!document.querySelectorAll("#full_content > details").values()
-                        .some(f => f.open && f.style.display !== "none")) {
-                        document.querySelector("#full_content > details").open = true;
-                    }
-                }
-            });
-
-            if (document.querySelectorAll(".reading-line").length === 0) {
-                fullContentEl.style.display = "none";
-                emptyContentEl.style.display = "flex";
-            } else {
-                fullContentEl.style.display = "flex";
-                emptyContentEl.style.display = "none";
-            }
-        }
+        const url = '/api/FileApi/DeleteReading';
+        const lineSelector = '.file-line';
     </script>
+    <script src="~/js/delete-row.js"></script>
 }

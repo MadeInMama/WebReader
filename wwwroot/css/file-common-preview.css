@@ -104,8 +104,8 @@ main {
 .big-page-nav > .prev-page-controller,
 .big-page-nav > .next-page-controller {
     position: fixed;
-    top: 3em;
-    bottom: 3em;
+    top: 20vh;
+    bottom: 20vh;
     width: calc((100vw - var(--max-width) + 2em) / 2);
     cursor: pointer;
     display: flex;

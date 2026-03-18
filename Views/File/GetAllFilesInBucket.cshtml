@@ -5,95 +5,7 @@
 
 @section Style
 {
-    <style>
-        main {
-            justify-content: space-between;
-            min-height: calc(100vh - 6em);
-        }
-
-        @@media (hover: none) and (pointer: coarse) {
-            main {
-                min-height: calc(100dvh - 6em);
-            }
-        }
-
-        .content {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: calc(var(--max-width) - 1em);
-        }
-
-        .file-line {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            min-height: 2em;
-        }
-
-        .file-line > a {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5em;
-            grid-auto-rows: 2em;
-            align-items: center;
-            width: 100%;
-        }
-
-        .file-line > a > span {
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .file-line > a > .left {
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-start;
-            white-space: pre-wrap;
-        }
-
-        .file-line > a > .center {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-        }
-
-        .file-line > a > .right {
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-end;
-        }
-
-        .file-line > a > div > .in-progress,
-        .file-line > a > div > .is-done,
-        .parted {
-            font-size: 0.75em;
-        }
-
-        .file-line:not(:last-child) {
-            margin-bottom: 0.5em;
-        }
-
-        .secondary-info-span {
-            flex-grow: 0;
-            flex-shrink: 0;
-        }
-
-        .main-info-span {
-            flex-grow: 1;
-        }
-
-        .in-progress-empty {
-            font-size: 0.75em;
-            height: 2em;
-            width: 2em;
-        }
-
-        .upload-btn-container {
-            margin-top: 1em;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
 }
 
 @section SpecialInfo
@@ -104,65 +16,62 @@
     }
 }
 
-@if (Model.Items.Any())
-{
-    <div class="content">
-        <details open class="always-open-details">
-            <summary>
-                <span>@Model.BucketName</span>
-            </summary>
-            @foreach (var item in Model.Items)
+<div id="full_content">
+    <details open class="always-open-details">
+        <summary>
+            <span>@Model.BucketName</span>
+        </summary>
+        @foreach (var item in Model.Items)
+        {
+            @if (item.IsParted)
             {
-                @if (item.IsParted)
-                {
-                    <div class="file-line">
-                        <a asp-controller="File" asp-action="GetAllPartsInFile"
-                           asp-route-bucketId="@Model.Id"
-                           asp-route-fileId="@item.Id">
-                            <div class="center parted secondary-info-span"></div>
-                            <span class="left main-info-span">@item.FileName</span>
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    <div class="file-line">
-                        <a asp-controller="File" asp-action="GetFile"
-                           asp-route-bucketId="@Model.Id"
-                           asp-route-fileId="@item.Id">
-                            @if (item.IsReading)
-                            {
-                                <div class="center secondary-info-span">
-                                    @if (item.IsDone)
-                                    {
-                                        <span class="is-done"></span>
-                                    }
-                                    else
-                                    {
-                                        <span class="in-progress"></span>
-                                    }
-                                </div>
-                            }
-                            else
-                            {
-                                <span class="in-progress-empty secondary-info-span"></span>
-                            }
-                            <span class="left main-info-span">@item.FileName</span>
-                            <span class="right secondary-info-span">@item.Type?.ToLower()</span>
-                            <span
-                                class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
-                            <span class="right secondary-info-span">@FormatSize(item.Size)</span>
-                        </a>
-                    </div>
-                }
+                <div class="file-line">
+                    <a asp-controller="File" asp-action="GetAllPartsInFile"
+                       asp-route-bucketId="@Model.Id"
+                       asp-route-fileId="@item.Id">
+                        <div class="center parted secondary-info-span"></div>
+                        <span class="left main-info-span">@item.FileName</span>
+                    </a>
+                </div>
             }
-        </details>
-    </div>
-}
-else
-{
-    @await Html.PartialAsync("_EmptyDisplay")
-}
+            else
+            {
+                <div class="file-line" id="@("RL_" + item.Id)">
+                    <a asp-controller="File" asp-action="GetFile"
+                       asp-route-bucketId="@Model.Id"
+                       asp-route-fileId="@item.Id">
+                        @if (item.IsReading)
+                        {
+                            <div class="center secondary-info-span">
+                                @if (item.IsDone)
+                                {
+                                    <span class="is-done"></span>
+                                }
+                                else
+                                {
+                                    <span class="in-progress"></span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="in-progress-empty secondary-info-span"></span>
+                        }
+                        <span class="left main-info-span">@item.FileName</span>
+                        <span class="right secondary-info-span">@item.Type?.ToLower()</span>
+                        <span
+                            class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
+                        <span class="right secondary-info-span">@FormatSize(item.Size)</span>
+                    </a>
+                    <div class="event-output">
+                        <button class="remove" onclick="Delete('@item.Id')"></button>
+                    </div>
+                </div>
+            }
+        }
+    </details>
+</div>
+@await Html.PartialAsync("_EmptyDisplay")
 
 @if (Model.IsBelongsToUser)
 {
@@ -177,6 +86,10 @@ else
 
 @section Scripts
 {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        const url = '/api/FileApi/DeleteFile';
+        const lineSelector = '.file-line';
     </script>
+    <script src="~/js/delete-row.js"></script>
 }

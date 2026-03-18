@@ -79,4 +79,16 @@ public class UserReadingRepository(
             .Where(r => idsArray.Contains(r.Id))
             .ExecuteDeleteAsync();
     }
+
+    public async Task DeleteAllByFileIdAsync(IEnumerable<Guid>? ids)
+    {
+        var idsArray = ids?.ToArray() ?? [];
+
+        if (idsArray.Length == 0)
+            return;
+
+        await context.UserReadings
+            .Where(r => idsArray.Contains(r.FileId))
+            .ExecuteDeleteAsync();
+    }
 }

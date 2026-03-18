@@ -27,7 +27,7 @@ public class FileUploadService(
         if (asPartOfId.HasValue)
         {
             asPartOfFile = await fileRepository.FirstOrDefaultAsync(f =>
-                f.BucketId == bucket.Id && !f.IsHidden && f.Id == asPartOfId!.Value &&
+                f.BucketId == bucket.Id && !f.IsHidden && f.Id == asPartOfId.Value &&
                 f.AccessRoles.Intersect(userRoles).Any(), null);
 
             if (asPartOfFile == null) return (false, "Part of file not available.", null);
@@ -36,7 +36,7 @@ public class FileUploadService(
         if (asParentOfId.HasValue)
         {
             asParentOfFile = await fileRepository.FirstOrDefaultAsync(f =>
-                f.BucketId == bucket.Id && !f.IsHidden && f.Id == asParentOfId!.Value &&
+                f.BucketId == bucket.Id && !f.IsHidden && f.Id == asParentOfId.Value &&
                 f.AccessRoles.Intersect(userRoles).Any(), null);
 
             if (asParentOfFile == null) return (false, "Parent of file not available.", null);

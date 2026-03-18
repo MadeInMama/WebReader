@@ -4,6 +4,7 @@ namespace WebReader.Services;
 
 public class FileService(
     FileRepository fileRepository,
+    UserReadingRepository readingRepository,
     MinioService minioService)
 {
     public async Task DeleteFileAsync(List<Guid> guids)
@@ -15,6 +16,7 @@ public class FileService(
             if (file == null) continue;
 
             await fileRepository.DeleteAsync(guid);
+            await readingRepository.DeleteAllByFileIdAsync([guid]);
             await minioService.RemoveObjectsAsync(file.Bucket!.Name, [file.Name]);
         }
     }

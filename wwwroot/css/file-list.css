@@ -1,0 +1,95 @@
+﻿main {
+    justify-content: space-between;
+    min-height: calc(100vh - 6em);
+}
+
+@media (hover: none) and (pointer: coarse) {
+    main {
+        min-height: calc(100dvh - 6em);
+    }
+}
+
+#full_content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: calc(var(--max-width) - 1em);
+}
+
+.file-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-height: 2em;
+}
+
+.file-line > a {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5em;
+    grid-auto-rows: 2em;
+    align-items: center;
+    width: 100%;
+}
+
+.file-line > a > span {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.file-line > a > .left {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    white-space: pre-wrap;
+}
+
+.file-line > a > .center {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.file-line > a > .right {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.file-line > a > div > .in-progress,
+.file-line > a > div > .is-done,
+.parted {
+    font-size: 0.75em;
+}
+
+.file-line:not(:last-child) {
+    margin-bottom: 0.5em;
+}
+
+.secondary-info-span {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.main-info-span {
+    flex-grow: 1;
+}
+
+.in-progress-empty {
+    font-size: 0.75em;
+    height: 2em;
+    width: 2em;
+}
+
+.upload-btn-container {
+    margin-top: 1em;
+}
+
+.event-output {
+    height: 2em;
+    width: 2em;
+    opacity: 1;
+    transition: none;
+    margin-left: 0.5em;
+}

@@ -202,7 +202,7 @@ else
 
         Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
             value.onclick = () => {
-                SetPage(--currentPage);
+                SetPage(currentPage - 1);
 
                 Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
                     value.disabled = false;
@@ -212,7 +212,7 @@ else
 
         Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
             value.onclick = () => {
-                SetPage(++currentPage);
+                SetPage(currentPage + 1);
 
                 Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
                     value.disabled = false;
@@ -229,10 +229,7 @@ else
         });
 
         function SetPage(page, send = true) {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            const scrollToTop = currentPage < page;
 
             currentPage = clamp(page, 1, maxPage);
 
@@ -259,9 +256,14 @@ else
                 });
             }
 
+            renderPage(currentPage);
+
             SetScale(currentScale, false);
 
-            renderPage(currentPage);
+            window.scrollTo({
+                top: scrollToTop ? 0 : document.body.scrollHeight,
+                behavior: 'smooth'
+            });
 
             if (send) SendCurrPage();
         }

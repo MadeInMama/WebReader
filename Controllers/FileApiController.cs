@@ -46,25 +46,25 @@ public class FileApiController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteReading([FromBody] DeleteReadingRequest request)
+    public async Task<IActionResult> DeleteReading([FromBody] DeleteRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        await readingRepository.DeleteAllAsync([request.ReadingId]);
+        await readingRepository.DeleteAllAsync([request.Id]);
 
         return NoContent();
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteFile([FromBody] DeleteFileRequest request)
+    public async Task<IActionResult> DeleteFile([FromBody] DeleteRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         if (!User.GetUserRoles().Contains(RoleType.Admin)) BadRequest(ModelState);
 
-        await fileService.DeleteFileAsync([request.FileId]);
+        await fileService.DeleteFileAsync([request.Id]);
 
         return NoContent();
     }
