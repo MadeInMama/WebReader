@@ -221,5 +221,12 @@ public class AutoDownloadNewPartsOmniscientReader(
             var installed = bf.GetInstalledBrowsers().ToList();
             foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
         }
+        catch (NavigationException _)
+        {
+            logger.LogError("Navigation error has been reached");
+            var bf = new BrowserFetcher();
+            var installed = bf.GetInstalledBrowsers().ToList();
+            foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
+        }
     }
 }
