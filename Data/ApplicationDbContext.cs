@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Bucket> Buckets { get; set; }
     public DbSet<File> Files { get; set; }
     public DbSet<UserReading> UserReadings { get; set; }
+    public DbSet<Settings> Settings { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -58,58 +59,28 @@ public class ApplicationDbContext : DbContext
             var bucketId = context.Set<Bucket>().First(f => f.Name.Equals("mybucket")).Id;
 
             if (!context.Set<File>().Any())
+            {
                 context.Set<File>().AddRange(new File
-                {
-                    BucketId = bucketId,
-                    Name = "314041.pdf",
-                    CustomName = "Семья Корлеоне: Пьюзо, Фалько",
-                    Type = FileType.Pdf,
-                    IsHidden = false
-                }, new File
                 {
                     BucketId = bucketId,
                     Name = "Краткие ответы на большие вопросы [2019] Хокинг.fb2",
                     CustomName = "Краткие ответы на большие вопросы: Хокинг",
                     Type = FileType.Fb2,
                     IsHidden = false
-                }, new File
-                {
-                    BucketId = bucketId,
-                    Name = "Mario_Pyuzo_-_Omerta.pdf",
-                    CustomName = "Омерта: Пьюзо",
-                    Type = FileType.Pdf,
-                    IsHidden = false
-                }, new File
-                {
-                    BucketId = bucketId,
-                    Name = "Mario_Pyuzo_-_Sitsiliets.pdf",
-                    CustomName = "Сицилиец: Пьюзо",
-                    Type = FileType.Pdf,
-                    IsHidden = false
-                }, new File
-                {
-                    BucketId = bucketId,
-                    Name = "pyuzo_krestnyy-otec_1_krestnyy-oteckw4btg178419.pdf",
-                    CustomName = "Крестный отец: Пьюзо",
-                    Type = FileType.Pdf,
-                    IsHidden = false
-                }, new File
-                {
-                    BucketId = bucketId,
-                    Name = "Vayngartner Mark Mest Krestnogo otca - BooksCafeNet.pdf",
-                    CustomName = "Месть Крестного отца: Винегарднер",
-                    Type = FileType.Pdf,
-                    IsHidden = false
-                }, new File
-                {
-                    BucketId = bucketId,
-                    Name = "Vayngartner Mark Vozvraschenie Krestnogo otca - BooksCafeNet.pdf",
-                    CustomName = "Возвращение Крестного отца: Винегарднер",
-                    Type = FileType.Pdf,
-                    IsHidden = false
                 });
 
-            context.SaveChanges();
+                context.SaveChanges();
+            }
+
+            if (!context.Set<Settings>().Any())
+            {
+                context.Set<Settings>().AddRange(new Settings
+                {
+                    Key = "max_files_size_limit",
+                    Value = (1u * 1024u * 1024u * 1024u).ToString()
+                });
+                context.SaveChanges();
+            }
         });
     }
 

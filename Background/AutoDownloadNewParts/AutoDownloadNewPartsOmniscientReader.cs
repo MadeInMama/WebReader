@@ -18,7 +18,11 @@ public class AutoDownloadNewPartsOmniscientReader(
     public async Task GetAndDownload(CancellationToken stoppingToken)
     {
         const string url = "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
-        const ulong maxSize = 1u * 1024u * 1024u * 1024u; //GB
+        var maxSizeSetting =
+            await context.Settings.FirstOrDefaultAsync(f => f.Key == "max_files_size_limit", stoppingToken);
+        ulong maxSize = 1u * 1024u * 1024u * 1024u; //GB
+        if (maxSizeSetting != null)
+            maxSize = ulong.Parse(maxSizeSetting.Value);
 
         var currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
             .AggregateAsync((f1, f2) => f1 + f2, stoppingToken);
