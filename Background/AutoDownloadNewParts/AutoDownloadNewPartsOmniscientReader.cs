@@ -214,9 +214,9 @@ public class AutoDownloadNewPartsOmniscientReader(
 
             foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
         }
-        catch (TimeoutException e)
+        catch (TimeoutException _)
         {
-            logger.LogError(e, "Timeout");
+            logger.LogError("Timeout has been reached");
             var bf = new BrowserFetcher();
             var installed = bf.GetInstalledBrowsers().ToList();
             foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
