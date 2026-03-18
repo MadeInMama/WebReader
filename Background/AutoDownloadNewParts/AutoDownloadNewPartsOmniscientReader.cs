@@ -191,6 +191,11 @@ public class AutoDownloadNewPartsOmniscientReader(
 
                 lastFile = fileUploadResult.currentFile;
 
+                maxSizeSetting =
+                    await context.Settings.FirstOrDefaultAsync(f => f.Key == "max_files_size_limit", stoppingToken);
+                if (maxSizeSetting != null)
+                    maxSize = ulong.Parse(maxSizeSetting.Value);
+
                 currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
                     .AggregateAsync((f1, f2) => f1 + f2, stoppingToken);
                 if (maxSize < currentSize)
