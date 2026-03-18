@@ -1,8 +1,6 @@
 ﻿const fullContentEl = document.getElementById("full_content");
 const emptyContentEl = document.getElementById("empty_content");
 
-CheckOnEmpty();
-
 async function Delete(id) {
     document.querySelectorAll(".remove").forEach(el => el.disabled = true);
     document.querySelector(`#RL_${id} > .event-output > button`).classList = 'waiting';

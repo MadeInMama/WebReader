@@ -38,6 +38,10 @@
         .reading-line {
             padding-left: 2em;
         }
+
+        .reading-line > a {
+            justify-content: flex-start;
+        }
     </style>
 }
 
@@ -55,10 +59,17 @@
             <summary><span>@item.Key.CustomName</span></summary>
             @foreach (var obj in item.Value)
             {
-                <div class="reading-line file-line" id="@("RL_" + obj.ReadingId)">
+                <div class="reading-line item-line" id="@("RL_" + obj.ReadingId)">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@item.Key.BucketId"
-                       asp-route-fileId="@obj.FileId">@obj.CustomName @obj.CurrentPartName @* - @obj.DateTime.LocalDateTime*@ - @obj.Page@* - @FormatSize(obj.Size)*@</a>
+                       asp-route-fileId="@obj.FileId">
+                        <span class="importance-1">@obj.CustomName</span>
+                        @if (obj.CurrentPartName != null)
+                        {
+                            <span class="importance-2">@obj.CurrentPartName</span>
+                        }
+                        <span class="importance-3">@obj.Page</span>
+                    </a>
                     <div class="event-output">
                         <button class="remove" onclick="Delete('@obj.ReadingId')"></button>
                     </div>
@@ -75,7 +86,9 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const url = '/api/FileApi/DeleteReading';
-        const lineSelector = '.file-line';
+        const lineSelector = '.item-line';
     </script>
     <script src="~/js/delete-row.js"></script>
+    <script src="~/js/empty-row-control.js"></script>
+    <script>CheckOnEmpty()</script>
 }

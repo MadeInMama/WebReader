@@ -16,7 +16,7 @@
     max-width: calc(var(--max-width) - 1em);
 }
 
-.file-line {
+.item-line {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -24,7 +24,7 @@
     min-height: 2em;
 }
 
-.file-line > a {
+.item-line > a {
     display: flex;
     justify-content: space-between;
     gap: 0.5em;
@@ -33,37 +33,37 @@
     width: 100%;
 }
 
-.file-line > a > span {
+.item-line > a > span {
     overflow: hidden;
     white-space: nowrap;
 }
 
-.file-line > a > .left {
+.item-line > a > .left {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     white-space: pre-wrap;
 }
 
-.file-line > a > .center {
+.item-line > a > .center {
     display: flex;
     flex-direction: row;
     justify-content: center;
 }
 
-.file-line > a > .right {
+.item-line > a > .right {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
 }
 
-.file-line > a > div > .in-progress,
-.file-line > a > div > .is-done,
+.item-line > a > div > .in-progress,
+.item-line > a > div > .is-done,
 .parted {
     font-size: 0.75em;
 }
 
-.file-line:not(:last-child) {
+.item-line:not(:last-child) {
     margin-bottom: 0.5em;
 }
 
@@ -92,4 +92,22 @@
     opacity: 1;
     transition: none;
     margin-left: 0.5em;
+}
+
+@media (width < 1000px) {
+    .importance-3 {
+        display: none !important;
+    }
+}
+
+@media (width < 800px) {
+    .importance-2 {
+        display: none !important;
+    }
+}
+
+@media (width < 700px) {
+    .importance-1 {
+        display: none !important;
+    }
 }

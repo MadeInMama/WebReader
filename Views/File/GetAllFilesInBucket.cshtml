@@ -25,7 +25,7 @@
         {
             @if (item.IsParted)
             {
-                <div class="file-line">
+                <div class="item-line">
                     <a asp-controller="File" asp-action="GetAllPartsInFile"
                        asp-route-bucketId="@Model.Id"
                        asp-route-fileId="@item.Id">
@@ -36,7 +36,7 @@
             }
             else
             {
-                <div class="file-line" id="@("RL_" + item.Id)">
+                <div class="item-line" id="@("RL_" + item.Id)">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@Model.Id"
                        asp-route-fileId="@item.Id">
@@ -58,10 +58,10 @@
                             <span class="in-progress-empty secondary-info-span"></span>
                         }
                         <span class="left main-info-span">@item.FileName</span>
-                        <span class="right secondary-info-span">@item.Type?.ToLower()</span>
+                        <span class="right secondary-info-span importance-3">@item.Type?.ToLower()</span>
                         <span
-                            class="right secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
-                        <span class="right secondary-info-span">@FormatSize(item.Size)</span>
+                            class="right secondary-info-span importance-2">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
+                        <span class="right secondary-info-span importance-1">@FormatSize(item.Size)</span>
                     </a>
                     <div class="event-output">
                         <button class="remove" onclick="Delete('@item.Id')"></button>
@@ -89,7 +89,9 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const url = '/api/FileApi/DeleteFile';
-        const lineSelector = '.file-line';
+        const lineSelector = '.item-line';
     </script>
     <script src="~/js/delete-row.js"></script>
+    <script src="~/js/empty-row-control.js"></script>
+    <script>CheckOnEmpty()</script>
 }

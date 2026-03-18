@@ -6,29 +6,7 @@
 
 @section Style
 {
-    <style>
-        .bucket-line {
-            width: 100%;
-            max-width: calc(var(--max-width) - 1em);
-            margin-top: 0.5em;
-        }
-
-        .bucket-line > a {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.5em;
-        }
-
-        .main-info-span {
-            flex-grow: 1;
-        }
-
-        .secondary-info-span {
-            flex-grow: 0;
-            flex-shrink: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
 }
 
 @section SpecialInfo
@@ -39,28 +17,28 @@
     }
 }
 
-@if (Model.Items.Any())
-{
+<div id="full_content">
     <h2>All Available Buckets</h2>
     @foreach (var item in Model.Items)
     {
-        <div class="bucket-line">
+        <div class="item-line">
             <a asp-controller="File" asp-action="GetAllFilesInBucket"
                asp-route-bucketId="@item.Id">
                 <span class="main-info-span">@item.CustomName</span>
-                <span class="secondary-info-span">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
-                <span class="secondary-info-span">@FormatSize(item.Size)</span>
+                <span
+                    class="secondary-info-span importance-2">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
+                <span class="secondary-info-span importance-1">@FormatSize(item.Size)</span>
             </a>
         </div>
     }
-}
-else
-{
-    @await Html.PartialAsync("_EmptyDisplay")
-}
+</div>
+@await Html.PartialAsync("_EmptyDisplay")
 
 @section Scripts
 {
     <script>
+        const lineSelector = '.item-line';
     </script>
+    <script src="~/js/empty-row-control.js"></script>
+    <script>CheckOnEmpty()</script>
 }

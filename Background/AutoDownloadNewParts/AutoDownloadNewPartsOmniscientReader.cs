@@ -161,7 +161,8 @@ public class AutoDownloadNewPartsOmniscientReader(
 
                             var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
                             await using var entryStream = entry.Open();
-                            await entryStream.WriteAsync(StaticFunctions.ConvertByteArrayToGif(imageBytes),
+                            await entryStream.WriteAsync(
+                                ImageTrimmer.TrimImageImageSharp(StaticFunctions.ConvertByteArrayToJpeg(imageBytes)),
                                 stoppingToken);
                         }
                     }
@@ -224,6 +225,13 @@ public class AutoDownloadNewPartsOmniscientReader(
         catch (NavigationException e)
         {
             logger.LogError("Navigation error has been reached: {}", e.Message);
+            var bf = new BrowserFetcher();
+            var installed = bf.GetInstalledBrowsers().ToList();
+            foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
+        }
+        catch (HttpRequestException e)
+        {
+            logger.LogError("HttpRequest error has been reached: {}", e.Message);
             var bf = new BrowserFetcher();
             var installed = bf.GetInstalledBrowsers().ToList();
             foreach (var el in installed) bf.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);

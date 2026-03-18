@@ -63,7 +63,7 @@ public static class StaticFunctions
         }
     }
 
-    public static byte[] ConvertByteArrayToGif(byte[] sourceImageBytes)
+    public static byte[] ConvertByteArrayToJpeg(byte[] sourceImageBytes)
     {
         using var image = Image.Load(sourceImageBytes);
         using var outputStream = new MemoryStream();

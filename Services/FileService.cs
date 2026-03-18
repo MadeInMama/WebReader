@@ -15,6 +15,18 @@ public class FileService(
 
             if (file == null) continue;
 
+            var prevFile = await fileRepository.FirstOrDefaultAsync(f => f.NextPartId == guid, null);
+
+            if (prevFile != null)
+            {
+                if (file.NextPartId.HasValue)
+                    prevFile.NextPartId = file.NextPartId.Value;
+                else
+                    prevFile.NextPartId = null;
+            }
+
+            await fileRepository.SaveChangesAsync();
+
             await fileRepository.DeleteAsync(guid);
             await readingRepository.DeleteAllByFileIdAsync([guid]);
             await minioService.RemoveObjectsAsync(file.Bucket!.Name, [file.Name]);
