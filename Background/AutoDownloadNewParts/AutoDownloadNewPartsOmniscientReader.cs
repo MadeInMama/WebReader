@@ -155,15 +155,19 @@ public class AutoDownloadNewPartsOmniscientReader(
 
                             var imageBytes = await new HttpClient().GetByteArrayAsync(src, stoppingToken);
 
-                            src!.TryGetImgType(out var imageType);
+                            if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
 
-                            var fileName = $"{img.GetAttribute("data-page")}.{TypeHelper.ImgTypeNameDict[imageType]}";
+                            var splitImages =
+                                ImageSplitter.SplitImage(StaticFunctions.ConvertByteArrayToJpeg(imageBytes));
 
-                            var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
-                            await using var entryStream = entry.Open();
-                            await entryStream.WriteAsync(
-                                ImageTrimmer.TrimImageImageSharp(StaticFunctions.ConvertByteArrayToJpeg(imageBytes)),
-                                stoppingToken);
+                            foreach (var el in splitImages.Index())
+                            {
+                                var fileName =
+                                    $"{img.GetAttribute("data-page")}-{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+                                var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
+                                await using var entryStream = entry.Open();
+                                await entryStream.WriteAsync(el.Item, stoppingToken);
+                            }
                         }
                     }
 

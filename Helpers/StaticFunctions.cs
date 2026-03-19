@@ -3,6 +3,7 @@ using System.Security.Claims;
 using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
 using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Models;
 
@@ -69,5 +70,12 @@ public static class StaticFunctions
         using var outputStream = new MemoryStream();
         image.Save(outputStream, new JpegEncoder());
         return outputStream.ToArray();
+    }
+
+    public static bool IsColorMatch(Rgb24 c1, Rgb24 c2, int tolerance)
+    {
+        return Math.Abs(c1.R - c2.R) <= tolerance &&
+               Math.Abs(c1.G - c2.G) <= tolerance &&
+               Math.Abs(c1.B - c2.B) <= tolerance;
     }
 }
