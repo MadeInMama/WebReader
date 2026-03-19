@@ -4,7 +4,7 @@ public class AutoDownloadNewPartsBackground(
     IServiceScopeFactory serviceScopeFactory,
     ILogger<AutoDownloadNewPartsBackground> logger) : BackgroundService
 {
-    private static readonly TimeSpan PeriodTime = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan PeriodTime = TimeSpan.FromHours(1);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -25,6 +25,10 @@ public class AutoDownloadNewPartsBackground(
         logger.LogInformation($"Start {nameof(PerformAutoDownloadNewParts)}");
 
         using var scope = serviceScopeFactory.CreateScope();
+
+        // var files = await scope.ServiceProvider.GetRequiredService<FileRepository>().AllAsync(f =>
+        //     f.CustomName == "Всеведущий читатель" && f.CurrentPartName != "52");
+        // await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
 
         foreach (var el in scope.ServiceProvider.GetRequiredService<IEnumerable<IAutoDownloadNewParts>>())
             await el.GetAndDownload(stoppingToken);

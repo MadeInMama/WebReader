@@ -11,7 +11,7 @@ using WebReader.Services;
 namespace WebReader.Background.AutoDownloadNewParts;
 
 public class AutoDownloadNewPartsOmniscientReader(
-    ApplicationDbContext context,
+    IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
     ILogger<AutoDownloadNewPartsOmniscientReader> logger) : IAutoDownloadNewParts
 {
@@ -20,6 +20,9 @@ public class AutoDownloadNewPartsOmniscientReader(
         try
         {
             const string url = "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
+
+            var context = await contextFactory.CreateDbContextAsync(stoppingToken);
+
             var maxSizeSetting =
                 await context.Settings.FirstOrDefaultAsync(f => f.Key == "max_files_size_limit", stoppingToken);
             ulong maxSize = 1u * 1024u * 1024u * 1024u; //GB
@@ -199,6 +202,7 @@ public class AutoDownloadNewPartsOmniscientReader(
 
                     lastFile = fileUploadResult.currentFile;
 
+                    context = await contextFactory.CreateDbContextAsync(stoppingToken);
                     maxSizeSetting =
                         await context.Settings.FirstOrDefaultAsync(f => f.Key == "max_files_size_limit", stoppingToken);
                     if (maxSizeSetting != null)

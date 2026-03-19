@@ -20,7 +20,6 @@ public class FileController(
     BucketRepository bucketRepository,
     FileRepository fileRepository,
     UserReadingRepository readingRepository,
-    MinioService minioService,
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService) : Controller
 {

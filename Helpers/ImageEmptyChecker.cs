@@ -5,7 +5,7 @@ namespace WebReader.Helpers;
 
 public static class ImageEmptyChecker
 {
-    public static bool IsEmpty(byte[] imageBytes, int tolerance = 20)
+    public static bool IsEmpty(byte[] imageBytes, int tolerance = 50)
     {
         using var image = Image.Load<Rgb24>(imageBytes);
 

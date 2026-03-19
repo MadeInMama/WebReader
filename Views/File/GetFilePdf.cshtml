@@ -95,7 +95,7 @@ else
         </div>
         <div class="controls-center">
             <button disabled class="prev-page prev-page-controller"></button>
-            <span class="preview-page">0/0</span>
+            <select class="preview-page"></select>
             <button disabled class="next-page next-page-controller"></button>
         </div>
         <div class="controls-end">
@@ -177,6 +177,18 @@ else
         async function loadPdf(data) {
             pdfDoc = await pdfjsLib.getDocument(new Uint8Array(data)).promise;
             maxPage = pdfDoc.numPages;
+
+            Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                for (let i = 0; i < pages.length; i++) {
+                    const option = document.createElement("option");
+
+                    option.text = `${i + 1}/${maxPage}`;
+                    option.value = (i + 1).toString();
+
+                    value.appendChild(option);
+                }
+            });
+
             await SetScale(currentScale, false);
             await SetPage(currentPage, false);
         }
@@ -195,10 +207,6 @@ else
                 viewport: viewport
             };
             await page.render(renderContext).promise;
-
-            Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                value.textContent = `${currentPage}/${maxPage}`;
-            });
         }
 
         Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
@@ -229,6 +237,12 @@ else
             };
         });
 
+        Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+            value.onchange = (e) => {
+                SetPage(e.target.value);
+            };
+        });
+
         async function SetPage(page, send = true) {
             const scrollToTop = currentPage < page;
 
@@ -256,6 +270,10 @@ else
                     value.disabled = false;
                 });
             }
+
+            Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                value.value = currentPage.toString();
+            });
 
             await renderPage();
 

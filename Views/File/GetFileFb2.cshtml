@@ -95,7 +95,7 @@ else
         </div>
         <div class="controls-center">
             <button disabled class="prev-page prev-page-controller"></button>
-            <span class="preview-page">0/0</span>
+            <select class="preview-page"></select>
             <button disabled class="next-page next-page-controller"></button>
         </div>
         <div class="controls-end">
@@ -178,11 +178,34 @@ else
         function loadFB2(fb2Text, fromLocal) {
             try {
                 if (!fromLocal && inMemory === fb2Text) {
+                    Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                        for (let i = 0; i < pages.length; i++) {
+                            const option = document.createElement("option");
+
+                            option.text = `${i + 1}/${maxPage}`;
+                            option.value = (i + 1).toString();
+
+                            value.appendChild(option);
+                        }
+                    });
                     SetPage(currentPage, false);
                     return;
                 }
+
                 parseFB2(fb2Text);
                 maxPage = pages.length;
+
+                Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                    for (let i = 0; i < pages.length; i++) {
+                        const option = document.createElement("option");
+
+                        option.text = `${i + 1}/${maxPage}`;
+                        option.value = (i + 1).toString();
+
+                        value.appendChild(option);
+                    }
+                });
+
                 SetPage(currentPage, false);
                 SetScale(currentScale, false);
             } catch (err) {
@@ -192,10 +215,6 @@ else
 
         function renderPage() {
             document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1];
-
-            Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                value.textContent = `${currentPage}/${maxPage}`;
-            });
         }
 
         function parseFB2(xmlString) {
@@ -387,6 +406,12 @@ else
             };
         });
 
+        Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+            value.onchange = (e) => {
+                SetPage(e.target.value);
+            };
+        });
+
         function SetPage(page, send = true) {
             currentPage = clamp(page, 1, maxPage);
 
@@ -412,6 +437,10 @@ else
                     value.disabled = false;
                 });
             }
+
+            Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
+                value.value = currentPage.toString();
+            });
 
             renderPage(currentPage);
 
