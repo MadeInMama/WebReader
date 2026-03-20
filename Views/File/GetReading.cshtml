@@ -71,7 +71,8 @@
                         <span class="importance-2">@obj.Page</span>
                     </a>
                     <div class="event-output">
-                        <button class="remove" onclick="Delete('@obj.ReadingId')"></button>
+                        <button class="remove"
+                                onclick="Delete('@obj.ReadingId', '@obj.CustomName @obj.CurrentPartName')"></button>
                     </div>
                 </div>
             }

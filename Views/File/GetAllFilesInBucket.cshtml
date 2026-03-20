@@ -64,7 +64,8 @@
                         <span class="right secondary-info-span importance-1">@FormatSize(item.Size)</span>
                     </a>
                     <div class="event-output">
-                        <button class="remove" onclick="Delete('@item.Id')"></button>
+                        <button class="remove"
+                                onclick="Delete('@item.Id', '@item.FileName')"></button>
                     </div>
                 </div>
             }
