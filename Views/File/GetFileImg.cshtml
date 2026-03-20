@@ -100,7 +100,8 @@ else
         </div>
         <div class="controls-end">
             <select class="set-scale">
-                <option value="0">fixed</option>
+                <option value="-1">fixed</option>
+                <option value="0">fit height</option>
                 <option value="10">10%</option>
                 <option value="25">25%</option>
                 <option value="50">50%</option>
@@ -294,12 +295,21 @@ else
                 value.value = currentScale
             });
 
-            if (currentScale === 0) {
+            if (currentScale === -1) {
                 document.querySelector("main").classList.add("max-width-set");
                 document.getElementById("img-canvas").style.maxWidth = "100%";
+                document.getElementById("img-canvas").style.height = "unset";
+                document.getElementById("img-canvas").style.objectFit = 'fill';
+            } else if (currentScale === 0) {
+                document.querySelector("main").classList.remove("max-width-set");
+                document.getElementById("img-canvas").style.maxWidth = "100%";
+                document.getElementById("img-canvas").style.height = "calc(100dvh - 6em)";
+                document.getElementById("img-canvas").style.objectFit = 'contain';
             } else {
                 document.querySelector("main").classList.remove("max-width-set");
                 document.getElementById("img-canvas").style.maxWidth = currentScale + "%";
+                document.getElementById("img-canvas").style.height = "unset";
+                document.getElementById("img-canvas").style.objectFit = 'fill';
             }
 
             if (send) SendCurrPage();
