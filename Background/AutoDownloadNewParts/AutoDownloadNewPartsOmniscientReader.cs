@@ -15,6 +15,9 @@ public class AutoDownloadNewPartsOmniscientReader(
     FileUploadService fileUploadService,
     ILogger<AutoDownloadNewPartsOmniscientReader> logger) : IAutoDownloadNewParts
 {
+    private const string SettingSizeName = "max_files_size_limit_vseveduschiy_chitatel";
+    private const string FileCustomName = "Всеведущий читатель";
+
     public async Task GetAndDownload(CancellationToken stoppingToken)
     {
         try
@@ -24,16 +27,18 @@ public class AutoDownloadNewPartsOmniscientReader(
             var context = await contextFactory.CreateDbContextAsync(stoppingToken);
 
             var maxSizeSetting =
-                await context.Settings.FirstOrDefaultAsync(f => f.Key == "max_files_size_limit", stoppingToken);
+                await context.Settings.FirstOrDefaultAsync(f => f.Key == SettingSizeName, stoppingToken);
             ulong maxSize = 1u * 1024u * 1024u * 1024u; //GB
             if (maxSizeSetting != null)
                 maxSize = ulong.Parse(maxSizeSetting.Value);
 
-            var currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
-                .AggregateAsync((f1, f2) => f1 + f2, stoppingToken);
+            var currentSize = await context.Files.Where(f => f.CustomName == FileCustomName).Select(f => f.Size)
+                .AsAsyncEnumerable()
+                .AggregateAsync(0ul, (currentSum, nullableValue) => currentSum + (nullableValue ?? 0ul), stoppingToken);
             if (maxSize < currentSize)
             {
-                logger.LogWarning("Max size {maxSize} has been reached {currentSize}", maxSize, currentSize);
+                logger.LogWarning("Max size {maxSize} has been reached {currentSize}",
+                    GlobalFunctions.FormatSize(maxSize), GlobalFunctions.FormatSize(currentSize));
                 return;
             }
 
@@ -109,112 +114,114 @@ public class AutoDownloadNewPartsOmniscientReader(
 
             logger.LogInformation("Found {links} links", links.Count);
 
-            var lastStoredFile = await context.Files.Where(f => f.CustomName == "Всеведущий читатель")
+            var defaultBucket = await context.Buckets.FirstAsync(b => b.Name == "mybucket", stoppingToken);
+
+            var lastStoredFile = await context.Files.Where(f => f.CustomName == FileCustomName)
                 .Include(f => f.Bucket)
                 .AsAsyncEnumerable()
                 .OrderBy(f => int.Parse(f.CurrentPartName!))
                 .LastOrDefaultAsync(stoppingToken);
 
-            if (lastStoredFile != null)
+            var lastFile = lastStoredFile;
+
+            foreach (var link in links.OrderBy(f => int.Parse(f.Split("/").Last())))
             {
-                var lastFile = lastStoredFile;
+                var dataNum = link.Split("/").Last() == "0" ? 0 : int.Parse(link.Split("/").Last());
 
-                foreach (var link in links.OrderBy(f => int.Parse(f.Split("/").Last())))
+                if (int.Parse(lastFile?.CurrentPartName ?? "-1") >= dataNum)
                 {
-                    var dataNum = link.Split("/").Last() == "0" ? 0 : int.Parse(link.Split("/").Last());
+                    logger.LogInformation("Skipping {dataNum}", dataNum);
+                    continue;
+                }
 
-                    if (int.Parse(lastFile.CurrentPartName) >= dataNum)
+                logger.LogInformation("Go to {link}", link);
+                await page.GoToAsync(link,
+                    new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
+
+                logger.LogInformation("Waiting for page load with images");
+                await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
+
+                html = await page.GetContentAsync();
+
+                var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
+                    .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
+                    .ToList();
+
+                logger.LogInformation("Found {images} links", images.Count);
+
+                using var memoryStream = new MemoryStream();
+
+                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
                     {
-                        logger.LogInformation("Skipping {dataNum}", dataNum);
-                        continue;
-                    }
+                        var src = img.GetAttribute("data-original");
+                        if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
+                            src = img.GetAttribute("src")!;
 
-                    logger.LogInformation("Go to {link}", link);
-                    await page.GoToAsync(link,
-                        new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
+                        logger.LogInformation("Downloading {src}", src);
 
-                    logger.LogInformation("Waiting for page load with images");
-                    await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
+                        var imageBytes = await new HttpClient().GetByteArrayAsync(src, stoppingToken);
 
-                    html = await page.GetContentAsync();
+                        if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
 
-                    var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
-                        .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
-                        .ToList();
+                        var splitImages =
+                            ImageSplitter.SplitImage(StaticFunctions.ConvertByteArrayToJpeg(imageBytes));
 
-                    logger.LogInformation("Found {images} links", images.Count);
-
-                    using var memoryStream = new MemoryStream();
-
-                    using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-                    {
-                        foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
+                        foreach (var el in splitImages.Index())
                         {
-                            var src = img.GetAttribute("data-original");
-                            if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
-                                src = img.GetAttribute("src")!;
-
-                            logger.LogInformation("Downloading {src}", src);
-
-                            var imageBytes = await new HttpClient().GetByteArrayAsync(src, stoppingToken);
-
-                            if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
-
-                            var splitImages =
-                                ImageSplitter.SplitImage(StaticFunctions.ConvertByteArrayToJpeg(imageBytes));
-
-                            foreach (var el in splitImages.Index())
-                            {
-                                var fileName =
-                                    $"{img.GetAttribute("data-page")}-{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                                var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
-                                await using var entryStream = entry.Open();
-                                await entryStream.WriteAsync(el.Item, stoppingToken);
-                            }
+                            var fileName =
+                                $"{img.GetAttribute("data-page")}-{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+                            var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
+                            await using var entryStream = entry.Open();
+                            await entryStream.WriteAsync(el.Item, stoppingToken);
                         }
                     }
+                }
 
-                    await memoryStream.FlushAsync(stoppingToken);
-                    memoryStream.Position = 0;
+                await memoryStream.FlushAsync(stoppingToken);
+                memoryStream.Position = 0;
 
-                    logger.LogInformation("Save to db {name}",
+                logger.LogInformation("Save to db {name}",
+                    $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
+
+                var fileUploadResult = await fileUploadService.UploadFileAsync(
+                    lastFile?.Id,
+                    null,
+                    lastFile?.Bucket ?? defaultBucket,
+                    Enum.GetValues<RoleType>().ToList(),
+                    memoryStream,
+                    $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip",
+                    FileCustomName,
+                    "application/zip",
+                    FileType.ZipWithImg,
+                    dataNum.ToString()
+                );
+
+                if (!fileUploadResult.isSuccessfull)
+                {
+                    logger.LogError("Error downloading {name}",
                         $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
+                    goto finish;
+                }
 
-                    var fileUploadResult = await fileUploadService.UploadFileAsync(
-                        lastFile.Id,
-                        null,
-                        lastFile.Bucket!,
-                        Enum.GetValues<RoleType>().ToList(),
-                        memoryStream,
-                        $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip",
-                        "Всеведущий читатель",
-                        "application/zip",
-                        FileType.ZipWithImg,
-                        dataNum.ToString()
-                    );
+                lastFile = fileUploadResult.currentFile;
 
-                    if (!fileUploadResult.isSuccessfull)
-                    {
-                        logger.LogError("Error downloading {name}",
-                            $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
-                        goto finish;
-                    }
+                context = await contextFactory.CreateDbContextAsync(stoppingToken);
+                maxSizeSetting =
+                    await context.Settings.FirstOrDefaultAsync(f => f.Key == SettingSizeName, stoppingToken);
+                if (maxSizeSetting != null)
+                    maxSize = ulong.Parse(maxSizeSetting.Value);
 
-                    lastFile = fileUploadResult.currentFile;
-
-                    context = await contextFactory.CreateDbContextAsync(stoppingToken);
-                    maxSizeSetting =
-                        await context.Settings.FirstOrDefaultAsync(f => f.Key == "max_files_size_limit", stoppingToken);
-                    if (maxSizeSetting != null)
-                        maxSize = ulong.Parse(maxSizeSetting.Value);
-
-                    currentSize = await context.Files.Select(f => f.Size).AsAsyncEnumerable()
-                        .AggregateAsync((f1, f2) => f1 + f2, stoppingToken);
-                    if (maxSize < currentSize)
-                    {
-                        logger.LogWarning("Max size {maxSize} has been reached {currentSize}", maxSize, currentSize);
-                        goto finish;
-                    }
+                currentSize = await context.Files.Where(f => f.CustomName == FileCustomName).Select(f => f.Size)
+                    .AsAsyncEnumerable()
+                    .AggregateAsync(0ul, (currentSum, nullableValue) => currentSum + (nullableValue ?? 0ul),
+                        stoppingToken);
+                if (maxSize < currentSize)
+                {
+                    logger.LogWarning("Max size {maxSize} has been reached {currentSize}",
+                        GlobalFunctions.FormatSize(maxSize), GlobalFunctions.FormatSize(currentSize));
+                    goto finish;
                 }
             }
 

@@ -125,7 +125,7 @@ else
         let pdfDoc = null;
         let currentPage = @Model.Page;
         let maxPage = 1;
-        let currentScale = @Model.Scale;
+        let currentScale = @(Model.Scale ?? 0);
 
         setSettings(
             document.querySelector(".settings-container"),

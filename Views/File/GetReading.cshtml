@@ -63,12 +63,12 @@
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@item.Key.BucketId"
                        asp-route-fileId="@obj.FileId">
-                        <span class="importance-1">@obj.CustomName</span>
+                        <span>@obj.CustomName</span>
                         @if (obj.CurrentPartName != null)
                         {
-                            <span class="importance-2">@obj.CurrentPartName</span>
+                            <span class="importance-1">@obj.CurrentPartName</span>
                         }
-                        <span class="importance-3">@obj.Page</span>
+                        <span class="importance-2">@obj.Page</span>
                     </a>
                     <div class="event-output">
                         <button class="remove" onclick="Delete('@obj.ReadingId')"></button>

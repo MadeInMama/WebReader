@@ -10,12 +10,11 @@ public class FileService(
 {
     public async Task DeleteFileAsync(List<Guid> guids)
     {
-        logger.LogInformation("Deleting files with ids: {guids}", string.Join(", ", guids));
+        logger.LogInformation("Deleting files with ids: ({count}, {guids})", guids.Count, string.Join(", ", guids));
 
         foreach (var guid in guids.Index())
         {
-            logger.LogInformation("Deleting file with id: {guid} | {index}/{count}", guid.ToString(), guid.Index + 1,
-                guids.Count);
+            logger.LogInformation("Deleting file with id: {guid}", guid.ToString());
 
             var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == guid.Item, null, f => f.Bucket);
 

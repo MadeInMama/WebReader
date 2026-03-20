@@ -101,6 +101,7 @@ else
         <div class="controls-end">
             <select class="set-scale">
                 <option value="0">fixed</option>
+                <option value="10">10%</option>
                 <option value="25">25%</option>
                 <option value="50">50%</option>
                 <option value="75">75%</option>
@@ -120,7 +121,7 @@ else
         const decodedString = url.replace(/\\u0026/g, '&')
         let pages = [];
         let currentPage = @Model.Page;
-        let currentScale = @Model.Scale;
+        let currentScale = @(Model.Scale ?? 0);
         let maxPage = 1;
 
         setSettings(

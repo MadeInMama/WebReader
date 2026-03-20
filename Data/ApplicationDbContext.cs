@@ -76,7 +76,7 @@ public class ApplicationDbContext : DbContext
             {
                 context.Set<Settings>().AddRange(new Settings
                 {
-                    Key = "max_files_size_limit",
+                    Key = "max_files_size_limit_vseveduschiy_chitatel",
                     Value = (1u * 1024u * 1024u * 1024u).ToString()
                 });
                 context.SaveChanges();

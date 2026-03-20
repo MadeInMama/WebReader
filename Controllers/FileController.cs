@@ -231,7 +231,7 @@ public class FileController(
             UserId = userGuid,
             FileId = file.Id,
             Page = reading?.Page ?? 1,
-            Scale = reading?.Scale ?? 100,
+            Scale = reading?.Scale,
             Title = file.CustomName ?? file.Name,
             BucketId = file.BucketId,
             BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",

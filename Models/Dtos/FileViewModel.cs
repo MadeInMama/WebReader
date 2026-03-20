@@ -10,7 +10,7 @@ public class FileViewModel
     public required string BucketName { get; init; }
     public required string FileName { get; init; }
     public required int Page { get; init; }
-    public required int Scale { get; init; }
+    public required int? Scale { get; init; }
     public required string Title { get; init; }
     public string? CurrentPartName { get; init; }
     public Guid? NextPartId { get; init; }
