@@ -261,7 +261,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
                 if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
                     src = img.GetAttribute("src")!;
 
-                Logger.LogInformation("Downloading {src}", src);
+                // Logger.LogInformation("Downloading {src}", src);
 
                 var imageBytes = await httpClientFactory.CreateClient("parser-http-client")
                     .GetByteArrayAsync(src, cancellationToken);
