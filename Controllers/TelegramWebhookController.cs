@@ -42,6 +42,13 @@ public class TelegramWebhookController(
     {
         var context = await contextFactory.CreateDbContextAsync();
 
+        if (await context.SubscriberTgs.AnyAsync(x => x.ChatId == chatId))
+        {
+            await botClient.SendMessage(chatId, "You already subscribed.");
+
+            return;
+        }
+
         context.SubscriberTgs.Add(new SubscriberTg
         {
             ChatId = chatId
@@ -65,11 +72,14 @@ public class TelegramWebhookController(
         {
             context.SubscriberTgs.Remove(subscriberTg);
             await context.SaveChangesAsync();
+            await botClient.SendMessage(
+                chatId,
+                "You've been unsubscribed. Type /start to subscribe again."
+            );
         }
-
-        await botClient.SendMessage(
-            chatId,
-            "You've been unsubscribed. Type /start to subscribe again."
-        );
+        else
+        {
+            await botClient.SendMessage(chatId, "You already unsubscribed.");
+        }
     }
 }
