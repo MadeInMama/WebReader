@@ -39,12 +39,6 @@ public class AutoDownloadNewPartsOmniscientReader(
 
             var page = await GetNewPage(browser);
 
-            await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
-            {
-                { "Accept-Language", "ru-RU,ru;q=0.9" },
-                { "Referer", "https://readmanga.ru/" }
-            });
-
             Logger.LogInformation("Go to {url}", Url);
             await page.GoToAsync(Url,
                 new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
@@ -54,6 +48,9 @@ public class AutoDownloadNewPartsOmniscientReader(
 
             var html = await page.GetContentAsync();
 
+            await browser.CloseAsync();
+            await browser.DisposeAsync();
+
             var links = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
                 .QuerySelectorAll(".chapters > table .item-title > a")
                 .Where(f => f.GetAttribute("href") != null)
@@ -61,7 +58,7 @@ public class AutoDownloadNewPartsOmniscientReader(
                 .Where(f => !GlobalFunctions.IsNullOrEmptyOrWhitespace(f.Key))
                 .Where(f => int.TryParse(f.Key.Split("/").Last(), out _))
                 .OrderBy(f => int.Parse(f.Key.Split("/").Last()))
-                .ToList();
+                .ToImmutableList();
 
             Logger.LogInformation("Found {links} links", links.Count);
 
@@ -86,6 +83,11 @@ public class AutoDownloadNewPartsOmniscientReader(
                 }
 
                 Logger.LogInformation("Go to {link}", link);
+
+                browser = await GetBrowser();
+
+                page = await GetNewPage(browser);
+
                 await page.GoToAsync(link.Key,
                     new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
 
@@ -93,6 +95,9 @@ public class AutoDownloadNewPartsOmniscientReader(
                 await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
 
                 html = await page.GetContentAsync();
+
+                await browser.CloseAsync();
+                await browser.DisposeAsync();
 
                 var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
                     .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
@@ -173,8 +178,6 @@ public class AutoDownloadNewPartsOmniscientReader(
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
-
-            await browser.CloseAsync();
 
             //UninstallBrowsers();
         }

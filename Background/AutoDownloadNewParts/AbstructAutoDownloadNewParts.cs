@@ -159,6 +159,12 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                 await e.Request.ContinueAsync();
         };
 
+        await res.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+        {
+            { "Accept-Language", "ru-RU,ru;q=0.9" },
+            { "Referer", "https://readmanga.ru/" }
+        });
+
         return res;
     }
 
