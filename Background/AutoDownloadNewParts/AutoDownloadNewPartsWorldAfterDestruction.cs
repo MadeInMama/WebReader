@@ -48,8 +48,7 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
 
             var html = await page.GetContentAsync();
 
-            await browser.CloseAsync();
-            await browser.DisposeAsync();
+            await CloseBrowser(browser);
 
             var links = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
                 .QuerySelectorAll(".chapters > table .item-title > a")
@@ -78,7 +77,7 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
 
                 if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
                 {
-                    logger.LogInformation("Skipping {dataNum}", dataNum);
+                    logger.LogInformation("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
                     continue;
                 }
 
@@ -96,8 +95,7 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
 
                 html = await page.GetContentAsync();
 
-                await browser.CloseAsync();
-                await browser.DisposeAsync();
+                await CloseBrowser(browser);
 
                 var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
                     .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")

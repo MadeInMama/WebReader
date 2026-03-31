@@ -19,7 +19,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
         return Task.CompletedTask;
     }
 
-
     protected async Task<ulong> GetMaxSize(
         ApplicationDbContext context,
         string settingSizeName,
@@ -188,5 +187,12 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                     await context.SaveChangesAsync();
                 }
             }
+    }
+
+    protected async Task CloseBrowser(IBrowser browser)
+    {
+        await browser.CloseAsync();
+        await browser.DisposeAsync();
+        BrowserProcessKiller.PrepareCleanBrowserEnvironment(Logger);
     }
 }
