@@ -85,10 +85,10 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                 await _browserFetcher.DownloadAsync(BrowserTag.Stable);
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 await _browserFetcher.DownloadAsync(BrowserTag.Latest);
-        }
 
-        Logger.LogInformation("Detected installed browsers: {join}",
-            string.Join(", ", _browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
+            Logger.LogInformation("Detected installed browsers: {join}",
+                string.Join(", ", _browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
+        }
 
         var browser = await Puppeteer.LaunchAsync(new LaunchOptions
         {
