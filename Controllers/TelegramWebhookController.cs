@@ -40,7 +40,7 @@ public class TelegramWebhookController(
 
     private async Task HandleStartCommand(long chatId, User? user)
     {
-        var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         if (await context.SubscriberTgs.AnyAsync(x => x.ChatId == chatId))
         {
@@ -64,7 +64,7 @@ public class TelegramWebhookController(
 
     private async Task HandleUnsubscribeCommand(long chatId)
     {
-        var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync();
 
         var subscriberTg = await context.SubscriberTgs.FirstOrDefaultAsync(x => x.ChatId == chatId);
 

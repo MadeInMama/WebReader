@@ -61,7 +61,7 @@ public class UserReadingRepository(
 
         foreach (var reading in readings)
         {
-            var ctx = await contextFactory.CreateDbContextAsync();
+            await using var ctx = await contextFactory.CreateDbContextAsync();
             tasks.Add(SetCurrPageAndScaleAndIsDoneAsync(reading.Id, reading.Page, reading.Scale, reading.IsDone, ctx));
         }
 

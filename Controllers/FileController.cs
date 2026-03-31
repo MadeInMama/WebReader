@@ -88,8 +88,8 @@ public class FileController(
 
         var userGuid = User.GetUserGuid();
 
-        var contextBucket = contextFactory.CreateDbContextAsync();
-        var contextFile = contextFactory.CreateDbContextAsync();
+        using var contextBucket = contextFactory.CreateDbContextAsync();
+        using var contextFile = contextFactory.CreateDbContextAsync();
 
         Task.WaitAll(contextBucket, contextFile);
 

@@ -25,7 +25,7 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
     {
         try
         {
-            var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
             var maxSize = await GetMaxSize(context, SettingSizeName, cancellationToken);
 

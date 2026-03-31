@@ -313,11 +313,11 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         await BroadcastAllSubs(context, botClient,
             $"File {fileCustomName} {Regex.Replace(link.Value.TextContent.Trim(), @"^\d+\s*-\s*", "").Trim()} has been uploaded automatically.");
 
-        context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context2 = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var maxSize = await GetMaxSize(context, settingSizeName, cancellationToken);
+        var maxSize = await GetMaxSize(context2, settingSizeName, cancellationToken);
 
-        var currentSize = await CurrentSize(context, fileCustomName, cancellationToken);
+        var currentSize = await CurrentSize(context2, fileCustomName, cancellationToken);
 
         if (CheckMaxSizeReached(maxSize, currentSize, fileCustomName))
             return (false, lastFile);
