@@ -76,13 +76,16 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
         Logger.LogInformation("Detected installed browsers: {join}",
             string.Join(", ", _browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
 
-        UninstallBrowsers();
+        //UninstallBrowsers();
 
-        Logger.LogInformation("Download Browser");
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            await _browserFetcher.DownloadAsync(BrowserTag.Stable);
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            await _browserFetcher.DownloadAsync(BrowserTag.Latest);
+        if (!_browserFetcher.GetInstalledBrowsers().Any())
+        {
+            Logger.LogInformation("Download Browser");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                await _browserFetcher.DownloadAsync(BrowserTag.Stable);
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                await _browserFetcher.DownloadAsync(BrowserTag.Latest);
+        }
 
         Logger.LogInformation("Detected installed browsers: {join}",
             string.Join(", ", _browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
@@ -96,7 +99,10 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
-                "--lang=en-US"
+                "--lang=en-US",
+                "--disable-image-loading",
+                "--disable-notifications",
+                "--use-gl=swiftshader"
             ],
             ExecutablePath =
                 _browserFetcher.GetExecutablePath(_browserFetcher.GetInstalledBrowsers().First().BuildId)

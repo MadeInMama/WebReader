@@ -172,22 +172,22 @@ public class AutoDownloadNewPartsOmniscientReader(
 
             await browser.CloseAsync();
 
-            UninstallBrowsers();
+            //UninstallBrowsers();
         }
         catch (TimeoutException e)
         {
             Logger.LogError("Timeout has been reached: {}", e.Message);
-            UninstallBrowsers();
+            //UninstallBrowsers();
         }
         catch (NavigationException e)
         {
             Logger.LogError("Navigation error has been reached: {}", e.Message);
-            UninstallBrowsers();
+            //UninstallBrowsers();
         }
         catch (HttpRequestException e)
         {
             Logger.LogError("HttpRequest error has been reached: {}", e.Message);
-            UninstallBrowsers();
+            //UninstallBrowsers();
         }
     }
 }
