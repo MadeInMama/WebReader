@@ -1,13 +1,10 @@
 ﻿using System.Collections.Immutable;
-using System.IO.Compression;
-using System.Text.RegularExpressions;
 using AngleSharp.Html.Parser;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
 using Telegram.Bot;
 using WebReader.Data;
 using WebReader.Helpers;
-using WebReader.Models;
 using WebReader.Services;
 
 namespace WebReader.Background.AutoDownloadNewParts;
@@ -73,108 +70,12 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
 
             foreach (var link in links)
             {
-                var dataNum = link.Key.Split("/").Last() == "0" ? 0 : int.Parse(link.Key.Split("/").Last());
+                var res = await ParseAndSaveFile(contextFactory, fileUploadService, botClient, link,
+                    defaultBucket, lastFile, context, FileCustomName, SettingSizeName, stoppingToken);
 
-                if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
-                {
-                    logger.LogInformation("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
-                    continue;
-                }
+                if (!res.isSuccessful) break;
 
-                Logger.LogInformation("Go to {link}", link);
-
-                browser = await GetBrowser();
-
-                page = await GetNewPage(browser);
-
-                await page.GoToAsync(link.Key,
-                    new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
-
-                Logger.LogInformation("Waiting for page load with images");
-                await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
-
-                html = await page.GetContentAsync();
-
-                await CloseBrowser(browser);
-
-                var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
-                    .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
-                    .ToImmutableList();
-
-                Logger.LogInformation("Found {images} links", images.Count);
-
-                using var memoryStream = new MemoryStream();
-
-                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-                {
-                    foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
-                    {
-                        var src = img.GetAttribute("data-original");
-                        if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
-                            src = img.GetAttribute("src")!;
-
-                        Logger.LogInformation("Downloading {src}", src);
-
-                        var imageBytes = await new HttpClient().GetByteArrayAsync(src, stoppingToken);
-
-                        if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
-
-                        var splitImages =
-                            ImageSplitter.SplitImage(StaticFunctions.ConvertByteArrayToJpeg(imageBytes));
-
-                        foreach (var el in splitImages.Index())
-                        {
-                            var fileName =
-                                $"{img.GetAttribute("data-page")}-{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                            var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
-                            await using var entryStream = entry.Open();
-                            await entryStream.WriteAsync(el.Item, stoppingToken);
-                        }
-                    }
-                }
-
-                await memoryStream.FlushAsync(stoppingToken);
-                memoryStream.Position = 0;
-
-                Logger.LogInformation("Save to db {name}",
-                    $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
-
-                var fileUploadResult = await fileUploadService.UploadFileAsync(
-                    lastFile?.Id,
-                    null,
-                    lastFile?.Bucket ?? defaultBucket,
-                    Enum.GetValues<RoleType>().ToList(),
-                    memoryStream,
-                    $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip",
-                    FileCustomName,
-                    "application/zip",
-                    FileType.ZipWithImg,
-                    Regex.Replace(link.Value.TextContent.Trim(), @"^\d+\s*-\s*", "").Trim(),
-                    uint.Parse(dataNum.ToString())
-                );
-
-                if (!fileUploadResult.isSuccessfull)
-                {
-                    Logger.LogError("Error downloading {name}",
-                        $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
-                    break;
-                }
-
-                await BroadcastAllSubs(context, botClient,
-                    $"File {FileCustomName} {Regex.Replace(link.Value.TextContent.Trim(), @"^\d+\s*-\s*", "").Trim()} has been uploaded automatically.");
-
-                lastFile = fileUploadResult.currentFile;
-
-                context = await contextFactory.CreateDbContextAsync(stoppingToken);
-
-                maxSize = await GetMaxSize(context, SettingSizeName, stoppingToken);
-
-                currentSize = await CurrentSize(context, FileCustomName, stoppingToken);
-
-                if (CheckMaxSizeReached(maxSize, currentSize, FileCustomName)) break;
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+                lastFile = res.lastFile;
             }
 
             // UninstallBrowsers();
