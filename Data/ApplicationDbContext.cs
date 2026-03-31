@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<File> Files { get; set; }
     public DbSet<UserReading> UserReadings { get; set; }
     public DbSet<Settings> Settings { get; set; }
+    public DbSet<SubscriberTg> SubscriberTgs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using PuppeteerSharp;
-using WebReader.Background.AutoDownloadNewParts;
 
 namespace WebReader.Helpers;
 
@@ -36,8 +35,8 @@ public static class BrowserProcessKiller
             }
         };
 
-    private static int KillBrowserProcesses(SupportedBrowser browser,
-        ILogger<AutoDownloadNewPartsOmniscientReader> logger, bool force = true)
+    private static int KillBrowserProcesses<T>(SupportedBrowser browser,
+        ILogger<T> logger, bool force = true)
     {
         var os = GetCurrentUserOs();
         var processNames = GetProcessNamesForBrowser(browser, os);
@@ -76,12 +75,12 @@ public static class BrowserProcessKiller
         return killedCount;
     }
 
-    private static int KillAllBrowserProcesses(ILogger<AutoDownloadNewPartsOmniscientReader> logger, bool force = true)
+    private static int KillAllBrowserProcesses<T>(ILogger<T> logger, bool force = true)
     {
         return Enum.GetValues<SupportedBrowser>().Sum(browser => KillBrowserProcesses(browser, logger, force));
     }
 
-    private static int KillAllBrowserProcesses2(ILogger<AutoDownloadNewPartsOmniscientReader> logger, bool force = true)
+    private static int KillAllBrowserProcesses2<T>(ILogger<T> logger, bool force = true)
     {
         var totalKilled = KillAllBrowserProcesses(logger, force);
 
@@ -95,7 +94,7 @@ public static class BrowserProcessKiller
         return totalKilled;
     }
 
-    public static void PrepareCleanBrowserEnvironment(ILogger<AutoDownloadNewPartsOmniscientReader> logger)
+    public static void PrepareCleanBrowserEnvironment<T>(ILogger<T> logger)
     {
         logger.LogInformation("Preparing clean environment...");
 

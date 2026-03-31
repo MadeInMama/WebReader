@@ -17,5 +17,6 @@ public class File : BaseEntity
     public Guid? NextPartId { get; set; }
     public File? NextPart { get; set; }
     [MaxLength(256)] public string? CurrentPartName { get; set; }
+    public uint? CurrentPartNumber { get; set; }
     public JsonDocument Settings { get; set; } = JsonDocument.Parse("{}");
 }

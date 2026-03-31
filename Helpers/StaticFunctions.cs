@@ -4,7 +4,6 @@ using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
-using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Models;
 
 namespace WebReader.Helpers;
@@ -43,8 +42,8 @@ public static class StaticFunctions
         return code is >= 200 and < 300;
     }
 
-    public static void CustomUninstall(this BrowserFetcher bf, SupportedBrowser sb, Platform p, string buildId,
-        ILogger<AutoDownloadNewPartsOmniscientReader> logger)
+    public static void CustomUninstall<T>(this BrowserFetcher bf, SupportedBrowser sb, Platform p, string buildId,
+        ILogger<T> logger)
     {
         BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
 

@@ -8,6 +8,7 @@ public class UploadFileRequest
     public IEnumerable<string> Names { get; set; } = [];
     public string? CustomName { get; set; }
     public string? CurrentPartName { get; set; }
+    public uint? CurrentPartNumber { get; set; }
     public IFormFile? File { get; set; }
     public Guid? AsPartOfId { get; set; }
     public Guid? AsParentOfId { get; set; }

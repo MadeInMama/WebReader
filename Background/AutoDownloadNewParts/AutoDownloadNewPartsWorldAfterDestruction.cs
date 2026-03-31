@@ -11,16 +11,16 @@ using WebReader.Services;
 
 namespace WebReader.Background.AutoDownloadNewParts;
 
-public class AutoDownloadNewPartsOmniscientReader(
+public class AutoDownloadNewPartsWorldAfterDestruction(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
-    ILogger<AutoDownloadNewPartsOmniscientReader> logger,
+    ILogger<AutoDownloadNewPartsWorldAfterDestruction> logger,
     ITelegramBotClient botClient)
-    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsOmniscientReader>(logger)
+    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsWorldAfterDestruction>(logger)
 {
-    private const string SettingSizeName = "max_files_size_limit_vseveduschiy_chitatel";
-    private const string FileCustomName = "Всеведущий читатель";
-    private const string Url = "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
+    private const string SettingSizeName = "max_files_size_limit_world_after_destruction";
+    private const string FileCustomName = "Мир после падения";
+    private const string Url = "https://3.readmanga.ru/mir_posle_padeniia";
 
     public override async Task GetAndDownload(CancellationToken stoppingToken)
     {
@@ -162,8 +162,6 @@ public class AutoDownloadNewPartsOmniscientReader(
                 lastFile = fileUploadResult.currentFile;
 
                 context = await contextFactory.CreateDbContextAsync(stoppingToken);
-
-                maxSize = await GetMaxSize(context, SettingSizeName, stoppingToken);
 
                 currentSize = await CurrentSize(context, FileCustomName, stoppingToken);
 

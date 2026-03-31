@@ -81,7 +81,7 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                            )
                            SELECT f.*
                            FROM "Files" f
-                                    INNER JOIN file_chain fc ON f."Id" = fc."Id"
+                                    INNER JOIN file_chain AS fc ON f."Id" = fc."Id"
                            ORDER BY fc.Level
                            """;
 
@@ -92,24 +92,21 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
     {
         const string sql = """
                            WITH RECURSIVE find_head AS (
-                               SELECT "Id","BucketId","Name","CustomName","Type","Size",
-                                      "AccessRoles","IsHidden","IsAvailable","CreatedDate",
-                                      "UpdatedDate","NextPartId","CurrentPartName","Settings",1 AS depth
+                               SELECT "Id","NextPartId",1 AS depth
                                FROM "Files"
                                WHERE "Id" = {0}
 
                                UNION ALL
 
-                               SELECT f."Id",f."BucketId",f."Name",f."CustomName",f."Type",f."Size",
-                                      f."AccessRoles",f."IsHidden",f."IsAvailable",f."CreatedDate",
-                                      f."UpdatedDate",f."NextPartId",f."CurrentPartName",f."Settings", fh.depth + 1
+                               SELECT f."Id",f."NextPartId", fh.depth + 1
                                FROM "Files" f
                                         INNER JOIN find_head fh ON f."NextPartId" = fh."Id"
                                WHERE fh.depth < 100000
                            )
-                           SELECT *
-                           FROM find_head
-                           ORDER BY depth DESC
+                           SELECT f.*
+                           FROM "Files" f
+                                    INNER JOIN find_head AS fh ON f."Id" = fh."Id"
+                           ORDER BY fh.depth DESC
                            LIMIT 1
                            """;
 

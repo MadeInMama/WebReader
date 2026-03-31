@@ -30,7 +30,7 @@
                        asp-route-bucketId="@Model.Id"
                        asp-route-fileId="@item.Id">
                         <div class="center parted secondary-info-span"></div>
-                        <span class="left main-info-span">@item.FileName</span>
+                        <span class="left main-info-span importance-0">@item.FileName</span>
                     </a>
                 </div>
             }
@@ -57,7 +57,7 @@
                         {
                             <span class="in-progress-empty secondary-info-span"></span>
                         }
-                        <span class="left main-info-span">@item.FileName</span>
+                        <span class="left main-info-span importance-0">@item.FileName</span>
                         <span class="right secondary-info-span importance-3">@item.Type?.ToLower()</span>
                         <span
                             class="right secondary-info-span importance-2">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>

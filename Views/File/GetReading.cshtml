@@ -63,7 +63,7 @@
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@item.Key.BucketId"
                        asp-route-fileId="@obj.FileId">
-                        <span>@obj.CustomName</span>
+                        <span class="importance-0">@obj.CustomName</span>
                         @if (obj.CurrentPartName != null)
                         {
                             <span class="importance-1">@obj.CurrentPartName</span>

@@ -27,7 +27,7 @@ public class AutoDownloadNewPartsBackground(
         using var scope = serviceScopeFactory.CreateScope();
 
         // var files = await scope.ServiceProvider.GetRequiredService<FileRepository>().AllAsync(f =>
-        //     f.CustomName == "Всеведущий читатель");
+        //     f.CustomName == "Всеведущий читатель" && f.CurrentPartNumber > 77);
         // await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
 
         foreach (var el in scope.ServiceProvider.GetRequiredService<IEnumerable<IAutoDownloadNewParts>>())

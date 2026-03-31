@@ -30,7 +30,7 @@
     gap: 0.5em;
     grid-auto-rows: 2em;
     align-items: center;
-    width: 100%;
+    width: calc(100% - 2.5em);
 }
 
 .item-line > a > span {
@@ -110,4 +110,8 @@
     .importance-1 {
         display: none !important;
     }
+}
+
+.importance-0 {
+    text-overflow: ellipsis;
 }

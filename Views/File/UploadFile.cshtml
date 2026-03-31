@@ -87,6 +87,9 @@
         <input asp-for="CurrentPartName" required placeholder="Part Name"
                autocapitalize="off" autocorrect="off" spellcheck="false"/>
 
+        <input asp-for="CurrentPartNumber" type="number" min="1" required placeholder="Part Number"
+               autocapitalize="off" autocorrect="off" spellcheck="false"/>
+
         <input asp-for="File" type="file" required/>
     </div>
 

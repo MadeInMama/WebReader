@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Minio;
+using Telegram.Bot;
 using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Configuration;
@@ -48,10 +49,14 @@ builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 
-builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
+// builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
+// builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsSoloLeveling>();
+// builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsWorldAfterDestruction>();
 
 builder.Services.AddHostedService<UpdateFilesFromS3>();
 builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
+
+builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["Telegram:BotToken"]!));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -98,6 +103,9 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.Migrate();
+
+    var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
+    await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
 }
 
 app.UseExceptionHandler("/Account/CustomNotFound");

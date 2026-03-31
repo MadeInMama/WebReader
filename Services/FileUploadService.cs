@@ -20,7 +20,8 @@ public class FileUploadService(
         string? fileCustomName,
         string fileContentType,
         FileType fileType,
-        string? filePartName)
+        string? filePartName,
+        uint? filePartNumber)
     {
         File? asPartOfFile = null, asParentOfFile = null;
 
@@ -60,7 +61,8 @@ public class FileUploadService(
             IsHidden = false,
             Size = (ulong?)fileStream.Length,
             NextPartId = asParentOfFile?.Id,
-            CurrentPartName = filePartName
+            CurrentPartName = filePartName,
+            CurrentPartNumber = filePartNumber
         };
 
         if (asPartOfFile != null)

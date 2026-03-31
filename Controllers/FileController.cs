@@ -69,8 +69,7 @@ public class FileController(
                     Type = TypeHelper.FileTypeNameDict[file.Type],
                     IsReading = reading != null,
                     IsParted = file.NextPartId.HasValue,
-                    IsDone = reading?.IsDone ?? false,
-                    CurrentPartName = file.CurrentPartName
+                    IsDone = reading?.IsDone ?? false
                 };
             }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
 
@@ -350,7 +349,8 @@ public class FileController(
             request.CustomName,
             request.File.ContentType,
             fileType,
-            request.CurrentPartName);
+            request.CurrentPartName,
+            request.CurrentPartNumber);
 
         if (!uploadFileResult.isSuccessfull) return View(string.Empty, uploadFileResult.errorMsg);
 
