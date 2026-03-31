@@ -49,9 +49,9 @@ builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 
-// builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
-// builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsSoloLeveling>();
-// builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsWorldAfterDestruction>();
+builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
+builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsSoloLeveling>();
+builder.Services.AddScoped<IAutoDownloadNewParts, AutoDownloadNewPartsWorldAfterDestruction>();
 
 builder.Services.AddHostedService<UpdateFilesFromS3>();
 builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
