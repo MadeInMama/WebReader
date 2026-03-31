@@ -116,7 +116,11 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                 "--mute-audio",
                 "--no-first-run",
                 "--safebrowsing-disable-auto-update",
-                "--memory-pressure-off" // Tells Chrome to ignore memory pressure signals
+                "--memory-pressure-off", // Tells Chrome to ignore memory pressure signals
+                "--no-zygote",
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-software-rasterizer"
             ],
             ExecutablePath =
                 _browserFetcher.GetExecutablePath(_browserFetcher.GetInstalledBrowsers().First().BuildId)

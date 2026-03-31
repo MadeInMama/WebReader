@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Collections.Immutable;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 using AngleSharp.Html.Parser;
 using Microsoft.EntityFrameworkCore;
@@ -95,7 +96,7 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
 
                 var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
                     .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
-                    .ToList();
+                    .ToImmutableList();
 
                 Logger.LogInformation("Found {images} links", images.Count);
 
@@ -166,6 +167,9 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
                 currentSize = await CurrentSize(context, FileCustomName, stoppingToken);
 
                 if (CheckMaxSizeReached(maxSize, currentSize, FileCustomName)) break;
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
 
             await browser.CloseAsync();

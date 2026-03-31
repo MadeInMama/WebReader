@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp;
+﻿using System.Collections.Immutable;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -7,7 +8,7 @@ namespace WebReader.Helpers;
 
 public static class ImageSplitter
 {
-    public static List<byte[]> SplitImage(byte[] imageBytes, int gap = 300, int tolerance = 10)
+    public static ImmutableList<byte[]> SplitImage(byte[] imageBytes, int gap = 300, int tolerance = 10)
     {
         using var image = Image.Load<Rgb24>(ImageTrimmer.TrimImage(imageBytes));
 
@@ -22,7 +23,8 @@ public static class ImageSplitter
             y = FindNextFilledY(image, currEndY + 1, tolerance);
         }
 
-        return result.Where(f => !ImageEmptyChecker.IsEmpty(f)).ToList(); //TODO: merge for small(size == gap + 1)
+        return result.Where(f => !ImageEmptyChecker.IsEmpty(f))
+            .ToImmutableList(); //TODO: merge for small(size == gap + 1)
     }
 
     private static int FindNextFilledY(Image<Rgb24> image, int startY, int tolerance)
