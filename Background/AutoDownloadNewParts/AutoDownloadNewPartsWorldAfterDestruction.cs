@@ -13,8 +13,9 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
     ILogger<AutoDownloadNewPartsWorldAfterDestruction> logger,
-    ITelegramBotClient botClient)
-    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsWorldAfterDestruction>(logger)
+    ITelegramBotClient botClient,
+    IHttpClientFactory httpClientFactory)
+    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsWorldAfterDestruction>(logger, httpClientFactory)
 {
     private const string SettingSizeName = "max_files_size_limit_world_after_destruction";
     private const string FileCustomName = "Мир после падения";

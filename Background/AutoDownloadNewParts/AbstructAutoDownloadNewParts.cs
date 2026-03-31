@@ -17,7 +17,8 @@ using File = WebReader.Models.Entities.File;
 
 namespace WebReader.Background.AutoDownloadNewParts;
 
-public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAutoDownloadNewParts
+public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpClientFactory httpClientFactory)
+    : IAutoDownloadNewParts
 {
     private const ulong DefaultMaxSize = 1u * 1024u; //1gb
     private readonly BrowserFetcher _browserFetcher = new();
@@ -262,7 +263,8 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
 
                 Logger.LogInformation("Downloading {src}", src);
 
-                var imageBytes = await new HttpClient().GetByteArrayAsync(src, cancellationToken);
+                var imageBytes = await httpClientFactory.CreateClient("parser-http-client")
+                    .GetByteArrayAsync(src, cancellationToken);
 
                 if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
 

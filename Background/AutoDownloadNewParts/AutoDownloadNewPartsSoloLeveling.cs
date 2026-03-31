@@ -13,8 +13,9 @@ public class AutoDownloadNewPartsSoloLeveling(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
     ILogger<AutoDownloadNewPartsSoloLeveling> logger,
-    ITelegramBotClient botClient)
-    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsSoloLeveling>(logger)
+    ITelegramBotClient botClient,
+    IHttpClientFactory httpClientFactory)
+    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsSoloLeveling>(logger, httpClientFactory)
 {
     private const string SettingSizeName = "max_files_size_limit_solo_leveling";
     private const string FileCustomName = "Поднятие уровня в одиночку";

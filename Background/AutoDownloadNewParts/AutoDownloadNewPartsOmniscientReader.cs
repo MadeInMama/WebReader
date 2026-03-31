@@ -13,8 +13,9 @@ public class AutoDownloadNewPartsOmniscientReader(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
     ILogger<AutoDownloadNewPartsOmniscientReader> logger,
-    ITelegramBotClient botClient)
-    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsOmniscientReader>(logger)
+    ITelegramBotClient botClient,
+    IHttpClientFactory httpClientFactory)
+    : AbstractAutoDownloadNewParts<AutoDownloadNewPartsOmniscientReader>(logger, httpClientFactory)
 {
     private const string SettingSizeName = "max_files_size_limit_vseveduschiy_chitatel";
     private const string FileCustomName = "Всеведущий читатель";
