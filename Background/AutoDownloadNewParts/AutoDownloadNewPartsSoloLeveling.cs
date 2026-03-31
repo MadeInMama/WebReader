@@ -169,6 +169,8 @@ public class AutoDownloadNewPartsSoloLeveling(
 
                 context = await contextFactory.CreateDbContextAsync(stoppingToken);
 
+                maxSize = await GetMaxSize(context, SettingSizeName, stoppingToken);
+
                 currentSize = await CurrentSize(context, FileCustomName, stoppingToken);
 
                 if (CheckMaxSizeReached(maxSize, currentSize, FileCustomName)) break;
