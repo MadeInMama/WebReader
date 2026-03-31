@@ -327,6 +327,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
 
         SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
 
-        return (false, fileUploadResult.currentFile);
+        return (true, fileUploadResult.currentFile);
     }
 }
