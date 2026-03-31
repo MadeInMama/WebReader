@@ -102,7 +102,9 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                 "--lang=en-US",
                 "--disable-image-loading",
                 "--disable-notifications",
-                "--use-gl=swiftshader"
+                "--use-gl=swiftshader",
+                "--enable-low-end-device-mode",
+                "--enable-features=InfiniteTabsFreezing"
             ],
             ExecutablePath =
                 _browserFetcher.GetExecutablePath(_browserFetcher.GetInstalledBrowsers().First().BuildId)
