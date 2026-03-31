@@ -251,6 +251,8 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
 
         using var memoryStream = new MemoryStream();
 
+        using var httpClient = httpClientFactory.CreateClient("parser-http-client");
+
         using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
             foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
@@ -258,8 +260,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
                 var src = img.GetAttribute("data-original");
                 if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
                     src = img.GetAttribute("src")!;
-
-                using var httpClient = httpClientFactory.CreateClient("parser-http-client");
 
                 var imageBytes = await httpClient.GetByteArrayAsync(src, cancellationToken);
 
@@ -327,6 +327,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        return (true, fileUploadResult.currentFile);
+        return (false, fileUploadResult.currentFile);
     }
 }
