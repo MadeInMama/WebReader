@@ -208,7 +208,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         BrowserProcessKiller.PrepareCleanBrowserEnvironment(Logger);
     }
 
-
     protected virtual async Task<(bool isSuccessful, File? lastFile)> ParseAndSaveFile(
         IDbContextFactory<ApplicationDbContext> contextFactory,
         FileUploadService fileUploadService,
