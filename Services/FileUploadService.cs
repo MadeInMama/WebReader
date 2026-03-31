@@ -43,6 +43,8 @@ public class FileUploadService(
             if (asParentOfFile == null) return (false, "Parent of file not available.", null);
         }
 
+        var fileStreamLength = (ulong?)fileStream.Length;
+
         var uploadToS3Successful =
             await minioService.UploadObjectAsync(bucket.Name, fileStream, fileName, fileContentType);
 
@@ -59,7 +61,7 @@ public class FileUploadService(
             Type = fileType,
             IsAvailable = true,
             IsHidden = false,
-            Size = (ulong?)fileStream.Length,
+            Size = fileStreamLength,
             NextPartId = asParentOfFile?.Id,
             CurrentPartName = filePartName,
             CurrentPartNumber = filePartNumber

@@ -94,6 +94,9 @@ public class MinioService(IMinioClient minioClient)
             .WithContentType(contentType)
             .WithObjectSize(stream.Length));
 
+        stream.Close();
+        await stream.DisposeAsync();
+
         return res != null && res.ResponseStatusCode.IsSuccessStatusCode();
     }
 }

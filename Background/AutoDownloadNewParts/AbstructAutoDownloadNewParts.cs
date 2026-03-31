@@ -215,7 +215,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         KeyValuePair<string, IElement> link,
         Bucket defaultBucket,
         File? lastFile,
-        ApplicationDbContext context,
         string fileCustomName,
         string settingSizeName,
         CancellationToken cancellationToken)
@@ -260,10 +259,9 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
                 if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
                     src = img.GetAttribute("src")!;
 
-                // Logger.LogInformation("Downloading {src}", src);
+                using var httpClient = httpClientFactory.CreateClient("parser-http-client");
 
-                var imageBytes = await httpClientFactory.CreateClient("parser-http-client")
-                    .GetByteArrayAsync(src, cancellationToken);
+                var imageBytes = await httpClient.GetByteArrayAsync(src, cancellationToken);
 
                 if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
 
@@ -277,6 +275,8 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
                     var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
                     await using var entryStream = entry.Open();
                     await entryStream.WriteAsync(el.Item, cancellationToken);
+                    await entryStream.FlushAsync(cancellationToken);
+                    entryStream.Close();
                 }
             }
         }
@@ -310,14 +310,14 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
             return (false, lastFile);
         }
 
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
         await BroadcastAllSubs(context, botClient,
             $"File {fileCustomName} {Regex.Replace(link.Value.TextContent.Trim(), @"^\d+\s*-\s*", "").Trim()} has been uploaded automatically.");
 
-        await using var context2 = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var maxSize = await GetMaxSize(context, settingSizeName, cancellationToken);
 
-        var maxSize = await GetMaxSize(context2, settingSizeName, cancellationToken);
-
-        var currentSize = await CurrentSize(context2, fileCustomName, cancellationToken);
+        var currentSize = await CurrentSize(context, fileCustomName, cancellationToken);
 
         if (CheckMaxSizeReached(maxSize, currentSize, fileCustomName))
             return (false, lastFile);
@@ -325,6 +325,8 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        return (true, fileUploadResult.currentFile);
+        SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+
+        return (false, fileUploadResult.currentFile);
     }
 }

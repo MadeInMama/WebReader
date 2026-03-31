@@ -72,7 +72,7 @@ public class AutoDownloadNewPartsOmniscientReader(
             foreach (var link in links)
             {
                 var res = await ParseAndSaveFile(contextFactory, fileUploadService, botClient, link,
-                    defaultBucket, lastFile, context, FileCustomName, SettingSizeName, cancellationToken);
+                    defaultBucket, lastFile, FileCustomName, SettingSizeName, cancellationToken);
 
                 if (!res.isSuccessful) break;
 

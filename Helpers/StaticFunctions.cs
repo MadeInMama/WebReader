@@ -68,7 +68,12 @@ public static class StaticFunctions
         using var image = Image.Load(sourceImageBytes);
         using var outputStream = new MemoryStream();
         image.Save(outputStream, new JpegEncoder());
-        return outputStream.ToArray();
+
+        var res = outputStream.ToArray();
+
+        outputStream.Close();
+
+        return res;
     }
 
     public static bool IsColorMatch(Rgb24 c1, Rgb24 c2, int tolerance)

@@ -31,7 +31,12 @@ public static class ImageTrimmer
 
         using var outputMs = new MemoryStream();
         cropped.Save(outputMs, new JpegEncoder());
-        return outputMs.ToArray();
+
+        var res = outputMs.ToArray();
+
+        outputMs.Close();
+
+        return res;
     }
 
     private static int FindTopRow(Image<Rgb24> image, int tolerance)
