@@ -35,5 +35,8 @@ public class AutoDownloadNewPartsBackground(
             await el.GetAndDownload(cancellationToken);
 
         logger.LogInformation($"Finished {nameof(PerformAutoDownloadNewParts)}");
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
     }
 }

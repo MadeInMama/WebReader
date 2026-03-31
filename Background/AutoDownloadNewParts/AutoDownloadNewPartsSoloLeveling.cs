@@ -77,6 +77,9 @@ public class AutoDownloadNewPartsSoloLeveling(
                 if (!res.isSuccessful) break;
 
                 lastFile = res.lastFile;
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
 
             // UninstallBrowsers();
