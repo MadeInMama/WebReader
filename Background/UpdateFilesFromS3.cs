@@ -12,32 +12,32 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
 {
     private static readonly TimeSpan PeriodTime = TimeSpan.FromHours(1);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await RemoveBucketsThatNotExistsInDb(stoppingToken);
-        await MakeUnavailableBucketsThatNotExistsInS3(stoppingToken);
-        await RemoveFilesThatNotExistsInDb(stoppingToken);
-        await UpdateBucketData(stoppingToken);
-        await UpdateFilesData(stoppingToken);
+        await RemoveBucketsThatNotExistsInDb(cancellationToken);
+        await MakeUnavailableBucketsThatNotExistsInS3(cancellationToken);
+        await RemoveFilesThatNotExistsInDb(cancellationToken);
+        await UpdateBucketData(cancellationToken);
+        await UpdateFilesData(cancellationToken);
 
         using PeriodicTimer timer = new(PeriodTime);
 
-        while (await timer.WaitForNextTickAsync(stoppingToken))
+        while (await timer.WaitForNextTickAsync(cancellationToken))
         {
-            await RemoveBucketsThatNotExistsInDb(stoppingToken);
-            await MakeUnavailableBucketsThatNotExistsInS3(stoppingToken);
-            await RemoveFilesThatNotExistsInDb(stoppingToken);
-            await UpdateBucketData(stoppingToken);
-            await UpdateFilesData(stoppingToken);
+            await RemoveBucketsThatNotExistsInDb(cancellationToken);
+            await MakeUnavailableBucketsThatNotExistsInS3(cancellationToken);
+            await RemoveFilesThatNotExistsInDb(cancellationToken);
+            await UpdateBucketData(cancellationToken);
+            await UpdateFilesData(cancellationToken);
         }
     }
 
-    public override async Task StopAsync(CancellationToken stoppingToken)
+    public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        await base.StopAsync(stoppingToken);
+        await base.StopAsync(cancellationToken);
     }
 
-    private async Task RemoveBucketsThatNotExistsInDb(CancellationToken stoppingToken = default)
+    private async Task RemoveBucketsThatNotExistsInDb(CancellationToken cancellationToken = default)
     {
         logger.LogInformation($"Start {nameof(RemoveBucketsThatNotExistsInDb)}");
         //TODO: run on SettingsEntity
@@ -70,7 +70,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
         logger.LogInformation($"Finished {nameof(RemoveBucketsThatNotExistsInDb)}");
     }
 
-    private async Task MakeUnavailableBucketsThatNotExistsInS3(CancellationToken stoppingToken = default)
+    private async Task MakeUnavailableBucketsThatNotExistsInS3(CancellationToken cancellationToken = default)
     {
         logger.LogInformation($"Start {nameof(MakeUnavailableBucketsThatNotExistsInS3)}");
         //TODO: run on SettingsEntity
@@ -114,7 +114,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
         logger.LogInformation($"Finished {nameof(MakeUnavailableBucketsThatNotExistsInS3)}");
     }
 
-    private async Task RemoveFilesThatNotExistsInDb(CancellationToken stoppingToken = default)
+    private async Task RemoveFilesThatNotExistsInDb(CancellationToken cancellationToken = default)
     {
         logger.LogInformation($"Start {nameof(RemoveFilesThatNotExistsInDb)}");
         //TODO: run on SettingsEntity AND log
@@ -145,7 +145,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
         logger.LogInformation($"Finished {nameof(RemoveFilesThatNotExistsInDb)}");
     }
 
-    private async Task UpdateBucketData(CancellationToken stoppingToken = default)
+    private async Task UpdateBucketData(CancellationToken cancellationToken = default)
     {
         logger.LogInformation($"Start {nameof(UpdateBucketData)}");
 
@@ -176,7 +176,7 @@ public class UpdateFilesFromS3(IServiceProvider services, ILogger<UpdateFilesFro
         logger.LogInformation($"Finished {nameof(UpdateBucketData)}");
     }
 
-    private async Task UpdateFilesData(CancellationToken stoppingToken = default)
+    private async Task UpdateFilesData(CancellationToken cancellationToken = default)
     {
         logger.LogInformation($"Start {nameof(UpdateFilesData)}");
         //TODO: run on SettingsEntity AND log

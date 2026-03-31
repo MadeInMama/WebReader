@@ -6,21 +6,22 @@ public class AutoDownloadNewPartsBackground(
 {
     private static readonly TimeSpan PeriodTime = TimeSpan.FromHours(1);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await PerformAutoDownloadNewParts(stoppingToken);
+        await PerformAutoDownloadNewParts(cancellationToken);
 
         using PeriodicTimer timer = new(PeriodTime);
 
-        while (await timer.WaitForNextTickAsync(stoppingToken)) await PerformAutoDownloadNewParts(stoppingToken);
+        while (await timer.WaitForNextTickAsync(cancellationToken))
+            await PerformAutoDownloadNewParts(cancellationToken);
     }
 
-    public override async Task StopAsync(CancellationToken stoppingToken)
+    public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        await base.StopAsync(stoppingToken);
+        await base.StopAsync(cancellationToken);
     }
 
-    private async Task PerformAutoDownloadNewParts(CancellationToken stoppingToken = default)
+    private async Task PerformAutoDownloadNewParts(CancellationToken cancellationToken = default)
     {
         logger.LogInformation($"Start {nameof(PerformAutoDownloadNewParts)}");
 
@@ -31,7 +32,7 @@ public class AutoDownloadNewPartsBackground(
         // await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
 
         foreach (var el in scope.ServiceProvider.GetRequiredService<IEnumerable<IAutoDownloadNewParts>>())
-            await el.GetAndDownload(stoppingToken);
+            await el.GetAndDownload(cancellationToken);
 
         logger.LogInformation($"Finished {nameof(PerformAutoDownloadNewParts)}");
     }

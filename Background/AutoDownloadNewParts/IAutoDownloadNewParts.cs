@@ -2,5 +2,5 @@
 
 public interface IAutoDownloadNewParts
 {
-    Task GetAndDownload(CancellationToken stoppingToken);
+    Task GetAndDownload(CancellationToken cancellationToken);
 }

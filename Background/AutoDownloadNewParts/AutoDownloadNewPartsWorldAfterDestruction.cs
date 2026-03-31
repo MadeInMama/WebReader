@@ -20,19 +20,19 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
     private const string FileCustomName = "Мир после падения";
     private const string Url = "https://3.readmanga.ru/mir_posle_padeniia";
 
-    public override async Task GetAndDownload(CancellationToken stoppingToken)
+    public override async Task GetAndDownload(CancellationToken cancellationToken)
     {
         try
         {
-            var context = await contextFactory.CreateDbContextAsync(stoppingToken);
+            var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-            var maxSize = await GetMaxSize(context, SettingSizeName, stoppingToken);
+            var maxSize = await GetMaxSize(context, SettingSizeName, cancellationToken);
 
-            var currentSize = await CurrentSize(context, FileCustomName, stoppingToken);
+            var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 
             if (CheckMaxSizeReached(maxSize, currentSize, FileCustomName)) return;
 
-            var browser = await GetBrowser();
+            var browser = await GetBrowser(cancellationToken);
 
             var page = await GetNewPage(browser);
 
@@ -47,7 +47,7 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
 
             await CloseBrowser(browser);
 
-            var links = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
+            var links = (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
                 .QuerySelectorAll(".chapters > table .item-title > a")
                 .Where(f => f.GetAttribute("href") != null)
                 .ToDictionary(f => f.GetAttribute("href")!, f => f)
@@ -58,20 +58,20 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
 
             Logger.LogInformation("Found {links} links", links.Count);
 
-            var defaultBucket = await context.Buckets.FirstAsync(b => b.Name == "mybucket", stoppingToken);
+            var defaultBucket = await context.Buckets.FirstAsync(b => b.Name == "mybucket", cancellationToken);
 
             var lastStoredFile = await context.Files.Where(f => f.CustomName == FileCustomName)
                 .Include(f => f.Bucket)
                 .AsAsyncEnumerable()
                 .OrderBy(f => f.CurrentPartNumber!)
-                .LastOrDefaultAsync(stoppingToken);
+                .LastOrDefaultAsync(cancellationToken);
 
             var lastFile = lastStoredFile;
 
             foreach (var link in links)
             {
                 var res = await ParseAndSaveFile(contextFactory, fileUploadService, botClient, link,
-                    defaultBucket, lastFile, context, FileCustomName, SettingSizeName, stoppingToken);
+                    defaultBucket, lastFile, context, FileCustomName, SettingSizeName, cancellationToken);
 
                 if (!res.isSuccessful) break;
 

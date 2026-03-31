@@ -23,7 +23,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
     private readonly BrowserFetcher _browserFetcher = new();
     protected readonly ILogger<T> Logger = logger;
 
-    public virtual Task GetAndDownload(CancellationToken stoppingToken)
+    public virtual Task GetAndDownload(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
     }
@@ -31,10 +31,10 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
     protected async Task<ulong> GetMaxSize(
         ApplicationDbContext context,
         string settingSizeName,
-        CancellationToken stoppingToken)
+        CancellationToken cancellationToken)
     {
         var maxSizeSetting =
-            await context.Settings.FirstOrDefaultAsync(f => f.Key == settingSizeName, stoppingToken);
+            await context.Settings.FirstOrDefaultAsync(f => f.Key == settingSizeName, cancellationToken);
 
         if (maxSizeSetting == null) return DefaultMaxSize;
 
@@ -42,11 +42,11 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
     }
 
     protected async Task<ulong> CurrentSize(ApplicationDbContext context, string fileCustomName,
-        CancellationToken stoppingToken)
+        CancellationToken cancellationToken)
     {
         return await context.Files.Where(f => f.CustomName == fileCustomName).Select(f => f.Size)
             .AsAsyncEnumerable()
-            .AggregateAsync(0ul, (currentSum, nullableValue) => currentSum + (nullableValue ?? 0ul), stoppingToken);
+            .AggregateAsync(0ul, (currentSum, nullableValue) => currentSum + (nullableValue ?? 0ul), cancellationToken);
     }
 
     protected bool CheckMaxSizeReached(ulong maxSize, ulong currentSize, string fileCustomName)
@@ -68,7 +68,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
         return true;
     }
 
-    protected async Task<IBrowser> GetBrowser()
+    protected async Task<IBrowser> GetBrowser(CancellationToken cancellationToken)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -98,7 +98,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                 string.Join(", ", _browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
         }
 
-        var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+        var browserTask = Puppeteer.LaunchAsync(new LaunchOptions
         {
             Headless = true,
             Args =
@@ -133,6 +133,8 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
             ExecutablePath =
                 _browserFetcher.GetExecutablePath(_browserFetcher.GetInstalledBrowsers().First().BuildId)
         });
+
+        var browser = await browserTask.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken);
 
         return browser;
     }
@@ -216,7 +218,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
         ApplicationDbContext context,
         string fileCustomName,
         string settingSizeName,
-        CancellationToken stoppingToken)
+        CancellationToken cancellationToken)
     {
         var dataNum = link.Key.Split("/").Last() == "0" ? 0 : int.Parse(link.Key.Split("/").Last());
 
@@ -228,7 +230,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
 
         Logger.LogInformation("Go to {link}", link);
 
-        var browser = await GetBrowser();
+        var browser = await GetBrowser(cancellationToken);
 
         var page = await GetNewPage(browser);
 
@@ -242,7 +244,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
 
         await CloseBrowser(browser);
 
-        var images = (await new HtmlParser().ParseDocumentAsync(html, stoppingToken))
+        var images = (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
             .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
             .ToImmutableList();
 
@@ -260,7 +262,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
 
                 Logger.LogInformation("Downloading {src}", src);
 
-                var imageBytes = await new HttpClient().GetByteArrayAsync(src, stoppingToken);
+                var imageBytes = await new HttpClient().GetByteArrayAsync(src, cancellationToken);
 
                 if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
 
@@ -273,12 +275,12 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                         $"{img.GetAttribute("data-page")}-{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
                     var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
                     await using var entryStream = entry.Open();
-                    await entryStream.WriteAsync(el.Item, stoppingToken);
+                    await entryStream.WriteAsync(el.Item, cancellationToken);
                 }
             }
         }
 
-        await memoryStream.FlushAsync(stoppingToken);
+        await memoryStream.FlushAsync(cancellationToken);
         memoryStream.Position = 0;
 
         Logger.LogInformation("Save to db {name}",
@@ -310,11 +312,11 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
         await BroadcastAllSubs(context, botClient,
             $"File {fileCustomName} {Regex.Replace(link.Value.TextContent.Trim(), @"^\d+\s*-\s*", "").Trim()} has been uploaded automatically.");
 
-        context = await contextFactory.CreateDbContextAsync(stoppingToken);
+        context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var maxSize = await GetMaxSize(context, settingSizeName, stoppingToken);
+        var maxSize = await GetMaxSize(context, settingSizeName, cancellationToken);
 
-        var currentSize = await CurrentSize(context, fileCustomName, stoppingToken);
+        var currentSize = await CurrentSize(context, fileCustomName, cancellationToken);
 
         if (CheckMaxSizeReached(maxSize, currentSize, fileCustomName))
             return (false, lastFile);
