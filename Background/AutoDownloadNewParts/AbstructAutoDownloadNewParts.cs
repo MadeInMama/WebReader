@@ -278,6 +278,8 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
                     await entryStream.FlushAsync(cancellationToken);
                     entryStream.Close();
                 }
+
+                SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
             }
         }
 
@@ -324,8 +326,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
-
-        SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
 
         return (true, fileUploadResult.currentFile);
     }
