@@ -36,7 +36,7 @@ public class AutoDownloadNewPartsOmniscientReader(
 
             var browser = await GetBrowser();
 
-            var page = await browser.NewPageAsync();
+            var page = await GetNewPage(browser);
 
             await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
             {

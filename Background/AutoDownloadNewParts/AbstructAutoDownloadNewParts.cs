@@ -104,7 +104,19 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
                 "--disable-notifications",
                 "--use-gl=swiftshader",
                 "--enable-low-end-device-mode",
-                "--enable-features=InfiniteTabsFreezing"
+                "--enable-features=InfiniteTabsFreezing",
+                "--disable-dev-shm-usage", // Overcome /dev/shm space limitations (critical for Docker/low RAM)
+                "--disable-background-networking", // Disable background services
+                "--disable-default-apps",
+                "--disable-extensions",
+                "--disable-sync",
+                "--disable-translate",
+                "--hide-scrollbars",
+                "--metrics-recording-only",
+                "--mute-audio",
+                "--no-first-run",
+                "--safebrowsing-disable-auto-update",
+                "--memory-pressure-off" // Tells Chrome to ignore memory pressure signals
             ],
             ExecutablePath =
                 _browserFetcher.GetExecutablePath(_browserFetcher.GetInstalledBrowsers().First().BuildId)
@@ -117,6 +129,33 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger) : IAuto
     {
         foreach (var el in _browserFetcher.GetInstalledBrowsers())
             _browserFetcher.CustomUninstall(el.Browser, el.Platform, el.BuildId, Logger);
+    }
+
+    protected async Task<IPage> GetNewPage(IBrowser browser)
+    {
+        var res = await browser.NewPageAsync();
+        await res.SetRequestInterceptionAsync(true);
+
+        res.Request += async (_, e) =>
+        {
+            var resourceType = e.Request.ResourceType;
+
+            if (new[]
+                {
+                    ResourceType.Image,
+                    ResourceType.ImageSet,
+                    ResourceType.Img,
+                    ResourceType.StyleSheet,
+                    ResourceType.Font,
+                    ResourceType.Media,
+                    ResourceType.WebSocket
+                }.Contains(resourceType))
+                await e.Request.AbortAsync();
+            else
+                await e.Request.ContinueAsync();
+        };
+
+        return res;
     }
 
     protected async Task BroadcastAllSubs(ApplicationDbContext context, ITelegramBotClient botClient, string message)
