@@ -8,7 +8,7 @@
 }
 
 @media (width < 800px) {
-    .main-canvas-fit-height {
+    main {
         margin-bottom: 0;
     }
 }
