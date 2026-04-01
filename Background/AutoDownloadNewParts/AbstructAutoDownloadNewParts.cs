@@ -327,6 +327,6 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        return (false, fileUploadResult.currentFile);
+        return (true, fileUploadResult.currentFile);
     }
 }
