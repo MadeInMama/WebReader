@@ -1,3 +1,14 @@
 #img-canvas {
     width: 100%;
 }
+
+.image-canvas-fit-height {
+    height: calc(100dvh - 6em);
+    object-fit: contain;
+}
+
+@media (width < 800px) {
+    .main-canvas-fit-height {
+        margin-bottom: 0;
+    }
+}

@@ -90,7 +90,7 @@ else
 {
     <div class="controls">
         <div class="spacer controls-start">
-            @await Html.PartialAsync("_FullscreenControl")
+            @* @await Html.PartialAsync("_FullscreenControl") *@
             <div class="settings-container"></div>
         </div>
         <div class="controls-center">
@@ -297,19 +297,23 @@ else
 
             if (currentScale === -1) {
                 document.querySelector("main").classList.add("max-width-set");
+                document.querySelector("main").classList.remove("main-canvas-fit-height");
+                document.getElementById("img-canvas").classList.remove("image-canvas-fit-height");
                 document.getElementById("img-canvas").style.maxWidth = "100%";
-                document.getElementById("img-canvas").style.height = "unset";
-                document.getElementById("img-canvas").style.objectFit = 'fill';
+                document.getElementById("img-canvas").style.removeProperty("height");
+                document.getElementById("img-canvas").style.removeProperty("object-fit");
             } else if (currentScale === 0) {
                 document.querySelector("main").classList.remove("max-width-set");
+                document.querySelector("main").classList.add("main-canvas-fit-height");
                 document.getElementById("img-canvas").style.maxWidth = "100%";
-                document.getElementById("img-canvas").style.height = "calc(100dvh - 6em)";
-                document.getElementById("img-canvas").style.objectFit = 'contain';
+                document.getElementById("img-canvas").classList.add("image-canvas-fit-height");
             } else {
                 document.querySelector("main").classList.remove("max-width-set");
+                document.querySelector("main").classList.remove("main-canvas-fit-height");
+                document.getElementById("img-canvas").classList.remove("image-canvas-fit-height");
                 document.getElementById("img-canvas").style.maxWidth = currentScale + "%";
-                document.getElementById("img-canvas").style.height = "unset";
-                document.getElementById("img-canvas").style.objectFit = 'fill';
+                document.getElementById("img-canvas").style.removeProperty("height");
+                document.getElementById("img-canvas").style.removeProperty("object-fit");
             }
 
             if (send) SendCurrPage();
