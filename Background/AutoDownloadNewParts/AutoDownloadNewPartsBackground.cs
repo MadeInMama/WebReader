@@ -30,9 +30,9 @@ public class AutoDownloadNewPartsBackground(
 
         using var scope = serviceScopeFactory.CreateScope();
 
-        var files = await scope.ServiceProvider.GetRequiredService<FileRepository>()
-            .AllAsync(f => f.CurrentPartNumber > 271);
-        await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
+        // var files = await scope.ServiceProvider.GetRequiredService<FileRepository>()
+        //     .AllAsync(f => f.CurrentPartNumber > 271);
+        // await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
 
         foreach (var el in scope.ServiceProvider.GetRequiredService<IEnumerable<IAutoDownloadNewParts>>())
             await el.GetAndDownload(cancellationToken);
