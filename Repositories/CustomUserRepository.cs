@@ -9,12 +9,16 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
 {
     public async Task<CustomUser?> FirstOrDefaultAsync(Expression<Func<CustomUser, bool>> predicate,
         ApplicationDbContext? ctx,
+        bool asNoTracking = false,
         params Expression<Func<CustomUser, object>>[] includes)
     {
         IQueryable<CustomUser> query = (ctx ?? context).Set<CustomUser>();
 
         foreach (var include in includes)
             query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
 
         return await query.FirstOrDefaultAsync(predicate);
     }

@@ -24,7 +24,7 @@ public class FileApiController(
             return BadRequest(ModelState);
 
         var reading = await readingRepository.FirstOrDefaultAsync(f =>
-            f.UserId == request.UserId && f.FileId == request.FileId, null);
+            f.UserId == request.UserId && f.FileId == request.FileId, null, true);
 
         if (reading == null)
         {

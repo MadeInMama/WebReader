@@ -14,13 +14,13 @@ public class FileService(
 
         foreach (var guid in guids.Index())
         {
-            logger.LogInformation("Deleting file with id: {guid}", guid.ToString());
+            logger.LogInformation("Deleting file with id: ({index}, {guid})", guid.Index + 1, guid.Item);
 
-            var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == guid.Item, null, f => f.Bucket);
+            var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == guid.Item, null, false, f => f.Bucket);
 
             if (file == null) continue;
 
-            var prevFile = await fileRepository.FirstOrDefaultAsync(f => f.NextPartId == guid.Item, null);
+            var prevFile = await fileRepository.FirstOrDefaultAsync(f => f.NextPartId == guid.Item, null, false);
 
             if (prevFile != null)
             {

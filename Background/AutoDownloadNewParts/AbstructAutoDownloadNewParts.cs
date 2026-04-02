@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
+using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
 using Telegram.Bot;
@@ -34,8 +35,9 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         string settingSizeName,
         CancellationToken cancellationToken)
     {
-        var maxSizeSetting =
-            await context.Settings.FirstOrDefaultAsync(f => f.Key == settingSizeName, cancellationToken);
+        var maxSizeSetting = await context.Settings
+            .AsNoTracking()
+            .SingleOrDefaultAsync(f => f.Key == settingSizeName, cancellationToken);
 
         if (maxSizeSetting == null) return DefaultMaxSize;
 
@@ -45,7 +47,9 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
     protected async Task<ulong> CurrentSize(ApplicationDbContext context, string fileCustomName,
         CancellationToken cancellationToken)
     {
-        return await context.Files.Where(f => f.CustomName == fileCustomName).Select(f => f.Size)
+        return await context.Files.Where(f => f.CustomName == fileCustomName)
+            .AsNoTracking()
+            .Select(f => f.Size)
             .AsAsyncEnumerable()
             .AggregateAsync(0ul, (currentSum, nullableValue) => currentSum + (nullableValue ?? 0ul), cancellationToken);
     }
@@ -181,9 +185,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
 
     protected async Task BroadcastAllSubs(ApplicationDbContext context, ITelegramBotClient botClient, string message)
     {
-        var subscribers = await context.SubscriberTgs.ToListAsync();
-
-        foreach (var el in subscribers)
+        await foreach (var el in context.SubscriberTgs.AsAsyncEnumerable())
             try
             {
                 await botClient.SendMessage(el.ChatId, message);
@@ -191,7 +193,9 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
             }
             catch (ApiRequestException ex) when (ex.ErrorCode == 403)
             {
-                var subscriberTg = await context.SubscriberTgs.FirstOrDefaultAsync(x => x.ChatId == el.ChatId);
+                var subscriberTg = await context.SubscriberTgs
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ChatId == el.ChatId);
 
                 if (subscriberTg != null)
                 {
@@ -208,7 +212,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         BrowserProcessKiller.PrepareCleanBrowserEnvironment(Logger);
     }
 
-    protected virtual async Task<(bool isSuccessful, File? lastFile)> ParseAndSaveFile(
+    protected virtual async Task<Result<File?>> ParseAndSaveFile(
         IDbContextFactory<ApplicationDbContext> contextFactory,
         FileUploadService fileUploadService,
         ITelegramBotClient botClient,
@@ -224,7 +228,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
         {
             Logger.LogInformation("Skipping {fileCustomName} {dataNum}", fileCustomName, dataNum);
-            return (true, lastFile);
+            return Result.Ok(lastFile);
         }
 
         Logger.LogInformation("Go to {link}", link);
@@ -305,12 +309,10 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
 
         memoryStream.Close();
 
-        if (!fileUploadResult.isSuccessfull)
-        {
-            Logger.LogError("Error downloading {name}",
-                $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
-            return (false, lastFile);
-        }
+        if (fileUploadResult.IsFailed)
+            return Result.Fail(
+                new Error(
+                    $"Error downloading {link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip"));
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -322,11 +324,11 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
         var currentSize = await CurrentSize(context, fileCustomName, cancellationToken);
 
         if (CheckMaxSizeReached(maxSize, currentSize, fileCustomName))
-            return (false, lastFile);
+            return Result.Fail("MaxSize reached");
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        return (true, fileUploadResult.currentFile);
+        return Result.Ok(fileUploadResult.Value)!;
     }
 }

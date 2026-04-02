@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -49,7 +50,7 @@ public class FileController(
                                       !f.IsHidden &&
                                       f.Id == bucketId &&
                                       f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
-                                      (f.UserId == userGuid || f.UserId == null), null);
+                                      (f.UserId == userGuid || f.UserId == null), null, true);
 
         if (bucket == null) return RedirectToAction("AccessDenied", "Account");
 
@@ -99,13 +100,13 @@ public class FileController(
                                                                f.AccessRoles.Intersect(User.GetUserRoles())
                                                                    .Any() &&
                                                                (f.UserId == userGuid || f.UserId == null),
-            contextBucket.Result);
+            contextBucket.Result, true);
 
         var file = fileRepository.FirstOrDefaultAsync(f => f.IsAvailable &&
                                                            !f.IsHidden &&
                                                            f.Id == fileId &&
                                                            f.AccessRoles.Intersect(User.GetUserRoles()).Any(),
-            contextFile.Result);
+            contextFile.Result, true);
 
         Task.WaitAll(bucket, file);
 
@@ -213,7 +214,7 @@ public class FileController(
         var file = await fileRepository.FirstOrDefaultAsync(f =>
                 f.BucketId == bucketId &&
                 f.Id == fileId &&
-                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null,
+                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null, true,
             f => f.Bucket!);
 
         if (file == null) return RedirectToAction("CustomNotFound", "Account");
@@ -223,7 +224,7 @@ public class FileController(
         var reading = await readingRepository
             .FirstOrDefaultAsync(f => f.UserId == userGuid
                                       && f.File!.BucketId == bucketId
-                                      && f.FileId == fileId, null);
+                                      && f.FileId == fileId, null, true);
 
         var res = new FileViewModel
         {
@@ -240,7 +241,7 @@ public class FileController(
             PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
                 f.BucketId == bucketId &&
                 f.NextPartId == file.Id &&
-                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null))?.Id,
+                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null, true))?.Id,
             Settings = file.Settings
         };
 
@@ -261,7 +262,7 @@ public class FileController(
                                       !f.IsHidden &&
                                       f.Id == bucketId &&
                                       f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
-                                      (f.UserId == User.GetUserGuid() || f.UserId == null), null);
+                                      (f.UserId == User.GetUserGuid() || f.UserId == null), null, true);
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
@@ -317,9 +318,9 @@ public class FileController(
         {
             var imagesCheckRes = CheckImagesInZip(request.File.OpenReadStream());
 
-            if (!imagesCheckRes.Item1)
+            if (imagesCheckRes.IsFailed)
             {
-                ModelState.AddModelError(string.Empty, imagesCheckRes.Item2!);
+                ModelState.AddModelError(string.Empty, imagesCheckRes.ToString());
                 return View(request);
             }
         }
@@ -335,7 +336,7 @@ public class FileController(
             .FirstOrDefaultAsync(f => f.IsAvailable && !f.IsHidden &&
                                       f.Id == request.BucketId &&
                                       f.AccessRoles.Intersect(userRoles).Any() &&
-                                      (f.UserId == userGuid || f.UserId == null), null);
+                                      (f.UserId == userGuid || f.UserId == null), null, true);
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
@@ -352,11 +353,15 @@ public class FileController(
             request.CurrentPartName,
             request.CurrentPartNumber);
 
-        if (!uploadFileResult.isSuccessfull) return View(string.Empty, uploadFileResult.errorMsg);
+        if (uploadFileResult.IsFailed)
+        {
+            uploadFileResult.HasError<Error>(out var errorMessage);
+            return View(string.Empty, errorMessage.FirstOrDefault()?.Message);
+        }
 
-        return uploadFileResult.currentFile is { NextPartId: not null }
+        return uploadFileResult.Value is { NextPartId: not null }
             ? RedirectToAction("GetAllPartsInFile",
-                new { bucketId = bucket.Id, fileId = uploadFileResult.currentFile.Id })
+                new { bucketId = bucket.Id, fileId = uploadFileResult.Value.Id })
             : RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
     }
 
@@ -382,23 +387,23 @@ public class FileController(
         return parts;
     }
 
-    private static (bool, string?) CheckImagesInZip(Stream fileStream)
+    private static Result CheckImagesInZip(Stream fileStream)
     {
         using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
         {
             if (archive.Entries.Count == 0)
-                return (false, "Files not found.");
+                return Result.Fail("Files not found.");
 
             foreach (var entry in archive.Entries)
             {
                 if (string.IsNullOrEmpty(entry.Name))
-                    return (false, "File name is null inside zip archive.");
+                    return Result.Fail("File name is null inside zip archive.");
 
                 if (!entry.FullName.TryGetImgType(out _))
-                    return (false, $"Can't get file type of file {entry.FullName}.");
+                    return Result.Fail($"Can't get file type of file {entry.FullName}.");
             }
         }
 
-        return (true, null);
+        return Result.Ok();
     }
 }

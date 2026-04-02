@@ -1,4 +1,5 @@
-﻿using WebReader.Models;
+﻿using FluentResults;
+using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
 
@@ -10,7 +11,7 @@ public class FileUploadService(
     FileRepository fileRepository,
     MinioService minioService)
 {
-    public async Task<(bool isSuccessfull, string? errorMsg, File? currentFile)> UploadFileAsync(
+    public async Task<Result<File>> UploadFileAsync(
         Guid? asPartOfId,
         Guid? asParentOfId,
         Bucket bucket,
@@ -29,18 +30,18 @@ public class FileUploadService(
         {
             asPartOfFile = await fileRepository.FirstOrDefaultAsync(f =>
                 f.BucketId == bucket.Id && !f.IsHidden && f.Id == asPartOfId.Value &&
-                f.AccessRoles.Intersect(userRoles).Any(), null);
+                f.AccessRoles.Intersect(userRoles).Any(), null, false);
 
-            if (asPartOfFile == null) return (false, "Part of file not available.", null);
+            if (asPartOfFile == null) return Result.Fail(new Error("Part of file not available."));
         }
 
         if (asParentOfId.HasValue)
         {
             asParentOfFile = await fileRepository.FirstOrDefaultAsync(f =>
                 f.BucketId == bucket.Id && !f.IsHidden && f.Id == asParentOfId.Value &&
-                f.AccessRoles.Intersect(userRoles).Any(), null);
+                f.AccessRoles.Intersect(userRoles).Any(), null, false);
 
-            if (asParentOfFile == null) return (false, "Parent of file not available.", null);
+            if (asParentOfFile == null) return Result.Fail(new Error("Parent of file not available."));
         }
 
         var fileStreamLength = (ulong?)fileStream.Length;
@@ -49,7 +50,7 @@ public class FileUploadService(
             await minioService.UploadObjectAsync(bucket.Name, fileStream, fileName, fileContentType);
 
         if (!uploadToS3Successful)
-            return (false, "File upload failed. Try again later. Storage is not accessible now.", null);
+            return Result.Fail(new Error("File upload failed. Try again later. Storage is not accessible now."));
 
         //TODO: part-parent check and set
 
@@ -83,13 +84,13 @@ public class FileUploadService(
         {
             await fileRepository.SaveChangesAsync();
         }
-        catch (Exception _)
+        catch (Exception ex)
         {
             await minioService.RemoveObjectsAsync(bucket.Name, [currentFile.Name]);
 
-            return (false, "File save failed. Try again later.", null);
+            return Result.Fail(new Error("File save failed. Try again later.").CausedBy(ex));
         }
 
-        return (true, null, currentFile);
+        return Result.Ok(currentFile);
     }
 }

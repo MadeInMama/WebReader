@@ -1,4 +1,7 @@
-﻿namespace WebReader.Background.AutoDownloadNewParts;
+﻿using WebReader.Repositories;
+using WebReader.Services;
+
+namespace WebReader.Background.AutoDownloadNewParts;
 
 public class AutoDownloadNewPartsBackground(
     IServiceScopeFactory serviceScopeFactory,
@@ -27,16 +30,13 @@ public class AutoDownloadNewPartsBackground(
 
         using var scope = serviceScopeFactory.CreateScope();
 
-        // var files = await scope.ServiceProvider.GetRequiredService<FileRepository>().AllAsync(f =>
-        //     f.CustomName == "Всеведущий читатель" && f.CurrentPartNumber > 77);
-        // await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
+        var files = await scope.ServiceProvider.GetRequiredService<FileRepository>()
+            .AllAsync(f => f.CurrentPartNumber > 271);
+        await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
 
         foreach (var el in scope.ServiceProvider.GetRequiredService<IEnumerable<IAutoDownloadNewParts>>())
             await el.GetAndDownload(cancellationToken);
 
         logger.LogInformation($"Finished {nameof(PerformAutoDownloadNewParts)}");
-
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
     }
 }

@@ -20,7 +20,7 @@ public class S3Controller(
         var file = await fileRepository.FirstOrDefaultAsync(f =>
             f.BucketId == bucketId &&
             f.Id == fileId &&
-            f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null, f => f.Bucket);
+            f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null, true, f => f.Bucket);
 
         if (file == null) return new NotFoundResult();
 

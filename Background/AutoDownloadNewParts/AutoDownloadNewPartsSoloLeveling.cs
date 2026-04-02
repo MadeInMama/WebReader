@@ -74,9 +74,14 @@ public class AutoDownloadNewPartsSoloLeveling(
                 var res = await ParseAndSaveFile(contextFactory, fileUploadService, botClient, link,
                     defaultBucket, lastFile, FileCustomName, SettingSizeName, cancellationToken);
 
-                if (!res.isSuccessful) break;
+                if (res.IsFailed)
+                {
+                    Logger.LogError("{msg}", res.ToString());
 
-                lastFile = res.lastFile;
+                    break;
+                }
+
+                lastFile = res.ValueOrDefault;
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -98,6 +103,13 @@ public class AutoDownloadNewPartsSoloLeveling(
         {
             Logger.LogError("HttpRequest error has been reached: {}", e.Message);
             // UninstallBrowsers();
+        }
+        finally
+        {
+            BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
+            SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
     }
 }

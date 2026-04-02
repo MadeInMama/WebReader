@@ -10,12 +10,16 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
 {
     public async Task<File?> FirstOrDefaultAsync(Expression<Func<File, bool>> predicate,
         ApplicationDbContext? ctx,
+        bool asNoTracking,
         params Expression<Func<File, object>>[] includes)
     {
         IQueryable<File> query = (ctx ?? context).Set<File>();
 
         foreach (var include in includes)
             query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
 
         return await query.FirstOrDefaultAsync(predicate);
     }

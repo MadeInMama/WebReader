@@ -11,12 +11,16 @@ public class UserReadingRepository(
 {
     public async Task<UserReading?> FirstOrDefaultAsync(Expression<Func<UserReading, bool>> predicate,
         ApplicationDbContext? ctx,
+        bool asNoTracking,
         params Expression<Func<UserReading, object>>[] includes)
     {
         IQueryable<UserReading> query = (ctx ?? context).Set<UserReading>();
 
         foreach (var include in includes)
             query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
 
         return await query.FirstOrDefaultAsync(predicate);
     }
