@@ -1,6 +1,9 @@
 ﻿main {
     justify-content: space-between;
     min-height: calc(100vh - 6em);
+    width: calc(var(--max-width));
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @media (hover: none) and (pointer: coarse) {
