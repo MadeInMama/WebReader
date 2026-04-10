@@ -82,4 +82,9 @@ public static class StaticFunctions
                Math.Abs(c1.G - c2.G) <= tolerance &&
                Math.Abs(c1.B - c2.B) <= tolerance;
     }
+
+    public static bool IsNullOrEmptyOrWhitespace(this string? value)
+    {
+        return string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value);
+    }
 }

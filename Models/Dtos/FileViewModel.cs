@@ -16,4 +16,5 @@ public class FileViewModel
     public Guid? NextPartId { get; init; }
     public Guid? PrevPartId { get; init; }
     public JsonDocument Settings { get; set; } = JsonDocument.Parse("{}");
+    public required FileType Type { get; set; }
 }

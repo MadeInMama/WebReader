@@ -11,6 +11,8 @@ namespace WebReader.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("UPDATE \"Files\" SET \"Settings\" = '[]'");
+
             migrationBuilder.AlterColumn<IDictionary<string, string>>(
                 name: "Settings",
                 table: "Files",

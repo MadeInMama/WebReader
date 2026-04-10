@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/css/file-pdf-preview.css" asp-append-version="true"/>
 }
 
-@if (IsNullOrEmptyOrWhitespace(Model.CurrentPartName))
+@if (Model.CurrentPartName.IsNullOrEmptyOrWhitespace())
 {
     @section SpecialInfo {
         <h3 class="special-info-big">@Model.Title</h3>
@@ -100,7 +100,9 @@ else
         </div>
         <div class="controls-end">
             <select class="set-scale">
-                <option value="0">fixed</option>
+                <option value="-1">fixed</option>
+                <option value="0">fit height</option>
+                <option value="10">10%</option>
                 <option value="25">25%</option>
                 <option value="50">50%</option>
                 <option value="75">75%</option>
@@ -124,8 +126,8 @@ else
         const decodedString = url.replace(/\\u0026/g, '&')
         let pdfDoc = null;
         let currentPage = @Model.Page;
-        let maxPage = 1;
         let currentScale = @(Model.Scale ?? 0);
+        let maxPage = 1;
 
         setSettings(
             document.querySelector(".settings-container"),
@@ -161,8 +163,8 @@ else
                 });
             }
         })
-            .then(response => {
-                loadPdf(response);
+            .then(async response => {
+                await loadPdf(response);
                 customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
                 customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
                 customSendCurrPageEvent.detail.millis = 3000;
@@ -179,7 +181,7 @@ else
             maxPage = pdfDoc.numPages;
 
             Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                for (let i = 0; i < pages.length; i++) {
+                for (let i = 0; i < maxPage; i++) {
                     const option = document.createElement("option");
 
                     option.text = `${i + 1}/${maxPage}`;
@@ -195,7 +197,7 @@ else
 
         async function renderPage() {
             const page = await pdfDoc.getPage(currentPage);
-            const viewport = page.getViewport({scale: currentScale === 0 ? 3 : currentScale / 33});
+            const viewport = page.getViewport({scale: currentScale <= 0 ? 3 : currentScale / 33});
             const canvas = document.getElementById('pdf-canvas');
             const context = canvas.getContext('2d');
 
@@ -294,11 +296,20 @@ else
                 value.value = currentScale
             });
 
-            if (currentScale === 0) {
+            if (currentScale === -1) {
                 document.querySelector("main").classList.add("max-width-set");
+                document.querySelector("main").classList.remove("main-canvas-fit-height");
+                document.getElementById("pdf-canvas").classList.remove("pdf-canvas-fit-height");
                 document.getElementById("pdf-canvas").style.maxWidth = "100%";
+            } else if (currentScale === 0) {
+                document.querySelector("main").classList.add("max-width-set");
+                document.querySelector("main").classList.add("main-canvas-fit-height");
+                document.getElementById("pdf-canvas").style.maxWidth = "100%";
+                document.getElementById("pdf-canvas").classList.add("pdf-canvas-fit-height");
             } else {
                 document.querySelector("main").classList.remove("max-width-set");
+                document.querySelector("main").classList.remove("main-canvas-fit-height");
+                document.getElementById("pdf-canvas").classList.remove("pdf-canvas-fit-height");
                 document.getElementById("pdf-canvas").style.maxWidth = currentScale + "%";
             }
 

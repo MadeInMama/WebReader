@@ -262,7 +262,7 @@ public abstract class AbstractAutoDownloadNewParts<T>(ILogger<T> logger, IHttpCl
             foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
             {
                 var src = img.GetAttribute("data-original");
-                if (GlobalFunctions.IsNullOrEmptyOrWhitespace(src))
+                if (src.IsNullOrEmptyOrWhitespace())
                     src = img.GetAttribute("src")!;
 
                 var imageBytes = await httpClient.GetByteArrayAsync(src, cancellationToken);

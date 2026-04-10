@@ -1,11 +1,11 @@
 main {
     justify-content: center;
-    min-height: 100vh;
+    min-height: calc(100vh - 3em);
 }
 
 @media (hover: none) and (pointer: coarse) {
     main {
-        min-height: 100dvh;
+        min-height: calc(100dvh - 3em);
     }
 }
 

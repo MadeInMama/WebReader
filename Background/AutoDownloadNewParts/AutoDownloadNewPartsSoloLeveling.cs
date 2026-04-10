@@ -52,7 +52,7 @@ public class AutoDownloadNewPartsSoloLeveling(
                 .QuerySelectorAll(".chapters > table .item-title > a")
                 .Where(f => f.GetAttribute("href") != null)
                 .ToDictionary(f => f.GetAttribute("href")!, f => f)
-                .Where(f => !GlobalFunctions.IsNullOrEmptyOrWhitespace(f.Key))
+                .Where(f => !f.Key.IsNullOrEmptyOrWhitespace())
                 .Where(f => int.TryParse(f.Key.Split("/").Last(), out _))
                 .OrderBy(f => int.Parse(f.Key.Split("/").Last()))
                 .ToImmutableList();

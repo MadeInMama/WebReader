@@ -1,8 +1,12 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Minio;
 using Telegram.Bot;
 using WebReader.Background.AutoDownloadNewParts;
@@ -47,18 +51,26 @@ builder.Services.AddScoped<BucketRepository>();
 builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
+builder.Services.AddScoped<FileControllerService>();
+builder.Services.AddScoped<AuthRestService>();
 
 builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
 builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsSoloLeveling>();
 builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsWorldAfterDestruction>();
 
 // builder.Services.AddHostedService<UpdateFilesFromS3>();
-builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
+// builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
 
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["Telegram:BotToken"]!));
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+var jwtConfig = new JwtConfig();
+builder.Configuration.GetRequiredSection(nameof(JwtConfig)).Bind(jwtConfig);
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.LoginPath = "/Account/SignIn";
         options.LogoutPath = "/Account/Logout";
@@ -69,7 +81,39 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         options.SlidingExpiration = true;
         options.ReturnUrlParameter = "returnUrl";
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtConfig.Issuer,
+            ValidAudience = jwtConfig.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtConfig.Key))
+        };
+    }).AddPolicyScheme("CookiesOrJwt", "Cookies or JWT", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(authHeader) &&
+                authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                return JwtBearerDefaults.AuthenticationScheme;
+
+            return CookieAuthenticationDefaults.AuthenticationScheme;
+        };
     });
+
+builder.Services.AddAuthorizationBuilder()
+    .SetDefaultPolicy(new AuthorizationPolicyBuilder("CookiesOrJwt")
+        .RequireAuthenticatedUser()
+        .Build());
 
 builder.Services.AddControllersWithViews();
 
@@ -95,6 +139,9 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.Configure<KestrelServerOptions>(options => { options.Limits.MaxRequestBodySize = long.MaxValue; });
 
 builder.Services.Configure<IISServerOptions>(options => { options.MaxRequestBodySize = long.MaxValue; });
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = null; });
 
 var app = builder.Build();
 

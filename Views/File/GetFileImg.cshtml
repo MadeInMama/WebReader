@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/css/file-img-preview.css" asp-append-version="true"/>
 }
 
-@if (IsNullOrEmptyOrWhitespace(Model.CurrentPartName))
+@if (Model.CurrentPartName.IsNullOrEmptyOrWhitespace())
 {
     @section SpecialInfo {
         <h3 class="special-info-big">@Model.Title</h3>
@@ -178,7 +178,7 @@ else
                 maxPage = pages.length;
 
                 Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-                    for (let i = 0; i < pages.length; i++) {
+                    for (let i = 0; i < maxPage; i++) {
                         const option = document.createElement("option");
 
                         option.text = `${i + 1}/${maxPage}`;

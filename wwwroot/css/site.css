@@ -165,7 +165,7 @@ header, footer {
     max-width: var(--max-width);
 }
 
-header > div, footer > div {
+header > nav, footer > div {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -173,27 +173,27 @@ header > div, footer > div {
     max-width: var(--max-width);
 }
 
-header > div > ul {
+header > nav > ul {
     display: flex;
     gap: 0.5em;
     flex-wrap: wrap;
     justify-content: flex-end;
 }
 
-header > div > ul > li {
+header > nav > ul > li {
     white-space: nowrap;
 }
 
-header > div > ul > li > a,
-header > div > ul > li > form > button {
+header > nav > ul > li > a,
+header > nav > ul > li > form > button {
     position: relative;
     display: inline-block;
     color: var(--foreground-color);;
     text-decoration: none;
 }
 
-header > div > ul > li > a::after,
-header > div > ul > li > form > button::after {
+header > nav > ul > li > a::after,
+header > nav > ul > li > form > button::after {
     position: absolute;
     content: "";
     width: 0;
@@ -205,8 +205,8 @@ header > div > ul > li > form > button::after {
     transition: 150ms;
 }
 
-header > div > ul > li > a:hover::after,
-header > div > ul > li > form > button:hover::after {
+header > nav > ul > li > a:hover::after,
+header > nav > ul > li > form > button:hover::after {
     width: 100%;
     left: 0;
 }
@@ -424,8 +424,8 @@ a.btn {
 }
 
 @media (hover: none) and (pointer: coarse) {
-    header > div > ul > li > a::after,
-    header > div > ul > li > form > button::after {
+    header > nav > ul > li > a::after,
+    header > nav > ul > li > form > button::after {
         display: none;
     }
 
@@ -476,7 +476,7 @@ a.btn {
         grid-column: 3;
     }
 
-    header > div {
+    header > nav {
         grid-row: 2;
         grid-column: 1 / 4;
         justify-content: center;
@@ -484,18 +484,18 @@ a.btn {
         transition: opacity var(--animation-time) ease-in-out;
     }
 
-    header.opened > div {
+    header.opened > nav {
         transition-delay: var(--animation-time);
         opacity: 1;
     }
 
-    header > div > ul {
+    header > nav > ul {
         display: flex;
         gap: 1em;
         flex-direction: column;
     }
 
-    header > div > ul > li {
+    header > nav > ul > li {
 
         text-align: center;
     }

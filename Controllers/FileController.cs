@@ -3,12 +3,9 @@ using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Dtos;
-using WebReader.Models.Entities;
 using WebReader.Repositories;
 using WebReader.Services;
 using File = WebReader.Models.Entities.File;
@@ -20,236 +17,53 @@ namespace WebReader.Controllers;
 public class FileController(
     BucketRepository bucketRepository,
     FileRepository fileRepository,
-    UserReadingRepository readingRepository,
-    IDbContextFactory<ApplicationDbContext> contextFactory,
-    FileUploadService fileUploadService) : Controller
+    FileUploadService fileUploadService,
+    FileControllerService fileControllerService) : Controller
 {
     public async Task<IActionResult> GetAllBuckets()
     {
-        var res = (await bucketRepository.GetAllAvailableBucketsAsync(User.GetUserRoles(), User.GetUserGuid()))
-            .Select(bucket =>
-                new AllBucketsItem
-                {
-                    Id = bucket.Id,
-                    CustomName = bucket.CustomName ?? bucket.Name,
-                    DateTime = bucket.CreatedDate,
-                    Size = bucket.Size ?? 0
-                });
-
-        return View(new AllBucketsViewModel { Items = res });
+        return View((await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles())).Value);
     }
 
     public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName")
     {
-        var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
+        var res = await fileControllerService.GetAllFilesInBucket(User.GetUserGuid(), User.GetUserRoles(), bucketId,
+            orderBy);
 
-        var userGuid = User.GetUserGuid();
+        if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
-        var bucket = await bucketRepository
-            .FirstOrDefaultAsync(f => f.IsAvailable &&
-                                      !f.IsHidden &&
-                                      f.Id == bucketId &&
-                                      f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
-                                      (f.UserId == userGuid || f.UserId == null), null, true);
-
-        if (bucket == null) return RedirectToAction("AccessDenied", "Account");
-
-        var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
-
-        var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Name, User.GetUserRoles()))
-            .Select(file =>
-            {
-                var reading = allUserReadings.FirstOrDefault(reading => reading.FileId == file.Id);
-
-                return new AllFilesInBucketItem
-                {
-                    Id = file.Id,
-                    FileName = file.CustomName ?? file.Name,
-                    DateTime = file.UpdatedDate,
-                    Size = file.Size ?? 0,
-                    Type = TypeHelper.FileTypeNameDict[file.Type],
-                    IsReading = reading != null,
-                    IsParted = file.NextPartId.HasValue,
-                    IsDone = reading?.IsDone ?? false
-                };
-            }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
-
-        return View(new AllFilesInBucketViewModel
-        {
-            Id = bucket.Id,
-            BucketName = bucket.CustomName ?? bucket.Name,
-            IsBelongsToUser = bucket.UserId == userGuid,
-            Items = res
-        });
+        return View(res.Value);
     }
 
     public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName")
     {
-        var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
+        var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,
+            fileId, orderBy);
 
-        var userGuid = User.GetUserGuid();
+        if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
-        using var contextBucket = contextFactory.CreateDbContextAsync();
-        using var contextFile = contextFactory.CreateDbContextAsync();
-
-        Task.WaitAll(contextBucket, contextFile);
-
-        var bucket = bucketRepository.FirstOrDefaultAsync(f => f.IsAvailable &&
-                                                               !f.IsHidden &&
-                                                               f.Id == bucketId &&
-                                                               f.AccessRoles.Intersect(User.GetUserRoles())
-                                                                   .Any() &&
-                                                               (f.UserId == userGuid || f.UserId == null),
-            contextBucket.Result, true);
-
-        var file = fileRepository.FirstOrDefaultAsync(f => f.IsAvailable &&
-                                                           !f.IsHidden &&
-                                                           f.Id == fileId &&
-                                                           f.AccessRoles.Intersect(User.GetUserRoles()).Any(),
-            contextFile.Result, true);
-
-        Task.WaitAll(bucket, file);
-
-        if (bucket.Result == null || file.Result == null)
-            return RedirectToAction("AccessDenied", "Account");
-
-        var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
-
-        var headedFile = await fileRepository.GetHeadedPartedObjectAsync(fileId);
-
-        var files = await fileRepository.GetAllAvailableObjectsWithPartsAsync(headedFile.Id);
-
-        var res = files.Select(f =>
-        {
-            var reading = allUserReadings.FirstOrDefault(reading => reading.FileId == f.Id);
-
-            return new AllFilesInBucketItem
-            {
-                Id = f.Id,
-                FileName = f.CustomName ?? f.Name,
-                DateTime = f.UpdatedDate,
-                Size = f.Size ?? 0,
-                Type = TypeHelper.FileTypeNameDict[f.Type],
-                IsReading = reading != null,
-                IsParted = f.NextPartId.HasValue,
-                IsDone = reading?.IsDone ?? false,
-                CurrentPartName = f.CurrentPartName
-            };
-        }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
-
-        return View(new AllFilesInBucketViewModel
-        {
-            Id = bucket.Result.Id,
-            BucketName = bucket.Result.CustomName ?? bucket.Result.Name,
-            IsBelongsToUser = bucket.Result.UserId == userGuid,
-            Items = res
-        });
+        return View(res.Value);
     }
 
     public async Task<IActionResult> GetReading()
     {
-        var userGuid = User.GetUserGuid();
+        var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles());
 
-        var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
-
-        var allUserReadingsGroupedByFile = allUserReadings
-            .GroupBy(reading => reading.FileId)
-            .ToDictionary(reading => reading.Key, reading => reading.ToList());
-
-        var idsToDelete = new List<Guid>();
-        var readingsToUpdate = new List<UserReading>();
-
-        foreach (var readingGroup in allUserReadingsGroupedByFile.Where(f => f.Value.Count > 1))
-        {
-            var readingsOrdered = readingGroup.Value.OrderBy(f => f.CreatedDate).ToList();
-            var picked = readingsOrdered.First();
-
-            picked.Page = readingGroup.Value.Max(reading => reading.Page);
-            picked.Scale = readingGroup.Value.OrderByDescending(f => f.UpdatedDate).First().Scale;
-
-            readingsToUpdate.Add(picked);
-            idsToDelete.AddRange(readingsOrdered.Skip(1).Select(reading => reading.Id));
-        }
-
-        var delete = idsToDelete.Count != 0
-            ? readingRepository.DeleteAllAsync(idsToDelete)
-            : Task.CompletedTask;
-
-        var update = readingsToUpdate.Count != 0
-            ? readingRepository.SetCurrPageAndScaleAndIsDoneAsync(readingsToUpdate)
-            : Task.CompletedTask;
-
-        await Task.WhenAll(delete, update);
-
-        var readings = (await readingRepository.AllAsync(f => f.UserId == userGuid &&
-                                                              !f.File!.IsHidden &&
-                                                              !f.IsDone &&
-                                                              f.File.AccessRoles.Intersect(User.GetUserRoles()).Any(),
-            f => f.File!,
-            f => f.File!.Bucket!)).ToList();
-
-        var res = readings.GroupBy(reading => new AllFilesReadingItemKey
-            {
-                BucketId = reading.File!.BucketId,
-                CustomName = reading.File?.Bucket?.CustomName ?? reading.File?.Bucket?.Name!
-            })
-            .ToDictionary(reading => reading.Key, reading => reading
-                .OrderByDescending(f => f.UpdatedDate)
-                .Select(r => new AllFilesReadingItem
-                {
-                    ReadingId = r.Id,
-                    FileId = r.FileId,
-                    CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
-                    CurrentPartName = r.File?.CurrentPartName,
-                    DateTime = r.UpdatedDate,
-                    Size = r.File?.Size ?? 0,
-                    Page = r.Page
-                }));
-
-        return View(new AllFilesReadingViewModel { Items = res });
+        return View(res.Value);
     }
 
     public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId)
     {
-        var file = await fileRepository.FirstOrDefaultAsync(f =>
-                f.BucketId == bucketId &&
-                f.Id == fileId &&
-                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null, true,
-            f => f.Bucket!);
+        var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId);
 
-        if (file == null) return RedirectToAction("CustomNotFound", "Account");
+        if (res.IsFailed) return RedirectToAction("CustomNotFound", "Account");
 
-        var userGuid = User.GetUserGuid();
+        return res.Value.Type switch
 
-        var reading = await readingRepository
-            .FirstOrDefaultAsync(f => f.UserId == userGuid
-                                      && f.File!.BucketId == bucketId
-                                      && f.FileId == fileId, null, true);
-
-        var res = new FileViewModel
         {
-            UserId = userGuid,
-            FileId = file.Id,
-            Page = reading?.Page ?? 1,
-            Scale = reading?.Scale,
-            Title = file.CustomName ?? file.Name,
-            BucketId = file.BucketId,
-            BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",
-            FileName = file.CustomName ?? file.Name,
-            CurrentPartName = file.CurrentPartName,
-            NextPartId = file.NextPartId,
-            PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
-                f.BucketId == bucketId &&
-                f.NextPartId == file.Id &&
-                f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null, true))?.Id,
-            Settings = file.Settings
-        };
-
-        return file.Type switch
-        {
-            FileType.Pdf => View("GetFilePdf", res),
-            FileType.Fb2 => View("GetFileFb2", res),
-            FileType.ZipWithImg => View("GetFileImg", res),
+            FileType.Pdf => View("GetFilePdf", res.Value),
+            FileType.Fb2 => View("GetFileFb2", res.Value),
+            FileType.ZipWithImg => View("GetFileImg", res.Value),
             _ => RedirectToAction("CustomNotFound", "Account")
         };
     }

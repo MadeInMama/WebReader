@@ -15,7 +15,7 @@
 <header>
     @await RenderSectionAsync("SpecialInfo", false)
     <button class="header-toggle"></button>
-    <div>
+    <nav>
         <ul>
             <li style="display: none;">
                 <a asp-controller="Home" asp-action="Index">Home</a>
@@ -61,7 +61,7 @@
                 </li>
             }
         </ul>
-    </div>
+    </nav>
 </header>
 <main>
     @RenderBody()

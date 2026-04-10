@@ -1,3 +1,15 @@
 #pdf-canvas {
     width: 100%;
 }
+
+.pdf-canvas-fit-height {
+    height: calc(100dvh - 6em);
+    width: auto;
+    object-fit: contain;
+}
+
+@media (width < 800px) {
+    .main-canvas-fit-height {
+        margin-bottom: 0;
+    }
+}
