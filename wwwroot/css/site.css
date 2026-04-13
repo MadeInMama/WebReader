@@ -129,6 +129,7 @@ body {
     flex-grow: 1;
     grid-column: 1;
     grid-row: 1;
+    align-self: center;
 }
 
 .header-toggle {
@@ -188,7 +189,7 @@ header > nav > ul > li > a,
 header > nav > ul > li > form > button {
     position: relative;
     display: inline-block;
-    color: var(--foreground-color);;
+    color: var(--foreground-color);
     text-decoration: none;
 }
 
@@ -201,7 +202,7 @@ header > nav > ul > li > form > button::after {
     left: 50%;
     height: 0.025em;
     display: block;
-    background: var(--foreground-color);;
+    background: var(--foreground-color);
     transition: 150ms;
 }
 

@@ -66,7 +66,6 @@ public static class ImageTrimmer
         return 0;
     }
 
-
     private static int FindRightCol(Image<Rgb24> image, Rgb24 fillColor, int tolerance)
     {
         for (var x = image.Width - 1; x >= 0; x--)
