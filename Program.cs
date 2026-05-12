@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Minio;
 using Telegram.Bot;
+using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Configuration;
 using WebReader.Data;
@@ -58,8 +59,8 @@ builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsOmnisci
 builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsSoloLeveling>();
 builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsWorldAfterDestruction>();
 
-// builder.Services.AddHostedService<UpdateFilesFromS3>();
-// builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
+builder.Services.AddHostedService<UpdateFilesFromS3>();
+builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
 
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["Telegram:BotToken"]!));
 
