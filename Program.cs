@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Tokens;
 using Minio;
 using Telegram.Bot;
@@ -13,6 +14,7 @@ using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Configuration;
 using WebReader.Data;
+using WebReader.Helpers;
 using WebReader.Repositories;
 using WebReader.Services;
 using MinioConfig = WebReader.Configuration.MinioConfig;
@@ -35,6 +37,14 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     ServiceLifetime.Scoped
 );
 
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(30)
+    };
+});
+
 var minioConfig = new MinioConfig();
 builder.Configuration.GetRequiredSection(nameof(MinioConfig)).Bind(minioConfig);
 builder.Services.AddSingleton<IMinioClient>(_ => new MinioClient()
@@ -54,6 +64,8 @@ builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 builder.Services.AddScoped<FileControllerService>();
 builder.Services.AddScoped<AuthRestService>();
+
+builder.Services.AddScoped<LogRequestAttribute>();
 
 builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
 builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsSoloLeveling>();

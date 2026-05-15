@@ -20,11 +20,13 @@ public class FileController(
     FileUploadService fileUploadService,
     FileControllerService fileControllerService) : Controller
 {
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllBuckets()
     {
         return View((await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles())).Value);
     }
 
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName")
     {
         var res = await fileControllerService.GetAllFilesInBucket(User.GetUserGuid(), User.GetUserRoles(), bucketId,
@@ -35,6 +37,7 @@ public class FileController(
         return View(res.Value);
     }
 
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName")
     {
         var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,
@@ -45,6 +48,7 @@ public class FileController(
         return View(res.Value);
     }
 
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetReading()
     {
         var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles());
@@ -52,6 +56,7 @@ public class FileController(
         return View(res.Value);
     }
 
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId)
     {
         var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId);
@@ -69,6 +74,7 @@ public class FileController(
     }
 
     [HttpGet]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> UploadFile(Guid bucketId)
     {
         var bucket = await bucketRepository
@@ -88,6 +94,7 @@ public class FileController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> UploadFile(
         [FromForm] UploadFileRequest request)
     {
@@ -130,7 +137,7 @@ public class FileController(
 
         if (fileType == FileType.ZipWithImg)
         {
-            var imagesCheckRes = CheckImagesInZip(request.File.OpenReadStream());
+            var imagesCheckRes = CheckImagesInZip(request.File.OpenReadStream(), maxFileSize);
 
             if (imagesCheckRes.IsFailed)
             {
@@ -201,17 +208,23 @@ public class FileController(
         return parts;
     }
 
-    private static Result CheckImagesInZip(Stream fileStream)
+    private static Result CheckImagesInZip(Stream fileStream, int maxTotalSize)
     {
         using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
         {
             if (archive.Entries.Count == 0)
                 return Result.Fail("Files not found.");
 
+            long totalUncompressedSize = 0;
+
             foreach (var entry in archive.Entries)
             {
                 if (string.IsNullOrEmpty(entry.Name))
                     return Result.Fail("File name is null inside zip archive.");
+
+                totalUncompressedSize += entry.Length;
+                if (totalUncompressedSize > maxTotalSize)
+                    return Result.Fail("Zip archive contains too much data (potential Zip Bomb).");
 
                 if (!entry.FullName.TryGetImgType(out _))
                     return Result.Fail($"Can't get file type of file {entry.FullName}.");

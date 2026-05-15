@@ -87,4 +87,9 @@ public static class StaticFunctions
     {
         return string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value);
     }
+
+    public static string LimitTo(this string src, int limit = 2000)
+    {
+        return string.IsNullOrEmpty(src) || src.Length <= limit ? src : src[..(limit - 3)] + "...";
+    }
 }
