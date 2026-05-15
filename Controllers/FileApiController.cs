@@ -18,19 +18,20 @@ public class FileApiController(
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> UpdateReading([FromBody] UpdateReadingRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         var reading = await readingRepository.FirstOrDefaultAsync(f =>
-            f.UserId == request.UserId && f.FileId == request.FileId, null, true);
+            f.UserId == User.GetUserGuid() && f.FileId == request.FileId, null, true);
 
         if (reading == null)
         {
             await readingRepository.AddAsync(new UserReading
             {
-                FileId = request.FileId, UserId = request.UserId, Page = request.Page, Scale = request.Scale,
+                FileId = request.FileId, UserId = User.GetUserGuid(), Page = request.Page, Scale = request.Scale,
                 IsDone = request.IsLastPage
             });
             await readingRepository.SaveChangesAsync();
@@ -46,6 +47,7 @@ public class FileApiController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> DeleteReading([FromBody] DeleteRequest request)
     {
         if (!ModelState.IsValid)
@@ -58,6 +60,7 @@ public class FileApiController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> DeleteFile([FromBody] DeleteRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);

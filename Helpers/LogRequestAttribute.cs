@@ -50,7 +50,9 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
 
     private static async Task<string> ReadStreamAsync(Stream stream)
     {
+        stream.Position = 0;
         using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-        return await reader.ReadToEndAsync();
+        var res = await reader.ReadToEndAsync();
+        return res;
     }
 }
