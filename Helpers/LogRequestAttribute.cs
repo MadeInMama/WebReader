@@ -14,10 +14,10 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         var requestBody = await ReadStreamAsync(context.HttpContext.Request.Body);
         context.HttpContext.Request.Body.Position = 0;
 
-        logger.LogInformation("IP: {ip}\nUserId: {userId}\nRequest: {method} {path}\nData: {data}",
+        logger.LogInformation("IP: {ip}\nUserId: {userId}\nRequest: {method} {path} {query}\nData: {data}",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
             context.HttpContext.User.GetUserGuid(), context.HttpContext.Request.Method,
-            context.HttpContext.Request.Path, requestBody);
+            context.HttpContext.Request.Path, string.Join(", ", context.HttpContext.Request.Query), requestBody);
 
         await base.OnActionExecutionAsync(context, next);
     }
@@ -38,10 +38,12 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         };
 
         logger.LogInformation(
-            "IP: {iP}\nUserId: {userId}\nRequest: {method} {path}\nResponse Status: {status}\nData: {data}\n",
+            "IP: {iP}\nUserId: {userId}\nRequest: {method} {path} {query}\nResponse Status: {status}\nData: {data}\n",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
-            context.HttpContext.User.GetUserGuid(), context.HttpContext.Response.StatusCode,
-            context.HttpContext.Request.Method, context.HttpContext.Request.Path, responseBody?.LimitTo());
+            context.HttpContext.User.GetUserGuid(), context.HttpContext.Request.Method,
+            context.HttpContext.Request.Path, string.Join(", ", context.HttpContext.Request.Query),
+            context.HttpContext.Response.StatusCode,
+            responseBody?.LimitTo());
 
         await base.OnResultExecutionAsync(context, next);
     }
