@@ -16,8 +16,11 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
 
         logger.LogInformation("IP: {ip}\nUserId: {userId}\nRequest: {method} {path} {query}\nData: {data}",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
-            context.HttpContext.User.GetUserGuid(), context.HttpContext.Request.Method,
-            context.HttpContext.Request.Path, string.Join(", ", context.HttpContext.Request.Query), requestBody);
+            context.HttpContext.User.Identity is { IsAuthenticated: true }
+                ? context.HttpContext.User.GetUserGuid()
+                : null,
+            context.HttpContext.Request.Method, context.HttpContext.Request.Path,
+            string.Join(", ", context.HttpContext.Request.Query), requestBody);
 
         await base.OnActionExecutionAsync(context, next);
     }
@@ -40,9 +43,11 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         logger.LogInformation(
             "IP: {iP}\nUserId: {userId}\nRequest: {method} {path} {query}\nResponse Status: {status}\nData: {data}\n",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
-            context.HttpContext.User.GetUserGuid(), context.HttpContext.Request.Method,
-            context.HttpContext.Request.Path, string.Join(", ", context.HttpContext.Request.Query),
-            context.HttpContext.Response.StatusCode,
+            context.HttpContext.User.Identity is { IsAuthenticated: true }
+                ? context.HttpContext.User.GetUserGuid()
+                : null,
+            context.HttpContext.Request.Method, context.HttpContext.Request.Path,
+            string.Join(", ", context.HttpContext.Request.Query), context.HttpContext.Response.StatusCode,
             responseBody?.LimitTo());
 
         await base.OnResultExecutionAsync(context, next);
