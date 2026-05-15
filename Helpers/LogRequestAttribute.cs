@@ -14,7 +14,7 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         var requestBody = await ReadStreamAsync(context.HttpContext.Request.Body);
         context.HttpContext.Request.Body.Position = 0;
 
-        logger.LogInformation("IP: {ip}\n      UserId: {userId}\n      Request: {method} {path}\n      Data: {data}",
+        logger.LogInformation("IP: {ip}\nUserId: {userId}\nRequest: {method} {path}\nData: {data}",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
             context.HttpContext.User.GetUserGuid(), context.HttpContext.Request.Method,
             context.HttpContext.Request.Path, requestBody);
@@ -38,7 +38,7 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         };
 
         logger.LogInformation(
-            "IP: {iP}\n      UserId: {userId}\n      Request: {method} {path}\n      Response Status: {status}\n      Data: {data}\n",
+            "IP: {iP}\nUserId: {userId}\nRequest: {method} {path}\nResponse Status: {status}\nData: {data}\n",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
             context.HttpContext.User.GetUserGuid(), context.HttpContext.Response.StatusCode,
             context.HttpContext.Request.Method, context.HttpContext.Request.Path, responseBody?.LimitTo());
