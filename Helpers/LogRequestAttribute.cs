@@ -10,14 +10,13 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
 {
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-
         context.HttpContext.Request.EnableBuffering();
         var requestBody = await ReadStreamAsync(context.HttpContext.Request.Body);
         context.HttpContext.Request.Body.Position = 0;
 
         logger.LogInformation("IP: {ip}\n      UserId: {userId}\n      Request: {method} {path}\n      Data: {data}",
-            ipAddress, context.HttpContext.User.GetUserGuid(), context.HttpContext.Request.Method,
+            context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
+            context.HttpContext.User.GetUserGuid(), context.HttpContext.Request.Method,
             context.HttpContext.Request.Path, requestBody);
 
         await base.OnActionExecutionAsync(context, next);
@@ -25,8 +24,6 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
 
     public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
     {
-        var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-
         var options = new JsonSerializerOptions
         {
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -42,7 +39,8 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
 
         logger.LogInformation(
             "IP: {iP}\n      UserId: {userId}\n      Request: {method} {path}\n      Response Status: {status}\n      Data: {data}\n",
-            ipAddress, context.HttpContext.User.GetUserGuid(), context.HttpContext.Response.StatusCode,
+            context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
+            context.HttpContext.User.GetUserGuid(), context.HttpContext.Response.StatusCode,
             context.HttpContext.Request.Method, context.HttpContext.Request.Path, responseBody?.LimitTo());
 
         await base.OnResultExecutionAsync(context, next);
