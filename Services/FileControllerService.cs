@@ -97,7 +97,8 @@ public class FileControllerService(
                         Items = res
                     };
                 },
-                logger
+                logger,
+                tags: [$"files_{userGuid}"]
             );
         }
         catch (CustomApiException e)
@@ -173,7 +174,8 @@ public class FileControllerService(
                         Items = res
                     };
                 },
-                logger
+                logger,
+                tags: [$"files_{userGuid}"]
             );
         }
         catch (CustomApiException e)
@@ -248,7 +250,8 @@ public class FileControllerService(
 
                     return new AllFilesReadingViewModel { Items = res };
                 },
-                logger
+                logger,
+                tags: [$"files_{userGuid}"]
             );
         }
         catch (CustomApiException e)
@@ -262,45 +265,36 @@ public class FileControllerService(
     {
         try
         {
-            return await cache.GetOrCreateWithLoggingAsync(
-                $"file_{userGuid}_{string.Join(",", roles)}_{bucketId}_{fileId}",
-                async _ =>
-                {
-                    var file = await fileRepository.FirstOrDefaultAsync(f =>
-                            f.BucketId == bucketId &&
-                            f.Id == fileId &&
-                            f.AccessRoles.Intersect(roles).Any(), null, true,
-                        f => f.Bucket!);
+            var file = await fileRepository.FirstOrDefaultAsync(f =>
+                    f.BucketId == bucketId &&
+                    f.Id == fileId &&
+                    f.AccessRoles.Intersect(roles).Any(), null, true,
+                f => f.Bucket!) ?? throw new CustomApiException("File not found");
 
-                    if (file == null) throw new CustomApiException("File not found");
+            var reading = await readingRepository
+                .FirstOrDefaultAsync(f => f.UserId == userGuid
+                                          && f.File!.BucketId == bucketId
+                                          && f.FileId == fileId, null, true);
 
-                    var reading = await readingRepository
-                        .FirstOrDefaultAsync(f => f.UserId == userGuid
-                                                  && f.File!.BucketId == bucketId
-                                                  && f.FileId == fileId, null, true);
-
-                    return new FileViewModel
-                    {
-                        UserId = userGuid,
-                        FileId = file.Id,
-                        Page = reading?.Page ?? 1,
-                        Scale = reading?.Scale,
-                        Title = file.CustomName ?? file.Name,
-                        BucketId = file.BucketId,
-                        BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",
-                        FileName = file.CustomName ?? file.Name,
-                        CurrentPartName = file.CurrentPartName,
-                        NextPartId = file.NextPartId,
-                        PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
-                            f.BucketId == bucketId &&
-                            f.NextPartId == file.Id &&
-                            f.AccessRoles.Intersect(roles).Any(), null, true))?.Id,
-                        Settings = file.Settings,
-                        Type = file.Type
-                    };
-                },
-                logger
-            );
+            return new FileViewModel
+            {
+                UserId = userGuid,
+                FileId = file.Id,
+                Page = reading?.Page ?? 1,
+                Scale = reading?.Scale,
+                Title = file.CustomName ?? file.Name,
+                BucketId = file.BucketId,
+                BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",
+                FileName = file.CustomName ?? file.Name,
+                CurrentPartName = file.CurrentPartName,
+                NextPartId = file.NextPartId,
+                PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
+                    f.BucketId == bucketId &&
+                    f.NextPartId == file.Id &&
+                    f.AccessRoles.Intersect(roles).Any(), null, true))?.Id,
+                Settings = file.Settings,
+                Type = file.Type
+            };
         }
         catch (CustomApiException e)
         {

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Dtos;
@@ -14,7 +15,8 @@ namespace WebReader.Controllers;
 [Route("api/[controller]/[action]")]
 public class FileApiController(
     UserReadingRepository readingRepository,
-    FileService fileService) : Controller
+    FileService fileService,
+    HybridCache cache) : Controller
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -63,11 +65,14 @@ public class FileApiController(
     [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> DeleteFile([FromBody] DeleteRequest request)
     {
+        //TODO: error if file not deleted or not exists
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         if (!User.GetUserRoles().Contains(RoleType.Admin)) BadRequest(ModelState);
 
         await fileService.DeleteFileAsync([request.Id]);
+
+        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}");
 
         return NoContent();
     }
