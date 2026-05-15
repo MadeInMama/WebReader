@@ -13,6 +13,7 @@ namespace WebReader.Controllers;
 public class AccountController(UserService userService) : Controller
 {
     [HttpGet]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public IActionResult SignIn(string? returnUrl = null)
     {
         if (User.Identity is { IsAuthenticated: true })
@@ -22,6 +23,7 @@ public class AccountController(UserService userService) : Controller
     }
 
     [HttpGet]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public IActionResult SignUp(string? returnUrl = null)
     {
         if (User.Identity is { IsAuthenticated: true })
