@@ -23,7 +23,11 @@ public class FileController(
     [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllBuckets()
     {
-        return View((await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles())).Value);
+        var res = await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles());
+
+        if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
+
+        return View(res.Value);
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
@@ -52,6 +56,8 @@ public class FileController(
     public async Task<IActionResult> GetReading()
     {
         var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles());
+
+        if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
         return View(res.Value);
     }
