@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace WebReader.Helpers;
 
@@ -8,7 +7,7 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         context.HttpContext.Request.EnableBuffering();
-        var requestBody = await ReadStreamAsync(context.HttpContext.Request.Body);
+        // var requestBody = await ReadStreamAsync(context.HttpContext.Request.Body);
         context.HttpContext.Request.Body.Position = 0;
 
         // logger.LogInformation("IP: {ip}\nUserId: {userId}\nRequest: {method} {path} {query}\nData: {data}",
@@ -19,7 +18,7 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         //     context.HttpContext.Request.Method, context.HttpContext.Request.Path,
         //     string.Join(", ", context.HttpContext.Request.Query), requestBody);
 
-        logger.LogInformation("IP: {ip}\nUserId: {userId}",
+        logger.LogInformation("IP: {ip} | UserId: {userId}",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
             context.HttpContext.User.Identity is { IsAuthenticated: true }
                 ? context.HttpContext.User.GetUserGuid()
@@ -53,7 +52,7 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         //     string.Join(", ", context.HttpContext.Request.Query), context.HttpContext.Response.StatusCode,
         //     responseBody?.LimitTo());
 
-        logger.LogInformation("IP: {ip}\nUserId: {userId}",
+        logger.LogInformation("IP: {ip} | UserId: {userId}",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
             context.HttpContext.User.Identity is { IsAuthenticated: true }
                 ? context.HttpContext.User.GetUserGuid()
@@ -62,11 +61,11 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         await base.OnResultExecutionAsync(context, next);
     }
 
-    private static async Task<string> ReadStreamAsync(Stream stream)
-    {
-        stream.Position = 0;
-        using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-        var res = await reader.ReadToEndAsync();
-        return res;
-    }
+    // private static async Task<string> ReadStreamAsync(Stream stream)
+    // {
+    //     stream.Position = 0;
+    //     using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
+    //     var res = await reader.ReadToEndAsync();
+    //     return res;
+    // }
 }
