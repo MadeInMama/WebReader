@@ -71,7 +71,7 @@ public class FileControllerService(
 
                     var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
 
-                    var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Name, roles))
+                    var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Id, roles))
                         .Select(file =>
                         {
                             var reading = allUserReadings.FirstOrDefault(reading => reading.FileId == file.Id);
@@ -85,7 +85,9 @@ public class FileControllerService(
                                 Type = TypeHelper.FileTypeNameDict[file.Type],
                                 IsReading = reading != null,
                                 IsParted = file.NextPartId.HasValue,
-                                IsDone = reading?.IsDone ?? false
+                                IsDone = reading?.IsDone ?? false,
+                                TotalCount = file.TotalCount,
+                                TotalSize = file.TotalSize
                             };
                         }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
 

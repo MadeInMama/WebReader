@@ -31,6 +31,8 @@
                        asp-route-fileId="@item.Id">
                         <div class="center parted secondary-info-span"></div>
                         <span class="left main-info-span importance-0">@item.FileName</span>
+                        <span class="right secondary-info-span importance-1">@item.TotalCount</span>
+                        <span class="right secondary-info-span importance-2">@FormatSize(item.TotalSize)</span>
                     </a>
                 </div>
             }

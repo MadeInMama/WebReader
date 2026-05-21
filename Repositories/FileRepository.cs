@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebReader.Data;
 using WebReader.Models;
+using WebReader.Models.Extended;
 using File = WebReader.Models.Entities.File;
 
 namespace WebReader.Repositories;
@@ -129,25 +130,48 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketTopLevelAsync(string bucketName,
+    public async Task<IEnumerable<ExtendedFile>> GetAllAvailableObjectsInBucketTopLevelAsync(Guid bucketId,
         IEnumerable<RoleType> roles)
     {
-        var rolesList = roles.ToList();
+        return await context.Database.SqlQuery<ExtendedFile>($"""
+                                                              WITH RECURSIVE file_chain AS (
+                                                                  SELECT
+                                                                      f."Id" AS root_id,
+                                                                      f."Id",
+                                                                      f."NextPartId",
+                                                                      f."Size"
+                                                                  FROM "Files" f
+                                                                      JOIN "Buckets" AS b ON b."Id" = f."BucketId"
+                                                                  WHERE b."Id" = {bucketId} AND
+                                                                        f."AccessRoles" && {roles} AND
+                                                                      NOT EXISTS (
+                                                                      SELECT 1 FROM "Files" AS child WHERE child."NextPartId" = f."Id"
+                                                                  )
 
-        var referencedIds = await context.Files
-            .Where(f => f.Bucket!.Name == bucketName && !f.Bucket.IsHidden &&
-                        f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
-                        !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any() &&
-                        f.NextPartId != null)
-            .Select(f => f.NextPartId!.Value)
-            .ToHashSetAsync();
+                                                                  UNION ALL
 
-        return await context.Files
-            .Where(f => f.Bucket!.Name == bucketName && !f.Bucket.IsHidden &&
-                        f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
-                        !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any() &&
-                        !referencedIds.Contains(f.Id))
-            .ToListAsync();
+                                                                  SELECT
+                                                                      current_file.root_id,
+                                                                      next_file."Id",
+                                                                      next_file."NextPartId",
+                                                                      next_file."Size"
+                                                                  FROM "Files" AS next_file
+                                                                           JOIN file_chain AS current_file ON next_file."Id" = current_file."NextPartId"
+                                                              )
+                                                              SELECT
+                                                                  f.*,
+                                                                  stats.total_count AS "TotalCount",
+                                                                  stats.total_size AS "TotalSize"
+                                                              FROM (
+                                                                       SELECT
+                                                                           root_id,
+                                                                           COUNT(*) AS total_count,
+                                                                           SUM(COALESCE("Size", 0)) AS total_size
+                                                                       FROM file_chain
+                                                                       GROUP BY root_id
+                                                                   ) stats
+                                                                       JOIN "Files" f ON f."Id" = stats.root_id;
+                                                              """).ToListAsync();
     }
 
     public async Task DeleteAllAsync(IEnumerable<Guid>? ids)

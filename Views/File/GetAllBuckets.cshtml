@@ -27,7 +27,7 @@
         {
             <div class="item-line">
                 <a asp-controller="File" asp-action="GetAllFilesInBucket"
-                   asp-route-bucketId="@item.Id">
+                   asp-route-bucketId="@item.Id" style="width: 100%;">
                     <span class="main-info-span importance-0">@item.CustomName</span>
                     <span
                         class="secondary-info-span importance-2">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
