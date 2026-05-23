@@ -1,25 +1,21 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Entities;
 using File = WebReader.Models.Entities.File;
 
 namespace WebReader.Data;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<CustomUser> Users { get; set; }
     public DbSet<Bucket> Buckets { get; set; }
     public DbSet<File> Files { get; set; }
     public DbSet<UserReading> UserReadings { get; set; }
-    public DbSet<Settings> Settings { get; set; }
     public DbSet<SubscriberTg> SubscriberTgs { get; set; }
+    public DbSet<ScheduledTask> ScheduledTasks { get; set; }
+    public DbSet<ScheduledTaskConfig> ScheduledTaskConfigs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -30,7 +26,7 @@ public class ApplicationDbContext : DbContext
                 var user = context.Set<CustomUser>().Add(new CustomUser
                 {
                     Username = "test",
-                    PasswordHash = HashPassword("test"),
+                    PasswordHash = StaticFunctions.HashPassword("test"),
                     Roles = [RoleType.Admin, RoleType.User]
                 });
 
@@ -57,29 +53,53 @@ public class ApplicationDbContext : DbContext
                 context.SaveChanges();
             }
 
-            var bucketId = context.Set<Bucket>().First(f => f.Name.Equals("mybucket")).Id;
-
-            if (!context.Set<File>().Any())
+            if (!context.Set<ScheduledTaskConfig>().Any())
             {
-                context.Set<File>().AddRange(new File
-                {
-                    BucketId = bucketId,
-                    Name = "Краткие ответы на большие вопросы [2019] Хокинг.fb2",
-                    CustomName = "Краткие ответы на большие вопросы: Хокинг",
-                    Type = FileType.Fb2,
-                    IsHidden = false
-                });
-
-                context.SaveChanges();
-            }
-
-            if (!context.Set<Settings>().Any())
-            {
-                context.Set<Settings>().AddRange(new Settings
-                {
-                    Key = "max_files_size_limit_vseveduschiy_chitatel",
-                    Value = (1u * 1024u * 1024u * 1024u).ToString()
-                });
+                context.Set<ScheduledTaskConfig>().AddRange(
+                    new ScheduledTaskConfig
+                    {
+                        Type = TaskType.RemoveBucketsThatNotExistsInDb,
+                        DefaultPriority = sbyte.MaxValue,
+                        Cron = TaskConfigCron.EveryHour
+                    }, new ScheduledTaskConfig
+                    {
+                        Type = TaskType.MakeUnavailableBucketsThatNotExistsInS3,
+                        DefaultPriority = sbyte.MaxValue - 1,
+                        Cron = TaskConfigCron.EveryHour
+                    }, new ScheduledTaskConfig
+                    {
+                        Type = TaskType.RemoveFilesThatNotExistsInDb,
+                        DefaultPriority = sbyte.MaxValue - 2,
+                        Cron = TaskConfigCron.EveryHour
+                    }, new ScheduledTaskConfig
+                    {
+                        Type = TaskType.UpdateBucketData,
+                        DefaultPriority = sbyte.MaxValue - 3,
+                        Cron = TaskConfigCron.EveryHour
+                    }, new ScheduledTaskConfig
+                    {
+                        Type = TaskType.UpdateFilesData,
+                        DefaultPriority = sbyte.MaxValue - 4,
+                        Cron = TaskConfigCron.EveryHour
+                    }, new ScheduledTaskConfig
+                    {
+                        Type = TaskType.AutoDownloadNewPartsOmniscientReader,
+                        DefaultPriority = 100,
+                        Cron = TaskConfigCron.EveryDay,
+                        Settings = JsonDocument.Parse("{\"max_size\": 1300}")
+                    }, new ScheduledTaskConfig
+                    {
+                        Type = TaskType.AutoDownloadNewPartsSoloLeveling,
+                        DefaultPriority = 90,
+                        Cron = TaskConfigCron.EveryWeek,
+                        Settings = JsonDocument.Parse("{\"max_size\": 1300}")
+                    }, new ScheduledTaskConfig
+                    {
+                        Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
+                        DefaultPriority = 90,
+                        Cron = TaskConfigCron.EveryWeek,
+                        Settings = JsonDocument.Parse("{\"max_size\": 1300}")
+                    });
                 context.SaveChanges();
             }
         });
@@ -106,6 +126,11 @@ public class ApplicationDbContext : DbContext
             .HasOne(f => f.Bucket)
             .WithOne(f => f.User)
             .HasForeignKey<Bucket>(f => f.UserId);
+
+        modelBuilder.Entity<ScheduledTask>()
+            .HasIndex(f => f.Priority);
+        modelBuilder.Entity<ScheduledTask>()
+            .HasOne(f => f.ScheduledTaskConfig);
 
         base.OnModelCreating(modelBuilder);
     }
@@ -134,11 +159,5 @@ public class ApplicationDbContext : DbContext
             if (entityEntry.State == EntityState.Added)
                 ((BaseEntity)entityEntry.Entity).CreatedDate = DateTimeOffset.UtcNow;
         }
-    }
-
-    private static string HashPassword(string password)
-    {
-        var hashedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
     }
 }

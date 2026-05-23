@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -91,5 +93,17 @@ public static class StaticFunctions
     public static string LimitTo(this string src, int limit = 2000)
     {
         return string.IsNullOrEmpty(src) || src.Length <= limit ? src : src[..(limit - 3)] + "...";
+    }
+
+    public static string HashPassword(string password)
+    {
+        var hashedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
+        return Convert.ToBase64String(hashedBytes);
+    }
+
+    public static bool VerifyPassword(string password, string hash)
+    {
+        var hashOfInput = HashPassword(password);
+        return hashOfInput == hash;
     }
 }

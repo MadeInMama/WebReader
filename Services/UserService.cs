@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using WebReader.Helpers;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
 
@@ -16,7 +15,7 @@ public class UserService(
     {
         var user = await userRepository.FirstOrDefaultAsync(f => f.Username.Equals(username) && f.IsActive, null, true);
 
-        if (user != null && VerifyPassword(password, user.PasswordHash)) return user;
+        if (user != null && StaticFunctions.VerifyPassword(password, user.PasswordHash)) return user;
 
         return null;
     }
@@ -29,7 +28,7 @@ public class UserService(
         var user = new CustomUser
         {
             Username = username,
-            PasswordHash = HashPassword(password)
+            PasswordHash = StaticFunctions.HashPassword(password)
         };
 
         var entity = await userRepository.AddAsync(user);
@@ -70,17 +69,5 @@ public class UserService(
         await Task.WhenAll(userReadingTask, bucketTask);
 //TODO: delete at once with custom query or context
         await userRepository.DeleteAsync(user.Id);
-    }
-
-    private static string HashPassword(string password)
-    {
-        var hashedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
-    }
-
-    private static bool VerifyPassword(string password, string hash)
-    {
-        var hashOfInput = HashPassword(password);
-        return hashOfInput == hash;
     }
 }

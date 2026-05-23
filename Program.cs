@@ -12,9 +12,11 @@ using Minio;
 using Telegram.Bot;
 using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
+using WebReader.Background.SyncDbWithS3;
 using WebReader.Configuration;
 using WebReader.Data;
 using WebReader.Helpers;
+using WebReader.Models;
 using WebReader.Repositories;
 using WebReader.Services;
 using MinioConfig = WebReader.Configuration.MinioConfig;
@@ -64,15 +66,30 @@ builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 builder.Services.AddScoped<FileControllerService>();
 builder.Services.AddScoped<AuthRestService>();
+builder.Services.AddScoped<ScheduledTaskConfigRepository>();
+builder.Services.AddScoped<ScheduledTaskRepository>();
 
 builder.Services.AddScoped<LogRequestAttribute>();
 
-builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsOmniscientReader>();
-builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsSoloLeveling>();
-builder.Services.AddTransient<IAutoDownloadNewParts, AutoDownloadNewPartsWorldAfterDestruction>();
+builder.Services.AddKeyedTransient<IBackgroundTasked, RemoveBucketsThatNotExistsInDb>(
+    TaskType.RemoveBucketsThatNotExistsInDb);
+builder.Services.AddKeyedTransient<IBackgroundTasked, MakeUnavailableBucketsThatNotExistsInS3>(
+    TaskType.MakeUnavailableBucketsThatNotExistsInS3);
+builder.Services.AddKeyedTransient<IBackgroundTasked, RemoveFilesThatNotExistsInDb>(
+    TaskType.RemoveFilesThatNotExistsInDb);
+builder.Services.AddKeyedTransient<IBackgroundTasked, UpdateBucketData>(
+    TaskType.UpdateBucketData);
+builder.Services.AddKeyedTransient<IBackgroundTasked, UpdateFilesData>(
+    TaskType.UpdateFilesData);
 
-builder.Services.AddHostedService<UpdateFilesFromS3>();
-builder.Services.AddHostedService<AutoDownloadNewPartsBackground>();
+builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsOmniscientReader>(
+    TaskType.AutoDownloadNewPartsOmniscientReader);
+builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsSoloLeveling>(
+    TaskType.AutoDownloadNewPartsSoloLeveling);
+builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsWorldAfterDestruction>(
+    TaskType.AutoDownloadNewPartsWorldAfterDestruction);
+
+builder.Services.AddHostedService<BackgroundTaskManager>();
 
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["Telegram:BotToken"]!));
 
