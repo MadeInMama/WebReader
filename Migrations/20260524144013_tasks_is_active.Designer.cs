@@ -3,6 +3,7 @@ using System;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebReader.Data;
@@ -12,9 +13,11 @@ using WebReader.Data;
 namespace WebReader.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524144013_tasks_is_active")]
+    partial class tasks_is_active
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,10 +185,6 @@ namespace WebReader.Migrations
 
                     b.Property<short>("Priority")
                         .HasColumnType("smallint");
-
-                    b.Property<decimal>("Progress")
-                        .HasPrecision(3, 2)
-                        .HasColumnType("numeric(3,2)");
 
                     b.Property<Guid?>("ScheduledTaskConfigId")
                         .HasColumnType("uuid");

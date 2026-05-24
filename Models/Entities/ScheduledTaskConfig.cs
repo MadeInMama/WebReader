@@ -4,8 +4,9 @@ namespace WebReader.Models.Entities;
 
 public class ScheduledTaskConfig : BaseEntity
 {
-    public TaskType Type { get; init; }
-    public sbyte DefaultPriority { get; init; }
-    public TaskConfigCron Cron { get; init; }
+    public TaskType Type { get; set; }
+    public sbyte DefaultPriority { get; set; }
+    public TaskConfigCron Cron { get; set; }
     public JsonDocument Settings { get; set; } = JsonDocument.Parse("{}");
+    public bool IsActive { get; set; } = true;
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -45,6 +46,12 @@ builder.Services.AddHybridCache(options =>
     {
         Expiration = TimeSpan.FromMinutes(30)
     };
+});
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
 });
 
 var minioConfig = new MinioConfig();
@@ -184,6 +191,15 @@ using (var scope = app.Services.CreateScope())
     await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
 }
 
+app.UseResponseCompression();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000, immutable");
+    }
+});
+
 app.UseExceptionHandler("/Account/CustomNotFound");
 
 app.UseHttpMethodOverride(new HttpMethodOverrideOptions
@@ -197,6 +213,7 @@ app.UseHsts();
 
 app.UseRouting();
 
+//TODO: don't understand. is needed? (new UseStaticFiles)
 app.MapStaticAssets();
 
 app.UseAuthentication();

@@ -39,7 +39,8 @@ public class BackgroundTaskManager(
 
         async Task DoWork()
         {
-            var taskConfigs = await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryHour);
+            var taskConfigs =
+                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryHour && f.IsActive);
 
             var tasks = CreateTasksFromConfigs(taskConfigs);
 
@@ -66,7 +67,7 @@ public class BackgroundTaskManager(
 
         async Task DoWork()
         {
-            var taskConfigs = await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryDay);
+            var taskConfigs = await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryDay && f.IsActive);
 
             var tasks = CreateTasksFromConfigs(taskConfigs);
 
@@ -93,7 +94,8 @@ public class BackgroundTaskManager(
 
         async Task DoWork()
         {
-            var taskConfigs = await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryWeek);
+            var taskConfigs =
+                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryWeek && f.IsActive);
 
             var tasks = CreateTasksFromConfigs(taskConfigs);
 
@@ -118,6 +120,7 @@ public class BackgroundTaskManager(
             if (task == null) continue;
 
             task.Status = TaskStatus.InProgress;
+            task.Progress = new decimal(0.0);
 
             await taskRepository.SaveChangesAsync();
 
@@ -132,11 +135,14 @@ public class BackgroundTaskManager(
             }
             else
             {
+                //TODO: set progress in executions
                 //TODO: catch exceptions and set ErrorMessage
                 //TODO: return FluentResult and set ErrorMessage on fail
+                //TODO: set execution time from settings
                 await taskExecutor.ExecuteAsync(task, cancellationToken);
 
                 task.Status = TaskStatus.Completed;
+                task.Progress = new decimal(1.0);
             }
 
             await taskRepository.SaveChangesAsync();
