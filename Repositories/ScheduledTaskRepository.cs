@@ -51,6 +51,7 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
         return await context.ScheduledTasks
             .Where(f => f.Status == TaskStatus.Pending)
             .OrderByDescending(f => f.Priority)
+            .ThenBy(f => f.CreatedDate)
             .Include(f => f.ScheduledTaskConfig)
             .FirstOrDefaultAsync(cancellationToken);
     }
