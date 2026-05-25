@@ -1,4 +1,5 @@
-﻿using WebReader.Models.Entities;
+﻿using FluentResults;
+using WebReader.Models.Entities;
 using WebReader.Repositories;
 using WebReader.Services;
 
@@ -9,23 +10,22 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
     ILogger<MakeUnavailableBucketsThatNotExistsInS3> logger)
     : IBackgroundTasked
 {
-    public async Task ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    //TODO: progress
+    public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Start {nameof(MakeUnavailableBucketsThatNotExistsInS3)}");
-
         using var scope = services.CreateScope();
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
         var allBucketsInDb = (await bucketRepository.AllAsync(f => true)).ToList();
 
-        logger.LogInformation(
+        logger.LogTrace(
             $"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Found {{count}} buckets in database",
             allBucketsInDb.Count);
 
         var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
 
-        logger.LogInformation(
+        logger.LogTrace(
             $"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Found {{count}} buckets in s3", allBucketsInS3.Count);
 
         var toSave = new List<Bucket>();
@@ -36,7 +36,7 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
 
             if (bucketInDb.IsAvailable == isAvailable) continue;
 
-            logger.LogInformation(
+            logger.LogTrace(
                 $"{nameof(RemoveBucketsThatNotExistsInDb)}: Bucket {{bucketName}} availability will be set to {{}}",
                 bucketInDb.Name, isAvailable);
 
@@ -47,9 +47,11 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
 
         if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
 
-        logger.LogInformation($"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Total update count {{updated}}",
-            await bucketRepository.SaveChangesAsync());
+        var result = await bucketRepository.SaveChangesAsync();
 
-        logger.LogInformation($"Finished {nameof(MakeUnavailableBucketsThatNotExistsInS3)}");
+        logger.LogTrace($"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Total update count: {{updated}}",
+            result);
+
+        return Result.Ok($"Update count: {result}");
     }
 }

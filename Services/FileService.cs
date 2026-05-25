@@ -14,7 +14,7 @@ public class FileService(
 
         foreach (var guid in guids.Index())
         {
-            logger.LogInformation("Deleting file with id: ({index}, {guid})", guid.Index + 1, guid.Item);
+            logger.LogTrace("Deleting file with id: ({index}, {guid})", guid.Index + 1, guid.Item);
 
             var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == guid.Item, null, false, f => f.Bucket);
 

@@ -1,4 +1,5 @@
-﻿using WebReader.Helpers;
+﻿using FluentResults;
+using WebReader.Helpers;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
 using WebReader.Services;
@@ -8,10 +9,9 @@ namespace WebReader.Background.SyncDbWithS3;
 public class RemoveFilesThatNotExistsInDb(IServiceProvider services, ILogger<RemoveFilesThatNotExistsInDb> logger)
     : IBackgroundTasked
 {
-    public async Task ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    //TODO: progress
+    public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Start {nameof(RemoveFilesThatNotExistsInDb)}");
-
         using var scope = services.CreateScope();
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
@@ -31,12 +31,16 @@ public class RemoveFilesThatNotExistsInDb(IServiceProvider services, ILogger<Rem
                 objToRemove.AddOrAppend(bucketName, fileInS3.Key);
 
         var tasks = new List<Task>();
+        var namesRemoved = new List<string>();
 
         foreach (var (bucketName, objectNames) in objToRemove)
+        {
+            namesRemoved.Add($"{bucketName}/({string.Join(",", objectNames)})");
             tasks.Add(minioService.RemoveObjectsAsync(bucketName, objectNames));
+        }
 
         await Task.WhenAll(tasks);
 
-        logger.LogInformation($"Finished {nameof(RemoveFilesThatNotExistsInDb)}");
+        return Result.Ok($"Removed files: {string.Join(", ", namesRemoved)}");
     }
 }

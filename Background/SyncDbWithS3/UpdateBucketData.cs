@@ -1,4 +1,5 @@
-﻿using Minio.DataModel;
+﻿using FluentResults;
+using Minio.DataModel;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
 using WebReader.Services;
@@ -8,10 +9,9 @@ namespace WebReader.Background.SyncDbWithS3;
 
 public class UpdateBucketData(IServiceProvider services, ILogger<UpdateBucketData> logger) : IBackgroundTasked
 {
-    public async Task ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    //TODO: progress
+    public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        logger.LogInformation($"Start {nameof(UpdateBucketData)}");
-
         using var scope = services.CreateScope();
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
@@ -33,9 +33,10 @@ public class UpdateBucketData(IServiceProvider services, ILogger<UpdateBucketDat
 
         if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
 
-        logger.LogInformation($"{nameof(UpdateBucketData)}: Total update count {{updated}}",
-            await bucketRepository.SaveChangesAsync());
+        var result = await bucketRepository.SaveChangesAsync();
 
-        logger.LogInformation($"Finished {nameof(UpdateBucketData)}");
+        logger.LogTrace($"{nameof(UpdateBucketData)}: Total update count {{updated}}", result);
+
+        return Result.Ok($"Update count: {result}");
     }
 }

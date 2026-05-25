@@ -55,11 +55,11 @@ public static class BrowserProcessKiller
                             process.CloseMainWindow();
                         process.WaitForExit(5000);
                         killedCount++;
-                        logger.LogInformation("Killed: {processName} (PID: {processId})", processName, process.Id);
+                        logger.LogTrace("Killed: {processName} (PID: {processId})", processName, process.Id);
                     }
                     catch (Exception ex)
                     {
-                        logger.LogInformation("Failed to kill {processName} (PID: {processId}): {exMessage}",
+                        logger.LogTrace("Failed to kill {processName} (PID: {processId}): {exMessage}",
                             processName, process.Id, ex.Message);
                     }
                     finally
@@ -69,7 +69,7 @@ public static class BrowserProcessKiller
             }
             catch (Exception ex)
             {
-                logger.LogInformation("Error finding {processName}: {exMessage}", processName, ex.Message);
+                logger.LogTrace("Error finding {processName}: {exMessage}", processName, ex.Message);
             }
 
         return killedCount;
@@ -88,7 +88,7 @@ public static class BrowserProcessKiller
 
         const int cleanupDelayMs = 2000;
 
-        logger.LogInformation("Waiting {cleanupDelayMs}ms for processes to fully terminate...", cleanupDelayMs);
+        logger.LogTrace("Waiting {cleanupDelayMs}ms for processes to fully terminate...", cleanupDelayMs);
         Task.Delay(cleanupDelayMs);
 
         return totalKilled;
@@ -96,11 +96,11 @@ public static class BrowserProcessKiller
 
     public static void PrepareCleanBrowserEnvironment<T>(ILogger<T> logger)
     {
-        logger.LogInformation("Preparing clean environment...");
+        logger.LogTrace("Preparing clean environment...");
 
         var killed = KillAllBrowserProcesses2(logger);
 
-        logger.LogInformation("Killed {killed} browser process(es)", killed);
+        logger.LogTrace("Killed {killed} browser process(es)", killed);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) CleanupWindowsBrowserArtifacts();
     }

@@ -1,8 +1,11 @@
-﻿using WebReader.Models.Entities;
+﻿using FluentResults;
+using WebReader.Models.Entities;
 
 namespace WebReader.Background;
 
 public interface IBackgroundTasked
 {
-    Task ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
+    //TODO: before exec method
+    Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
+    //TODO: after exec method
 }

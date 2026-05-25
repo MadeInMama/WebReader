@@ -5,7 +5,7 @@ public static class GlobalFunctions
     public static string FormatSize(ulong size)
     {
         if (size == 0)
-            return string.Empty;
+            return "0B";
 
         var digits = size.ToString().Length;
 

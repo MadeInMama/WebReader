@@ -35,27 +35,31 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     protected abstract string Url { get; }
     protected virtual ulong MaxSize { get; set; }
 
-    public virtual async Task ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    public virtual async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var result = Result.Ok("");
+
         try
         {
-            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
             MaxSize = GetMaxSize(task.ScheduledTaskConfig);
 
             var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 
-            if (CheckMaxSizeReached(MaxSize, currentSize, FileCustomName)) return;
+            if (CheckMaxSizeReached(MaxSize, currentSize, FileCustomName))
+                return Result.Fail(
+                    $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
 
             var browser = await GetBrowser(cancellationToken);
 
             var page = await GetNewPage(browser);
 
-            logger.LogInformation("Go to {url}", Url);
+            logger.LogTrace("Go to {url}", Url);
             await page.GoToAsync(Url,
                 new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
 
-            logger.LogInformation("Waiting for page load");
+            logger.LogTrace("Waiting for page load");
             await page.WaitForSelectorAsync(".chapters", new WaitForSelectorOptions { Timeout = 30000 });
 
             var html = await page.GetContentAsync();
@@ -71,7 +75,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 .OrderBy(f => int.Parse(f.Key.Split("/").Last()))
                 .ToImmutableList();
 
-            logger.LogInformation("Found {links} links", links.Count);
+            logger.LogTrace("Found {links} links", links.Count);
 
             var defaultBucket = await context.Buckets.FirstAsync(b => b.Name == "mybucket", cancellationToken);
 
@@ -83,13 +87,26 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             var lastFile = lastStoredFile;
 
-            foreach (var link in links)
+            try
             {
-                var res = await ParseAndSaveFile(link, defaultBucket, lastFile, cancellationToken);
+                task.Progress = new decimal(0.01);
+                context.ScheduledTasks.Attach(task);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning("Can't save progress: {}", e.Message);
+            }
+
+            foreach (var link in links.Index())
+            {
+                var res = await ParseAndSaveFile(link.Item, defaultBucket, lastFile, cancellationToken);
 
                 if (res.IsFailed)
                 {
-                    logger.LogError("{msg}", res.ToString());
+                    logger.LogTrace("{msg}", res.ToString());
+
+                    result = Result.Fail(string.Join(", ", res.Reasons.Select(f => f.Message)));
 
                     break;
                 }
@@ -98,23 +115,39 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
+
+                try
+                {
+                    task.Progress = new decimal((link.Index + 1) * 1f / links.Count);
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    logger.LogWarning("Can't save progress: {}", e.Message);
+                }
             }
+
+            if (result.IsSuccess)
+                result = Result.Ok($"Downloaded count: {links.Count}");
 
             // UninstallBrowsers();
         }
         catch (TimeoutException e)
         {
-            logger.LogError("Timeout has been reached: {}", e.Message);
+            result = Result.Fail($"Timeout has been reached: {e.Message}");
+
             // UninstallBrowsers();
         }
         catch (NavigationException e)
         {
-            logger.LogError("Navigation error has been reached: {}", e.Message);
+            result = Result.Fail($"Navigation error has been reached: {e.Message}");
+
             // UninstallBrowsers();
         }
         catch (HttpRequestException e)
         {
-            logger.LogError("HttpRequest error has been reached: {}", e.Message);
+            result = Result.Fail($"HttpRequest error has been reached: {e.Message}");
+
             // UninstallBrowsers();
         }
         finally
@@ -124,6 +157,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
+
+        return result;
     }
 
     protected virtual ulong GetMaxSize(ScheduledTaskConfig? config)
@@ -150,14 +185,14 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     {
         if (maxSize >= currentSize)
         {
-            logger.LogInformation("Current '{fileCustomName}' size {currentSize} of {maxSize}",
+            logger.LogTrace("Current '{fileCustomName}' size {currentSize} of {maxSize}",
                 fileCustomName,
                 GlobalFunctions.FormatSize(currentSize),
                 GlobalFunctions.FormatSize(maxSize));
             return false;
         }
 
-        logger.LogWarning("Max size {maxSize} of '{fileCustomName}' has been reached {currentSize}",
+        logger.LogTrace("Max size {maxSize} of '{fileCustomName}' has been reached {currentSize}",
             GlobalFunctions.FormatSize(maxSize),
             fileCustomName,
             GlobalFunctions.FormatSize(currentSize));
@@ -169,29 +204,29 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            logger.LogInformation("Detected Windows");
+            logger.LogTrace("Detected Windows");
             _browserFetcher.Browser = SupportedBrowser.Chrome;
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            logger.LogInformation("Detected Linux");
+            logger.LogTrace("Detected Linux");
             _browserFetcher.Browser = SupportedBrowser.Chromium;
         }
 
-        logger.LogInformation("Detected installed browsers: {join}",
+        logger.LogTrace("Detected installed browsers: {join}",
             string.Join(", ", _browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
 
         //UninstallBrowsers();
 
         if (!_browserFetcher.GetInstalledBrowsers().Any())
         {
-            logger.LogInformation("Download Browser");
+            logger.LogTrace("Download Browser");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 await _browserFetcher.DownloadAsync(BrowserTag.Stable);
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 await _browserFetcher.DownloadAsync(BrowserTag.Latest);
 
-            logger.LogInformation("Detected installed browsers: {join}",
+            logger.LogTrace("Detected installed browsers: {join}",
                 string.Join(", ", _browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
         }
 
@@ -315,11 +350,11 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
         {
-            logger.LogInformation("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
+            logger.LogTrace("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
             return Result.Ok(lastFile);
         }
 
-        logger.LogInformation("Go to {link}", link);
+        logger.LogTrace("Go to {link}", link);
 
         var browser = await GetBrowser(cancellationToken);
 
@@ -328,7 +363,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         await page.GoToAsync(link.Key,
             new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
 
-        logger.LogInformation("Waiting for page load with images");
+        logger.LogTrace("Waiting for page load with images");
         await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
 
         var html = await page.GetContentAsync();
@@ -339,7 +374,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
             .ToImmutableList();
 
-        logger.LogInformation("Found {images} links", images.Count);
+        logger.LogTrace("Found {images} links", images.Count);
 
         using var memoryStream = new MemoryStream();
 
@@ -378,7 +413,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         await memoryStream.FlushAsync(cancellationToken);
         memoryStream.Position = 0;
 
-        logger.LogInformation("Save to db {name}",
+        logger.LogTrace("Save to db {name}",
             $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
 
         var fileUploadResult = await fileUploadService.UploadFileAsync(
@@ -410,7 +445,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 
         if (CheckMaxSizeReached(MaxSize, currentSize, FileCustomName))
-            return Result.Fail("MaxSize reached");
+            return Result.Fail(
+                $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
 
         GC.Collect();
         GC.WaitForPendingFinalizers();

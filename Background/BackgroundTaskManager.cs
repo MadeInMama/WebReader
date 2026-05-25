@@ -12,12 +12,11 @@ public class BackgroundTaskManager(
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Multi-Schedule Background Service starting");
-
         await Task.WhenAll(
             RunHourlyTask(cancellationToken),
             RunDailyTask(cancellationToken),
             RunWeeklyTask(cancellationToken),
+            RunMonthlyTask(cancellationToken),
             RunAsSoonAsPossible(cancellationToken)
         );
     }
@@ -105,6 +104,34 @@ public class BackgroundTaskManager(
         }
     }
 
+    private async Task RunMonthlyTask(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromDays(30));
+
+        using var scope = serviceScopeFactory.CreateScope();
+
+        var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
+        var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
+
+        await DoWork();
+
+        while (await timer.WaitForNextTickAsync(cancellationToken)) await DoWork();
+
+        return;
+
+        async Task DoWork()
+        {
+            var taskConfigs =
+                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryMonth && f.IsActive);
+
+            var tasks = CreateTasksFromConfigs(taskConfigs);
+
+            await taskRepository.AddRangeAsync(tasks, cancellationToken);
+
+            await taskRepository.SaveChangesAsync();
+        }
+    }
+
     private async Task RunAsSoonAsPossible(CancellationToken cancellationToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
@@ -131,18 +158,34 @@ public class BackgroundTaskManager(
                 logger.LogError("No TaskExecutorClass for type:{type}", task.Type);
 
                 task.Status = TaskStatus.Error;
-                task.ErrorMessage = $"No TaskExecutorClass for type:{task.Type}";
+                task.Result = $"No TaskExecutorClass for type:{task.Type}";
             }
             else
             {
-                //TODO: set progress in executions
-                //TODO: catch exceptions and set ErrorMessage
-                //TODO: return FluentResult and set ErrorMessage on fail
-                //TODO: set execution time from settings
-                await taskExecutor.ExecuteAsync(task, cancellationToken);
+                //TODO: set execution time limit from settings
+                try
+                {
+                    logger.LogInformation("Started task: {}", task.Type);
+                    var result = await taskExecutor.ExecuteAsync(task, cancellationToken);
+                    logger.LogInformation("Finished task: {}", task.Type);
 
-                task.Status = TaskStatus.Completed;
-                task.Progress = new decimal(1.0);
+                    if (result.IsSuccess)
+                    {
+                        task.Progress = new decimal(1.0);
+                        task.Result = result.ValueOrDefault;
+                    }
+                    else if (result.Reasons.Count != 0)
+                    {
+                        task.Result = string.Join(", ", result.Reasons.Select(f => f.Message));
+                    }
+
+                    task.Status = TaskStatus.Completed;
+                }
+                catch (Exception e)
+                {
+                    task.Status = TaskStatus.Error;
+                    task.Result = e.Message;
+                }
             }
 
             await taskRepository.SaveChangesAsync();

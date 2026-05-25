@@ -13,6 +13,7 @@ using Minio;
 using Telegram.Bot;
 using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
+using WebReader.Background.Delete;
 using WebReader.Background.SyncDbWithS3;
 using WebReader.Configuration;
 using WebReader.Data;
@@ -95,6 +96,11 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsSoloLe
     TaskType.AutoDownloadNewPartsSoloLeveling);
 builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsWorldAfterDestruction>(
     TaskType.AutoDownloadNewPartsWorldAfterDestruction);
+
+builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldCompletedTasks>(
+    TaskType.DeleteOldCompletedTasks);
+builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldErroredTasks>(
+    TaskType.DeleteOldErroredTasks);
 
 builder.Services.AddHostedService<BackgroundTaskManager>();
 
@@ -187,8 +193,12 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.Migrate();
 
-    var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
-    await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
+    await context.ScheduledTasks.ExecuteDeleteAsync();
+    var files = await context.Files.ToListAsync();
+    await scope.ServiceProvider.GetRequiredService<FileService>().DeleteFileAsync(files.Select(f => f.Id).ToList());
+
+    // var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
+    // await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
 }
 
 app.UseResponseCompression();

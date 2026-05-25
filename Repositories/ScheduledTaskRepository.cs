@@ -60,10 +60,17 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
         await context.ScheduledTasks.AddRangeAsync(entities, cancellationToken);
     }
 
-    public async Task DeleteAllOlderThenAsync(DateTimeOffset updatedDate)
+    public async Task<int> DeleteAllOlderThenAsync(DateTimeOffset updatedDate)
     {
-        await context.ScheduledTasks
+        return await context.ScheduledTasks
             .Where(f => f.UpdatedDate < updatedDate)
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task<int> DeleteAllOlderThenAsync(DateTimeOffset updatedDate, TaskStatus status)
+    {
+        return await context.ScheduledTasks
+            .Where(f => f.UpdatedDate < updatedDate && f.Status == status)
             .ExecuteDeleteAsync();
     }
 }

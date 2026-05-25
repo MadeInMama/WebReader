@@ -29,9 +29,9 @@ public static class HybridCacheExtensions
         );
 
         if (isCacheMiss)
-            logger.LogInformation("HybridCache MISS: {key}", key);
+            logger.LogTrace("HybridCache MISS: {key}", key);
         else
-            logger.LogInformation("HybridCache HIT: {key}", key);
+            logger.LogTrace("HybridCache HIT: {key}", key);
 
         return result;
     }

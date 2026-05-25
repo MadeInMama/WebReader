@@ -52,11 +52,11 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         //     string.Join(", ", context.HttpContext.Request.Query), context.HttpContext.Response.StatusCode,
         //     responseBody?.LimitTo());
 
-        logger.LogInformation("IP: {ip} | UserId: {userId}",
-            context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
-            context.HttpContext.User.Identity is { IsAuthenticated: true }
-                ? context.HttpContext.User.GetUserGuid()
-                : null);
+        // logger.LogInformation("IP: {ip} | UserId: {userId}",
+        //     context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
+        //     context.HttpContext.User.Identity is { IsAuthenticated: true }
+        //         ? context.HttpContext.User.GetUserGuid()
+        //         : null);
 
         await base.OnResultExecutionAsync(context, next);
     }

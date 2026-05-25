@@ -53,55 +53,102 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.SaveChanges();
             }
 
-            if (!context.Set<ScheduledTaskConfig>().Any())
-            {
-                context.Set<ScheduledTaskConfig>().AddRange(
-                    new ScheduledTaskConfig
-                    {
-                        Type = TaskType.RemoveBucketsThatNotExistsInDb,
-                        DefaultPriority = sbyte.MaxValue,
-                        Cron = TaskConfigCron.EveryHour
-                    }, new ScheduledTaskConfig
-                    {
-                        Type = TaskType.MakeUnavailableBucketsThatNotExistsInS3,
-                        DefaultPriority = sbyte.MaxValue - 1,
-                        Cron = TaskConfigCron.EveryHour
-                    }, new ScheduledTaskConfig
-                    {
-                        Type = TaskType.RemoveFilesThatNotExistsInDb,
-                        DefaultPriority = sbyte.MaxValue - 2,
-                        Cron = TaskConfigCron.EveryHour
-                    }, new ScheduledTaskConfig
-                    {
-                        Type = TaskType.UpdateBucketData,
-                        DefaultPriority = sbyte.MaxValue - 3,
-                        Cron = TaskConfigCron.EveryHour
-                    }, new ScheduledTaskConfig
-                    {
-                        Type = TaskType.UpdateFilesData,
-                        DefaultPriority = sbyte.MaxValue - 4,
-                        Cron = TaskConfigCron.EveryHour
-                    }, new ScheduledTaskConfig
-                    {
-                        Type = TaskType.AutoDownloadNewPartsOmniscientReader,
-                        DefaultPriority = 100,
-                        Cron = TaskConfigCron.EveryDay,
-                        Settings = JsonDocument.Parse("{\"max_size\": 1300}")
-                    }, new ScheduledTaskConfig
-                    {
-                        Type = TaskType.AutoDownloadNewPartsSoloLeveling,
-                        DefaultPriority = 90,
-                        Cron = TaskConfigCron.EveryWeek,
-                        Settings = JsonDocument.Parse("{\"max_size\": 1300}")
-                    }, new ScheduledTaskConfig
-                    {
-                        Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
-                        DefaultPriority = 90,
-                        Cron = TaskConfigCron.EveryWeek,
-                        Settings = JsonDocument.Parse("{\"max_size\": 1300}")
-                    });
-                context.SaveChanges();
-            }
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.RemoveBucketsThatNotExistsInDb))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.RemoveBucketsThatNotExistsInDb,
+                    DefaultPriority = sbyte.MaxValue,
+                    Cron = TaskConfigCron.EveryHour
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.MakeUnavailableBucketsThatNotExistsInS3))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.MakeUnavailableBucketsThatNotExistsInS3,
+                    DefaultPriority = sbyte.MaxValue - 1,
+                    Cron = TaskConfigCron.EveryHour
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.RemoveFilesThatNotExistsInDb))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.RemoveFilesThatNotExistsInDb,
+                    DefaultPriority = sbyte.MaxValue - 2,
+                    Cron = TaskConfigCron.EveryHour
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.UpdateBucketData))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.UpdateBucketData,
+                    DefaultPriority = sbyte.MaxValue - 3,
+                    Cron = TaskConfigCron.EveryHour
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.UpdateFilesData))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.UpdateFilesData,
+                    DefaultPriority = sbyte.MaxValue - 4,
+                    Cron = TaskConfigCron.EveryHour
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.AutoDownloadNewPartsOmniscientReader))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.AutoDownloadNewPartsOmniscientReader,
+                    DefaultPriority = 100,
+                    Cron = TaskConfigCron.EveryDay,
+                    Settings = JsonDocument.Parse("{\"max_size\": 1000}")
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.AutoDownloadNewPartsSoloLeveling))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.AutoDownloadNewPartsSoloLeveling,
+                    DefaultPriority = 90,
+                    Cron = TaskConfigCron.EveryWeek,
+                    Settings = JsonDocument.Parse("{\"max_size\": 1000}")
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.AutoDownloadNewPartsWorldAfterDestruction))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
+                    DefaultPriority = 90,
+                    Cron = TaskConfigCron.EveryWeek,
+                    Settings = JsonDocument.Parse("{\"max_size\": 1000}")
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.DeleteOldCompletedTasks))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.DeleteOldCompletedTasks,
+                    DefaultPriority = 0,
+                    Cron = TaskConfigCron.EveryWeek,
+                    Settings = JsonDocument.Parse("{\"older_then_in_days\": 7}")
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.DeleteOldErroredTasks))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.DeleteOldErroredTasks,
+                    DefaultPriority = 0,
+                    Cron = TaskConfigCron.EveryMonth,
+                    Settings = JsonDocument.Parse("{\"older_then_in_days\": 30}")
+                });
+
+            context.SaveChanges();
         });
     }
 

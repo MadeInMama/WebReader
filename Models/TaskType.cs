@@ -10,7 +10,10 @@ public enum TaskType
 
     AutoDownloadNewPartsOmniscientReader,
     AutoDownloadNewPartsSoloLeveling,
-    AutoDownloadNewPartsWorldAfterDestruction
+    AutoDownloadNewPartsWorldAfterDestruction,
+
+    DeleteOldCompletedTasks,
+    DeleteOldErroredTasks
 
     //TODO: delete in s3 tasks
 }
