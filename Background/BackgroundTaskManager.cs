@@ -134,7 +134,7 @@ public class BackgroundTaskManager(
 
     private async Task RunAsSoonAsPossible(CancellationToken cancellationToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromMicroseconds(1));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
 
         using var scope = serviceScopeFactory.CreateScope();
 
