@@ -44,6 +44,8 @@ public class FileApiController(
                 request.IsLastPage);
         }
 
+        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}");
+
         return Accepted();
     }
 
@@ -56,6 +58,8 @@ public class FileApiController(
             return BadRequest(ModelState);
 
         await readingRepository.DeleteAllAsync([request.Id]);
+
+        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}");
 
         return NoContent();
     }
