@@ -197,13 +197,13 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.Migrate();
 
-    //await context.ScheduledTasks.ExecuteDeleteAsync();
-    //var files = await context.Files.Where(f => f.CurrentPartNumber > 307).ToListAsync();
-    //await scope.ServiceProvider.GetRequiredService<FileService>()
+    // await context.ScheduledTasks.ExecuteDeleteAsync();
+    // var files = await context.Files.Where(f => f.CurrentPartNumber > 307).ToListAsync();
+    // await scope.ServiceProvider.GetRequiredService<FileService>()
     //    .DeleteFileAsync(files.Select(f => f.Id).ToList(), CancellationToken.None);
 
-    // var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
-    // await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
+    var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
+    await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
 }
 
 app.UseResponseCompression();

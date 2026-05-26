@@ -9,6 +9,7 @@
         <th>Status</th>
         <th>Progress</th>
         <th>Result</th>
+        <th>Updated Date</th>
     </tr>
     </thead>
     <tbody>
@@ -16,7 +17,7 @@
     {
         <tr>
             <td>@item.Id</td>
-            <td>@item.Type</td>
+            <td>@item.Type (@((int)item.Type))</td>
             <td>@item.Status</td>
             <td>
                 <div
@@ -34,6 +35,7 @@
                 </div>
             </td>
             <td>@item.Result</td>
+            <td>@item.UpdatedDate</td>
         </tr>
     }
     </tbody>

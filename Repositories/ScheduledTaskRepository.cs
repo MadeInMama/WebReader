@@ -35,7 +35,9 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
             query = query.Include(include);
 
         return await query.Where(predicate)
-            .OrderBy(f => f.Priority)
+            .OrderBy(f => f.Status)
+            .ThenByDescending(f => f.UpdatedDate)
+            .ThenBy(f => f.Priority)
             .ThenByDescending(f => f.Type)
             .ThenByDescending(f => f.CreatedDate)
             .ToListAsync(cancellationToken);
