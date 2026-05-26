@@ -103,6 +103,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 logger.LogWarning("Can't save progress: {}", e.Message);
             }
 
+            var startIndex = 0;
+
             foreach (var link in links.Index())
             {
                 var res = await ParseAndSaveFile(link.Item, defaultBucket, lastFile, cancellationToken);
@@ -116,14 +118,16 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                     break;
                 }
 
-                lastFile = res.ValueOrDefault;
+                if (res.ValueOrDefault.isSkipped) startIndex = link.Index;
+
+                lastFile = res.ValueOrDefault.file;
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
 
                 try
                 {
-                    task.Progress = new decimal((link.Index + 1) * 1f / links.Count);
+                    task.Progress = new decimal((link.Index + 1 - startIndex) * 1f / (links.Count - startIndex));
                     await context.SaveChangesAsync(cancellationToken);
 
                     await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
@@ -347,7 +351,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
     }
 
-    protected virtual async Task<Result<File?>> ParseAndSaveFile(
+    protected virtual async Task<Result<(bool isSkipped, File? file)>> ParseAndSaveFile(
         KeyValuePair<string, IElement> link,
         Bucket defaultBucket,
         File? lastFile,
@@ -358,7 +362,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
         {
             logger.LogTrace("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
-            return Result.Ok(lastFile);
+            return Result.Ok((true, lastFile));
         }
 
         logger.LogTrace("Go to {link}", link);
@@ -462,7 +466,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        return Result.Ok(fileUploadResult.Value)!;
+        return Result.Ok((false, fileUploadResult.Value))!;
     }
 
     [GeneratedRegex(@"^\d+\s*-\s*")]
