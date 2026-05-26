@@ -17,10 +17,11 @@ public class UpdateFilesData(IServiceProvider services, ILogger<UpdateFilesData>
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allFilesInDb = (await fileRepository.AllAsync(f => true, f => f.Bucket)).ToList();
-        var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
+        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, f => f.Bucket)).ToList();
+        var allBucketsInS3 = (await minioService.ListBucketsAsync(cancellationToken)).ToList();
         Dictionary<string, Task<List<Item>>> allFilesInS3 =
-            allBucketsInS3.ToDictionary(f => f.Name, async f => (await minioService.ListObjectsAsync(f.Name)).ToList());
+            allBucketsInS3.ToDictionary(f => f.Name,
+                async f => (await minioService.ListObjectsAsync(f.Name, cancellationToken)).ToList());
 
         await Task.WhenAll(allFilesInS3.Values);
 
@@ -76,7 +77,7 @@ public class UpdateFilesData(IServiceProvider services, ILogger<UpdateFilesData>
 
         if (toSave.Count != 0) fileRepository.UpdateAll(toSave);
 
-        var result = await fileRepository.SaveChangesAsync();
+        var result = await fileRepository.SaveChangesAsync(cancellationToken);
         logger.LogTrace($"{nameof(UpdateFilesData)}: Total update count {{updated}}", result);
 
         return Result.Ok($"Update count: {result}");

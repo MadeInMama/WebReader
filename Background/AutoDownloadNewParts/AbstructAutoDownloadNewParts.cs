@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using FluentResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
 using Telegram.Bot;
@@ -13,6 +14,7 @@ using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Entities;
+using WebReader.Models.Signal;
 using WebReader.Services;
 using File = WebReader.Models.Entities.File;
 
@@ -23,7 +25,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     FileUploadService fileUploadService,
     ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
-    ILogger<T> logger)
+    ILogger<T> logger,
+    IHubContext<ScheduledTaskHub> scheduledTaskHubContext)
     : IBackgroundTasked
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
@@ -92,6 +95,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 task.Progress = new decimal(0.01);
                 context.ScheduledTasks.Attach(task);
                 await context.SaveChangesAsync(cancellationToken);
+
+                await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
             }
             catch (Exception e)
             {
@@ -120,6 +125,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 {
                     task.Progress = new decimal((link.Index + 1) * 1f / links.Count);
                     await context.SaveChangesAsync(cancellationToken);
+
+                    await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
                 }
                 catch (Exception e)
                 {
@@ -356,6 +363,12 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         logger.LogTrace("Go to {link}", link);
 
+        var fileName =
+            $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
+        var currentPartName = MyRegex().Replace(string.Concat(link.Value.ChildNodes
+            .Where(node => node.NodeType == NodeType.Text)
+            .Select(node => node.TextContent)).Trim(), "");
+
         var browser = await GetBrowser(cancellationToken);
 
         var page = await GetNewPage(browser);
@@ -397,9 +410,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
                 foreach (var el in splitImages.Index())
                 {
-                    var fileName =
+                    var imgName =
                         $"{img.GetAttribute("data-page")}-{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                    var entry = zipArchive.CreateEntry(fileName, CompressionLevel.SmallestSize);
+                    var entry = zipArchive.CreateEntry(imgName, CompressionLevel.SmallestSize);
                     await using var entryStream = entry.Open();
                     await entryStream.WriteAsync(el.Item, cancellationToken);
                     await entryStream.FlushAsync(cancellationToken);
@@ -413,8 +426,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         await memoryStream.FlushAsync(cancellationToken);
         memoryStream.Position = 0;
 
-        logger.LogTrace("Save to db {name}",
-            $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip");
+        logger.LogTrace("Save to db {name}", fileName);
 
         var fileUploadResult = await fileUploadService.UploadFileAsync(
             lastFile?.Id,
@@ -422,25 +434,24 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             lastFile?.Bucket ?? defaultBucket,
             Enum.GetValues<RoleType>().ToList(),
             memoryStream,
-            $"{link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip",
+            fileName,
             FileCustomName,
             "application/zip",
             FileType.ZipWithImg,
-            MyRegex().Replace(link.Value.TextContent.Trim(), "").Trim(),
-            uint.Parse(dataNum.ToString())
+            currentPartName,
+            uint.Parse(dataNum.ToString()),
+            cancellationToken
         );
 
         memoryStream.Close();
 
         if (fileUploadResult.IsFailed)
-            return Result.Fail(
-                new Error(
-                    $"Error downloading {link.Key.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "")}.zip"));
+            return Result.Fail(new Error($"Error downloading {fileName}"));
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         await BroadcastAllSubs(context, botClient,
-            $"File {FileCustomName} {MyRegex().Replace(link.Value.TextContent.Trim(), "").Trim()} has been uploaded automatically.");
+            $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
 
         var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 

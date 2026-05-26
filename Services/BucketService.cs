@@ -7,12 +7,12 @@ public class BucketService(
     MinioService minioService,
     BucketRepository bucketRepository)
 {
-    public async Task RemoveBucketAsync(Bucket? bucket)
+    public async Task RemoveBucketAsync(Bucket? bucket, CancellationToken cancellationToken)
     {
         if (bucket == null) return;
 
-        var dbTask = bucketRepository.DeleteAsync(bucket.Id);
-        var s3Task = minioService.RemoveBucketAsync(bucket.Name);
+        var dbTask = bucketRepository.DeleteAsync(bucket.Id, cancellationToken);
+        var s3Task = minioService.RemoveBucketAsync(bucket.Name, cancellationToken);
 
         await Task.WhenAll(s3Task, dbTask);
     }

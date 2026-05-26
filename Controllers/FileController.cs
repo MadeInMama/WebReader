@@ -21,9 +21,9 @@ public class FileController(
     FileControllerService fileControllerService) : Controller
 {
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetAllBuckets()
+    public async Task<IActionResult> GetAllBuckets(CancellationToken cancellationToken = default)
     {
-        var res = await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles());
+        var res = await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles(), cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
@@ -31,10 +31,11 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName")
+    public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName",
+        CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllFilesInBucket(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            orderBy);
+            orderBy, cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
@@ -42,10 +43,11 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName")
+    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName",
+        CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            fileId, orderBy);
+            fileId, orderBy, cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
@@ -53,9 +55,9 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetReading()
+    public async Task<IActionResult> GetReading(CancellationToken cancellationToken = default)
     {
-        var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles());
+        var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles(), cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
@@ -63,9 +65,10 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId)
+    public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId, CancellationToken cancellationToken = default)
     {
-        var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId);
+        var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId,
+            cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("CustomNotFound", "Account");
 
@@ -81,19 +84,21 @@ public class FileController(
 
     [HttpGet]
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> UploadFile(Guid bucketId)
+    public async Task<IActionResult> UploadFile(Guid bucketId, CancellationToken cancellationToken = default)
     {
         var bucket = await bucketRepository
             .FirstOrDefaultAsync(f => f.IsAvailable &&
                                       !f.IsHidden &&
                                       f.Id == bucketId &&
                                       f.AccessRoles.Intersect(User.GetUserRoles()).Any() &&
-                                      (f.UserId == User.GetUserGuid() || f.UserId == null), null, true);
+                                      (f.UserId == User.GetUserGuid() || f.UserId == null), null, cancellationToken,
+                true);
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
         var parts = GetSelectListParts(
-            await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles()));
+            await fileRepository.GetAllAvailableObjectsInBucketAsync(bucket.Name, User.GetUserRoles(),
+                cancellationToken));
 
         return View(new UploadFileRequest { BucketId = bucketId, Parts = parts });
     }
@@ -101,8 +106,8 @@ public class FileController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> UploadFile(
-        [FromForm] UploadFileRequest request)
+    public async Task<IActionResult> UploadFile([FromForm] UploadFileRequest request,
+        CancellationToken cancellationToken = default)
     {
         var userRoles = User.GetUserRoles();
         var userGuid = User.GetUserGuid();
@@ -110,7 +115,7 @@ public class FileController(
         if (userRoles.Count == 0 || userGuid == Guid.Empty) return RedirectToAction("AccessDenied", "Account");
 
         var parts = GetSelectListParts(
-            await fileRepository.GetAllAvailableObjectsInBucketAsync(request.BucketId, userRoles));
+            await fileRepository.GetAllAvailableObjectsInBucketAsync(request.BucketId, userRoles, cancellationToken));
 
         request.Parts = parts;
 
@@ -163,7 +168,7 @@ public class FileController(
             .FirstOrDefaultAsync(f => f.IsAvailable && !f.IsHidden &&
                                       f.Id == request.BucketId &&
                                       f.AccessRoles.Intersect(userRoles).Any() &&
-                                      (f.UserId == userGuid || f.UserId == null), null, true);
+                                      (f.UserId == userGuid || f.UserId == null), null, cancellationToken, true);
 
         if (bucket == null) return RedirectToAction("CustomNotFound", "Account");
 
@@ -178,7 +183,8 @@ public class FileController(
             request.File.ContentType,
             fileType,
             request.CurrentPartName,
-            request.CurrentPartNumber);
+            request.CurrentPartNumber,
+            cancellationToken);
 
         if (uploadFileResult.IsFailed)
         {

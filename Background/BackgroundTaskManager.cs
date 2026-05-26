@@ -1,5 +1,7 @@
-﻿using WebReader.Models;
+﻿using Microsoft.AspNetCore.SignalR;
+using WebReader.Models;
 using WebReader.Models.Entities;
+using WebReader.Models.Signal;
 using WebReader.Repositories;
 using TaskStatus = WebReader.Models.TaskStatus;
 
@@ -29,6 +31,7 @@ public class BackgroundTaskManager(
 
         var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
         var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
+        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
 
         await DoWork();
 
@@ -39,13 +42,16 @@ public class BackgroundTaskManager(
         async Task DoWork()
         {
             var taskConfigs =
-                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryHour && f.IsActive);
+                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryHour && f.IsActive,
+                    cancellationToken);
 
             var tasks = CreateTasksFromConfigs(taskConfigs);
 
             await taskRepository.AddRangeAsync(tasks, cancellationToken);
 
-            await taskRepository.SaveChangesAsync();
+            await taskRepository.SaveChangesAsync(cancellationToken);
+
+            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }
     }
 
@@ -57,6 +63,7 @@ public class BackgroundTaskManager(
 
         var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
         var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
+        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
 
         await DoWork();
 
@@ -66,13 +73,16 @@ public class BackgroundTaskManager(
 
         async Task DoWork()
         {
-            var taskConfigs = await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryDay && f.IsActive);
+            var taskConfigs = await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryDay && f.IsActive,
+                cancellationToken);
 
             var tasks = CreateTasksFromConfigs(taskConfigs);
 
             await taskRepository.AddRangeAsync(tasks, cancellationToken);
 
-            await taskRepository.SaveChangesAsync();
+            await taskRepository.SaveChangesAsync(cancellationToken);
+
+            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }
     }
 
@@ -84,6 +94,7 @@ public class BackgroundTaskManager(
 
         var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
         var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
+        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
 
         await DoWork();
 
@@ -94,13 +105,16 @@ public class BackgroundTaskManager(
         async Task DoWork()
         {
             var taskConfigs =
-                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryWeek && f.IsActive);
+                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryWeek && f.IsActive,
+                    cancellationToken);
 
             var tasks = CreateTasksFromConfigs(taskConfigs);
 
             await taskRepository.AddRangeAsync(tasks, cancellationToken);
 
-            await taskRepository.SaveChangesAsync();
+            await taskRepository.SaveChangesAsync(cancellationToken);
+
+            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }
     }
 
@@ -112,6 +126,7 @@ public class BackgroundTaskManager(
 
         var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
         var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
+        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
 
         await DoWork();
 
@@ -122,13 +137,16 @@ public class BackgroundTaskManager(
         async Task DoWork()
         {
             var taskConfigs =
-                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryMonth && f.IsActive);
+                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryMonth && f.IsActive,
+                    cancellationToken);
 
             var tasks = CreateTasksFromConfigs(taskConfigs);
 
             await taskRepository.AddRangeAsync(tasks, cancellationToken);
 
-            await taskRepository.SaveChangesAsync();
+            await taskRepository.SaveChangesAsync(cancellationToken);
+
+            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }
     }
 
@@ -139,6 +157,7 @@ public class BackgroundTaskManager(
         using var scope = serviceScopeFactory.CreateScope();
 
         var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
+        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
 
         while (await timer.WaitForNextTickAsync(cancellationToken))
         {
@@ -153,25 +172,30 @@ public class BackgroundTaskManager(
             task.Status = TaskStatus.InProgress;
             task.Progress = new decimal(0.0);
 
-            await taskRepository.SaveChangesAsync();
+            await taskRepository.SaveChangesAsync(cancellationToken);
 
             var taskExecutor = scope.ServiceProvider.GetKeyedService<IBackgroundTasked>(task.Type);
 
             if (taskExecutor == null)
             {
-                logger.LogError("No TaskExecutorClass for type:{type}", task.Type);
+                logger.LogError("No TaskExecutorClass for type: {type}({typeCode})", task.Type, (int)task.Type);
 
                 task.Status = TaskStatus.Error;
-                task.Result = $"No TaskExecutorClass for type:{task.Type}";
+                task.Result = $"No TaskExecutorClass for type: {task.Type}({(int)task.Type})";
             }
             else
             {
                 //TODO: set execution time limit from settings
                 try
                 {
-                    logger.LogInformation("Started task: {}", task.Type);
-                    var result = await taskExecutor.ExecuteAsync(task, cancellationToken);
-                    logger.LogInformation("Finished task: {}", task.Type);
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    linkedCts.CancelAfter(TimeSpan.FromHours(1));
+                    var combinedToken = linkedCts.Token;
+
+                    logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
+                        task.ScheduledTaskConfig!.Settings.RootElement.ToString());
+                    var result = await taskExecutor.ExecuteAsync(task, combinedToken);
+                    logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
 
                     if (result.IsSuccess)
                     {
@@ -192,7 +216,9 @@ public class BackgroundTaskManager(
                 }
             }
 
-            await taskRepository.SaveChangesAsync();
+            await taskRepository.SaveChangesAsync(cancellationToken);
+
+            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }
     }
 

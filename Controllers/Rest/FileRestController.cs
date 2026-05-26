@@ -19,13 +19,13 @@ public class FileRestController(
     CustomUserRepository userRepository) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllBuckets()
+    public async Task<IActionResult> GetAllBuckets(CancellationToken cancellationToken = default)
     {
-        var jwtData = await GetNewJwt();
+        var jwtData = await GetNewJwt(cancellationToken);
 
         if (jwtData.IsFailed) return Unauthorized(jwtData.ToString());
 
-        var res = await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles());
+        var res = await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles(), cancellationToken);
 
         return Ok(new BaseResponseDto<AllBucketsViewModel>
         {
@@ -38,14 +38,15 @@ public class FileRestController(
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName")
+    public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName",
+        CancellationToken cancellationToken = default)
     {
-        var jwtData = await GetNewJwt();
+        var jwtData = await GetNewJwt(cancellationToken);
 
         if (jwtData.IsFailed) return Unauthorized(jwtData.ToString());
 
         var res = await fileControllerService.GetAllFilesInBucket(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            orderBy);
+            orderBy, cancellationToken);
 
         if (res.IsFailed) return BadRequest(res.ToString());
 
@@ -60,14 +61,15 @@ public class FileRestController(
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName")
+    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName",
+        CancellationToken cancellationToken = default)
     {
-        var jwtData = await GetNewJwt();
+        var jwtData = await GetNewJwt(cancellationToken);
 
         if (jwtData.IsFailed) return Unauthorized(jwtData.ToString());
 
         var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            fileId, orderBy);
+            fileId, orderBy, cancellationToken);
 
         if (res.IsFailed) return BadRequest(res.ToString());
 
@@ -82,13 +84,13 @@ public class FileRestController(
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetReading()
+    public async Task<IActionResult> GetReading(CancellationToken cancellationToken = default)
     {
-        var jwtData = await GetNewJwt();
+        var jwtData = await GetNewJwt(cancellationToken);
 
         if (jwtData.IsFailed) return Unauthorized(jwtData.ToString());
 
-        var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles());
+        var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles(), cancellationToken);
 
         return Ok(new BaseResponseDto<AllFilesReadingViewModel>
         {
@@ -100,13 +102,14 @@ public class FileRestController(
         });
     }
 
-    public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId)
+    public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId, CancellationToken cancellationToken = default)
     {
-        var jwtData = await GetNewJwt();
+        var jwtData = await GetNewJwt(cancellationToken);
 
         if (jwtData.IsFailed) return Unauthorized(jwtData.ToString());
 
-        var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId);
+        var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId,
+            cancellationToken);
 
         if (res.IsFailed) return BadRequest(res.ToString());
 
@@ -120,10 +123,10 @@ public class FileRestController(
         });
     }
 
-    private async Task<Result<BaseResponseDto<int?>>> GetNewJwt()
+    private async Task<Result<BaseResponseDto<int?>>> GetNewJwt(CancellationToken cancellationToken = default)
     {
         var user = await userRepository.FirstOrDefaultAsync(f => f.Id.Equals(User.GetUserGuid()) && f.IsActive, null,
-            true);
+            cancellationToken, true);
 
         if (user == null) return Result.Fail("User not found");
 

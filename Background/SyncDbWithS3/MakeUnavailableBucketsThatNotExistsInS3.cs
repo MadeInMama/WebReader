@@ -17,13 +17,13 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allBucketsInDb = (await bucketRepository.AllAsync(f => true)).ToList();
+        var allBucketsInDb = (await bucketRepository.AllAsync(f => true, cancellationToken)).ToList();
 
         logger.LogTrace(
             $"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Found {{count}} buckets in database",
             allBucketsInDb.Count);
 
-        var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
+        var allBucketsInS3 = (await minioService.ListBucketsAsync(cancellationToken)).ToList();
 
         logger.LogTrace(
             $"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Found {{count}} buckets in s3", allBucketsInS3.Count);
@@ -47,7 +47,7 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
 
         if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
 
-        var result = await bucketRepository.SaveChangesAsync();
+        var result = await bucketRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogTrace($"{nameof(MakeUnavailableBucketsThatNotExistsInS3)}: Total update count: {{updated}}",
             result);

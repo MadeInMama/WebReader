@@ -16,10 +16,11 @@ public class RemoveFilesThatNotExistsInDb(IServiceProvider services, ILogger<Rem
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allFilesInDb = (await fileRepository.AllAsync(f => true, f => f.Bucket)).ToList();
-        var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
+        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, f => f.Bucket)).ToList();
+        var allBucketsInS3 = (await minioService.ListBucketsAsync(cancellationToken)).ToList();
         var allFilesInS3 =
-            allBucketsInS3.ToDictionary(f => f.Name, async f => await minioService.ListObjectsAsync(f.Name));
+            allBucketsInS3.ToDictionary(f => f.Name,
+                async f => await minioService.ListObjectsAsync(f.Name, cancellationToken));
 
         await Task.WhenAll(allFilesInS3.Values);
 
@@ -36,7 +37,7 @@ public class RemoveFilesThatNotExistsInDb(IServiceProvider services, ILogger<Rem
         foreach (var (bucketName, objectNames) in objToRemove)
         {
             namesRemoved.Add($"{bucketName}/({string.Join(",", objectNames)})");
-            tasks.Add(minioService.RemoveObjectsAsync(bucketName, objectNames));
+            tasks.Add(minioService.RemoveObjectsAsync(bucketName, objectNames, cancellationToken));
         }
 
         await Task.WhenAll(tasks);

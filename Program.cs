@@ -19,6 +19,7 @@ using WebReader.Configuration;
 using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
+using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
 using MinioConfig = WebReader.Configuration.MinioConfig;
@@ -45,7 +46,7 @@ builder.Services.AddHybridCache(options =>
 {
     options.DefaultEntryOptions = new HybridCacheEntryOptions
     {
-        Expiration = TimeSpan.FromMinutes(30)
+        Expiration = TimeSpan.FromMinutes(1)
     };
 });
 
@@ -101,6 +102,8 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldCompletedTasks>(
     TaskType.DeleteOldCompletedTasks);
 builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldErroredTasks>(
     TaskType.DeleteOldErroredTasks);
+builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldInProgressTasks>(
+    TaskType.DeleteOldInProgressTasks);
 
 builder.Services.AddHostedService<BackgroundTaskManager>();
 
@@ -159,6 +162,7 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
 
@@ -193,8 +197,13 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.Migrate();
 
-    var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
-    await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
+    //await context.ScheduledTasks.ExecuteDeleteAsync();
+    //var files = await context.Files.Where(f => f.CurrentPartNumber > 307).ToListAsync();
+    //await scope.ServiceProvider.GetRequiredService<FileService>()
+    //    .DeleteFileAsync(files.Select(f => f.Id).ToList(), CancellationToken.None);
+
+    // var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
+    // await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
 }
 
 app.UseResponseCompression();
@@ -220,7 +229,7 @@ app.UseHsts();
 app.UseRouting();
 
 //TODO: don't understand. is needed? (new UseStaticFiles)
-app.MapStaticAssets();
+// app.MapStaticAssets();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -229,6 +238,7 @@ app.MapControllers();
 
 app.Map("/", () => Results.Redirect("/Home/Index"));
 app.Map("/Home", () => Results.Redirect("/Home/Index"));
+app.MapHub<ScheduledTaskHub>("/ScheduledTaskHub");
 
 app.Use((context, next) =>
 {

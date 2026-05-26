@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using WebReader.Models
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -25,6 +26,13 @@
 
             @if (User.Identity is { IsAuthenticated: true })
             {
+                @if (User.GetUserRoles().Contains(RoleType.Admin))
+                {
+                    <li>
+                        <a asp-controller="ScheduledTask" asp-action="ScheduledTasks">Scheduled Tasks</a>
+                    </li>
+                }
+
                 <li>
                     <a asp-controller="File" asp-action="GetAllBuckets">Buckets</a>
                 </li>

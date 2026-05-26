@@ -1,0 +1,40 @@
+﻿@using TaskStatus = WebReader.Models.TaskStatus
+@model WebReader.Models.Dtos.AllScheduledTasksViewModel
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Progress</th>
+        <th>Result</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model.Items)
+    {
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.Type</td>
+            <td>@item.Status</td>
+            <td>
+                <div
+                    style="width: 100%; background-color: #e0e0e0; border-radius: 0.25em; overflow: hidden; display: flex; align-items: center; justify-content: flex-start; position: relative">
+                    <div
+                        style="width: @(item.Progress * 100)%; height: 2em; border-radius: 0.25em; background-color: @(item.Status switch
+                                                                                                                     {
+                                                                                                                         TaskStatus.Completed => "#4CAF50",
+                                                                                                                         TaskStatus.Error => "#f44336",
+                                                                                                                         _ => "#ff9800"
+                                                                                                                     });">
+                    </div>
+                    <span
+                        style="position: absolute; left: 50%; transform: translateX(-50%);">@((int)(item.Progress * 100))</span>
+                </div>
+            </td>
+            <td>@item.Result</td>
+        </tr>
+    }
+    </tbody>
+</table>

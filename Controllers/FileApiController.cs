@@ -21,13 +21,14 @@ public class FileApiController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> UpdateReading([FromBody] UpdateReadingRequest request)
+    public async Task<IActionResult> UpdateReading([FromBody] UpdateReadingRequest request,
+        CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         var reading = await readingRepository.FirstOrDefaultAsync(f =>
-            f.UserId == User.GetUserGuid() && f.FileId == request.FileId, null, true);
+            f.UserId == User.GetUserGuid() && f.FileId == request.FileId, null, cancellationToken, true);
 
         if (reading == null)
         {
@@ -35,16 +36,16 @@ public class FileApiController(
             {
                 FileId = request.FileId, UserId = User.GetUserGuid(), Page = request.Page, Scale = request.Scale,
                 IsDone = request.IsLastPage
-            });
-            await readingRepository.SaveChangesAsync();
+            }, cancellationToken);
+            await readingRepository.SaveChangesAsync(cancellationToken);
         }
         else
         {
             await readingRepository.SetCurrPageAndScaleAndIsDoneAsync(reading.Id, request.Page, request.Scale,
-                request.IsLastPage);
+                request.IsLastPage, cancellationToken);
         }
 
-        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}");
+        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
 
         return Accepted();
     }
@@ -52,14 +53,15 @@ public class FileApiController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> DeleteReading([FromBody] DeleteRequest request)
+    public async Task<IActionResult> DeleteReading([FromBody] DeleteRequest request,
+        CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        await readingRepository.DeleteAllAsync([request.Id]);
+        await readingRepository.DeleteAllAsync([request.Id], cancellationToken);
 
-        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}");
+        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
 
         return NoContent();
     }
@@ -67,16 +69,17 @@ public class FileApiController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> DeleteFile([FromBody] DeleteRequest request)
+    public async Task<IActionResult> DeleteFile([FromBody] DeleteRequest request,
+        CancellationToken cancellationToken = default)
     {
         //TODO: error if file not deleted or not exists
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         if (!User.GetUserRoles().Contains(RoleType.Admin)) BadRequest(ModelState);
 
-        await fileService.DeleteFileAsync([request.Id]);
+        await fileService.DeleteFileAsync([request.Id], cancellationToken);
 
-        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}");
+        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
 
         return NoContent();
     }

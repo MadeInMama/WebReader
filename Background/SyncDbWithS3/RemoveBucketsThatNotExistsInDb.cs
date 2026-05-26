@@ -15,12 +15,12 @@ public class RemoveBucketsThatNotExistsInDb(IServiceProvider services, ILogger<R
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allBucketsInDb = (await bucketRepository.AllAsync(f => true)).ToList();
+        var allBucketsInDb = (await bucketRepository.AllAsync(f => true, cancellationToken)).ToList();
 
         logger.LogTrace(
             $"{nameof(RemoveBucketsThatNotExistsInDb)}: Found {{count}} buckets in database", allBucketsInDb.Count);
 
-        var allBucketsInS3 = (await minioService.ListBucketsAsync()).ToList();
+        var allBucketsInS3 = (await minioService.ListBucketsAsync(cancellationToken)).ToList();
 
         logger.LogTrace(
             $"{nameof(RemoveBucketsThatNotExistsInDb)}: Found {{count}} buckets in s3", allBucketsInS3.Count);
@@ -32,7 +32,7 @@ public class RemoveBucketsThatNotExistsInDb(IServiceProvider services, ILogger<R
             if (allBucketsInDb.FirstOrDefault(f => f.Name == bucketInS3.Name) == null)
             {
                 namesRemoved.Add(bucketInS3.Name);
-                tasks.Add(minioService.RemoveBucketAsync(bucketInS3.Name));
+                tasks.Add(minioService.RemoveBucketAsync(bucketInS3.Name, cancellationToken));
             }
 
         await Task.WhenAll(tasks);

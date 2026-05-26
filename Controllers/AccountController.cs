@@ -34,11 +34,11 @@ public class AccountController(UserService userService) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SignIn(LoginViewModel model)
+    public async Task<IActionResult> SignIn(LoginViewModel model, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid) return View(model);
 
-        var user = await userService.AuthenticateAsync(model.Username, model.Password);
+        var user = await userService.AuthenticateAsync(model.Username, model.Password, cancellationToken);
 
         if (user != null) return await SetUser(user, model.RememberMe, model.ReturnUrl);
 
@@ -49,12 +49,12 @@ public class AccountController(UserService userService) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SignUp(RegisterViewModel model)
+    public async Task<IActionResult> SignUp(RegisterViewModel model, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
             return View(model);
 
-        var user = await userService.CreateUserAsync(model.Username, model.Password);
+        var user = await userService.CreateUserAsync(model.Username, model.Password, cancellationToken);
 
         if (user != null) return await SetUser(user, model.RememberMe, model.ReturnUrl);
 
@@ -87,10 +87,10 @@ public class AccountController(UserService userService) : Controller
 
     [HttpDelete]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteMe()
+    public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken = default)
     {
         var id = User.GetUserGuid();
-        await userService.DeleteUserAsync(id);
+        await userService.DeleteUserAsync(id, cancellationToken);
         return RedirectToAction("Logout", "Account");
     }
 

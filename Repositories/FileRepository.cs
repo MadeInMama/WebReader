@@ -11,6 +11,7 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
 {
     public async Task<File?> FirstOrDefaultAsync(Expression<Func<File, bool>> predicate,
         ApplicationDbContext? ctx,
+        CancellationToken cancellationToken,
         bool asNoTracking,
         params Expression<Func<File, object>>[] includes)
     {
@@ -22,10 +23,11 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate);
+        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
     public async Task<IEnumerable<File>> AllAsync(Expression<Func<File, bool>> predicate,
+        CancellationToken cancellationToken,
         params Expression<Func<File, object>>[] includes)
     {
         IQueryable<File> query = context.Set<File>();
@@ -33,18 +35,18 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         foreach (var include in includes)
             query = query.Include(include);
 
-        return await query.Where(predicate).ToListAsync();
+        return await query.Where(predicate).ToListAsync(cancellationToken);
     }
 
-    public async Task<File> AddAsync(File entity)
+    public async Task<File> AddAsync(File entity, CancellationToken cancellationToken)
     {
-        var res = await context.Files.AddAsync(entity);
+        var res = await context.Files.AddAsync(entity, cancellationToken);
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync()
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync();
+        return await context.SaveChangesAsync(cancellationToken);
     }
 
     public File Update(File entity)
@@ -59,7 +61,7 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
     }
 
     public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(string bucketName,
-        IEnumerable<RoleType> roles)
+        IEnumerable<RoleType> roles, CancellationToken cancellationToken)
     {
         var rolesList = roles.ToList();
 
@@ -67,10 +69,11 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
             .Where(f => f.Bucket!.Name == bucketName && !f.Bucket.IsHidden &&
                         f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
                         !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any())
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<File>> GetAllAvailableObjectsWithPartsAsync(Guid fileId)
+    public async Task<IEnumerable<File>> GetAllAvailableObjectsWithPartsAsync(Guid fileId,
+        CancellationToken cancellationToken)
     {
         const string sql = """
                            WITH RECURSIVE file_chain AS (
@@ -90,10 +93,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                            ORDER BY fc.Level
                            """;
 
-        return await context.Files.FromSqlRaw(sql, fileId).ToListAsync();
+        return await context.Files.FromSqlRaw(sql, fileId).ToListAsync(cancellationToken);
     }
 
-    public async Task<File> GetHeadedPartedObjectAsync(Guid fileId)
+    public async Task<File> GetHeadedPartedObjectAsync(Guid fileId, CancellationToken cancellationToken)
     {
         const string sql = """
                            WITH RECURSIVE find_head AS (
@@ -115,11 +118,11 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                            LIMIT 1
                            """;
 
-        return await context.Files.FromSqlRaw(sql, fileId).SingleAsync();
+        return await context.Files.FromSqlRaw(sql, fileId).SingleAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(Guid bucketId,
-        IEnumerable<RoleType> roles)
+        IEnumerable<RoleType> roles, CancellationToken cancellationToken)
     {
         var rolesList = roles.ToList();
 
@@ -127,11 +130,11 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
             .Where(f => f.BucketId == bucketId && !f.Bucket.IsHidden &&
                         f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
                         !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any())
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<ExtendedFile>> GetAllAvailableObjectsInBucketTopLevelAsync(Guid bucketId,
-        IEnumerable<RoleType> roles)
+        IEnumerable<RoleType> roles, CancellationToken cancellationToken)
     {
         return await context.Database.SqlQuery<ExtendedFile>($"""
                                                               WITH RECURSIVE file_chain AS (
@@ -171,10 +174,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                                                                        GROUP BY root_id
                                                                    ) stats
                                                                        JOIN "Files" f ON f."Id" = stats.root_id;
-                                                              """).ToListAsync();
+                                                              """).ToListAsync(cancellationToken);
     }
 
-    public async Task DeleteAllAsync(IEnumerable<Guid>? ids)
+    public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
@@ -182,13 +185,13 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
 
         await context.Files
             .Where(r => idsArray.Contains(r.Id))
-            .ExecuteDeleteAsync();
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid? id)
+    public async Task DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
         if (id == null) return;
 
-        await DeleteAllAsync([id.Value]);
+        await DeleteAllAsync([id.Value], cancellationToken);
     }
 }

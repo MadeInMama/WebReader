@@ -5,7 +5,7 @@ using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.Delete;
 
-public class DeleteOldErroredTasks(IServiceProvider services, ILogger<DeleteOldErroredTasks> logger)
+public class DeleteOldInProgressTasks(IServiceProvider services, ILogger<DeleteOldInProgressTasks> logger)
     : IBackgroundTasked
 {
     private const string SettingOlderThenInDaysToDelete = "older_then_in_days";
@@ -20,7 +20,7 @@ public class DeleteOldErroredTasks(IServiceProvider services, ILogger<DeleteOldE
         var scheduledTaskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
 
         var result = await scheduledTaskRepository.DeleteAllOlderThenAsync(
-            DateTimeOffset.UtcNow.AddDays(-days), [TaskStatus.Error], cancellationToken);
+            DateTimeOffset.UtcNow.AddDays(-days), [TaskStatus.InProgress], cancellationToken);
 
         logger.LogTrace($"{nameof(DeleteOldErroredTasks)}: Deleted rows count: {{}}", result);
 

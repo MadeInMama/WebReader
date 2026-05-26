@@ -16,13 +16,13 @@ public class UpdateBucketData(IServiceProvider services, ILogger<UpdateBucketDat
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allBucketsInDb = (await bucketRepository.AllAsync(f => true)).ToList();
+        var allBucketsInDb = (await bucketRepository.AllAsync(f => true, cancellationToken)).ToList();
 
         var toSave = new List<Bucket>();
 
         foreach (var bucketInDb in allBucketsInDb)
         {
-            var size = (await minioService.ListObjectsAsync(bucketInDb.Name)).ToList()
+            var size = (await minioService.ListObjectsAsync(bucketInDb.Name, cancellationToken)).ToList()
                 .Aggregate<Item, ulong>(0, (current, s) => current + s.Size);
 
             if (size == bucketInDb.Size) continue;
@@ -33,7 +33,7 @@ public class UpdateBucketData(IServiceProvider services, ILogger<UpdateBucketDat
 
         if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
 
-        var result = await bucketRepository.SaveChangesAsync();
+        var result = await bucketRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogTrace($"{nameof(UpdateBucketData)}: Total update count {{updated}}", result);
 

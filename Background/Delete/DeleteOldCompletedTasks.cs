@@ -20,7 +20,7 @@ public class DeleteOldCompletedTasks(IServiceProvider services, ILogger<DeleteOl
         var scheduledTaskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
 
         var result = await scheduledTaskRepository.DeleteAllOlderThenAsync(
-            DateTimeOffset.UtcNow.AddDays(-days), TaskStatus.Completed);
+            DateTimeOffset.UtcNow.AddDays(-days), [TaskStatus.Completed], cancellationToken);
 
         logger.LogTrace($"{nameof(DeleteOldCompletedTasks)}: Deleted rows count: {{}}", result);
 

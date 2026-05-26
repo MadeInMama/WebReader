@@ -1,0 +1,41 @@
+﻿#partialContainer {
+    width: 100%;
+}
+
+table {
+    width: auto;
+    border-collapse: collapse;
+    table-layout: fixed;
+    word-wrap: break-word;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+thead {
+    border-bottom: 2px solid;
+}
+
+th, td {
+    padding: 0.25em;
+    text-align: left;
+}
+
+tr {
+    border-bottom: 1px solid;
+}
+
+th:nth-child(1) {
+    width: 13em;
+}
+
+th:nth-child(2) {
+    width: 25em;
+}
+
+th:nth-child(3) {
+    width: 8em;
+}
+
+th:nth-child(4) {
+    width: 10em;
+}

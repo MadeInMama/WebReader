@@ -1,0 +1,58 @@
+﻿@model WebReader.Models.Dtos.AllScheduledTasksViewModel
+
+@{
+    ViewBag.Title = "Scheduled Tasks";
+}
+
+@section Style
+{
+    <link rel="stylesheet" href="~/css/scheduled-tasks.css" asp-append-version="true"/>
+}
+
+@section SpecialInfo
+{
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
+    }
+}
+
+<div id="partialContainer">
+    @await Html.PartialAsync("_ScheduledTasksPartial", Model)
+</div>
+
+@section Scripts
+{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"
+            integrity="sha512-kkMt8UThSmWcdXLYFaGZ/U6vyWSNLZMUWQ5SMeF80pGqrEkH5ei9D/3MbVQpB8p7D5C3A4vlX7BpsWTT2BfB6A=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/ScheduledTaskHub")
+            .build();
+
+        connection.on("ScheduledTaskHub", function () {
+            console.log("Получен сигнал на обновление. Запрашиваю свежий HTML...");
+            loadPartialView();
+        });
+
+        async function loadPartialView() {
+            try {
+                const response = await fetch('/ScheduledTask/ScheduledTasksPartial');
+                if (response.ok) {
+                    const html = await response.text();
+                    document.getElementById('partialContainer').innerHTML = html;
+                } else {
+                    console.error("Не удалось загрузить данные:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Ошибка при выполнении AJAX-запроса:", error);
+            }
+        }
+
+        connection.start()
+            .then(() => console.log("SignalR подключен"))
+            .catch(err => console.error(err.toString()));
+    </script>
+}

@@ -6,27 +6,25 @@ using Microsoft.IdentityModel.Tokens;
 using WebReader.Configuration;
 using WebReader.Models.Dtos.Rest;
 using WebReader.Models.Entities;
-using WebReader.Repositories;
 
 namespace WebReader.Services;
 
 public class AuthRestService
 {
     private readonly JwtConfig _jwtConfig = new();
-    private readonly CustomUserRepository _userRepository;
     private readonly UserService _userService;
 
-    public AuthRestService(UserService userService, IConfiguration configuration, CustomUserRepository userRepository)
+    public AuthRestService(UserService userService, IConfiguration configuration)
     {
         _userService = userService;
-        _userRepository = userRepository;
 
         configuration.GetRequiredSection(nameof(JwtConfig)).Bind(_jwtConfig);
     }
 
-    public async Task<Result<BaseResponseDto<int?>>> SignIn(LoginRequestDto request)
+    public async Task<Result<BaseResponseDto<int?>>> SignIn(LoginRequestDto request,
+        CancellationToken cancellationToken = default)
     {
-        var user = await _userService.AuthenticateAsync(request.Username, request.Password);
+        var user = await _userService.AuthenticateAsync(request.Username, request.Password, cancellationToken);
 
         if (user == null) return Result.Fail("Invalid credentials");
 

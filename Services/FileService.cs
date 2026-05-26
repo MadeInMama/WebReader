@@ -8,7 +8,7 @@ public class FileService(
     MinioService minioService,
     ILogger<FileService> logger)
 {
-    public async Task DeleteFileAsync(List<Guid> guids)
+    public async Task DeleteFileAsync(List<Guid> guids, CancellationToken cancellationToken)
     {
         logger.LogInformation("Deleting files with ids: ({count}, {guids})", guids.Count, string.Join(", ", guids));
 
@@ -16,11 +16,14 @@ public class FileService(
         {
             logger.LogTrace("Deleting file with id: ({index}, {guid})", guid.Index + 1, guid.Item);
 
-            var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == guid.Item, null, false, f => f.Bucket);
+            var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == guid.Item, null, cancellationToken, false,
+                f => f.Bucket);
 
             if (file == null) continue;
 
-            var prevFile = await fileRepository.FirstOrDefaultAsync(f => f.NextPartId == guid.Item, null, false);
+            var prevFile =
+                await fileRepository.FirstOrDefaultAsync(f => f.NextPartId == guid.Item, null, cancellationToken,
+                    false);
 
             if (prevFile != null)
             {
@@ -30,11 +33,11 @@ public class FileService(
                     prevFile.NextPartId = null;
             }
 
-            await fileRepository.SaveChangesAsync();
+            await fileRepository.SaveChangesAsync(cancellationToken);
 
-            await fileRepository.DeleteAsync(guid.Item);
-            await readingRepository.DeleteAllByFileIdAsync([guid.Item]);
-            await minioService.RemoveObjectsAsync(file.Bucket!.Name, [file.Name]);
+            await fileRepository.DeleteAsync(guid.Item, cancellationToken);
+            await readingRepository.DeleteAllByFileIdAsync([guid.Item], cancellationToken);
+            await minioService.RemoveObjectsAsync(file.Bucket!.Name, [file.Name], cancellationToken);
         }
 
         logger.LogInformation("Deleting files done");

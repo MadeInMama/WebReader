@@ -9,6 +9,7 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
 {
     public async Task<ScheduledTaskConfig?> FirstOrDefaultAsync(Expression<Func<ScheduledTaskConfig, bool>> predicate,
         ApplicationDbContext? ctx,
+        CancellationToken cancellationToken,
         bool asNoTracking = false,
         params Expression<Func<ScheduledTaskConfig, object>>[] includes)
     {
@@ -20,10 +21,11 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate);
+        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
     public async Task<IEnumerable<ScheduledTaskConfig>> AllAsync(Expression<Func<ScheduledTaskConfig, bool>> predicate,
+        CancellationToken cancellationToken,
         params Expression<Func<ScheduledTaskConfig, object>>[] includes)
     {
         IQueryable<ScheduledTaskConfig> query = context.Set<ScheduledTaskConfig>();
@@ -31,17 +33,17 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         foreach (var include in includes)
             query = query.Include(include);
 
-        return await query.Where(predicate).ToListAsync();
+        return await query.Where(predicate).OrderBy(f => f.Type).ToListAsync(cancellationToken);
     }
 
-    public async Task<ScheduledTaskConfig> AddAsync(ScheduledTaskConfig entity)
+    public async Task<ScheduledTaskConfig> AddAsync(ScheduledTaskConfig entity, CancellationToken cancellationToken)
     {
-        var res = await context.ScheduledTaskConfigs.AddAsync(entity);
+        var res = await context.ScheduledTaskConfigs.AddAsync(entity, cancellationToken);
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync()
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync();
+        return await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -20,7 +20,8 @@ public class FileControllerService(
     ILogger<FileControllerService> logger,
     HybridCache cache)
 {
-    public async Task<Result<AllBucketsViewModel>> GetAllBuckets(Guid userGuid, List<RoleType> roles)
+    public async Task<Result<AllBucketsViewModel>> GetAllBuckets(Guid userGuid, List<RoleType> roles,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -28,7 +29,7 @@ public class FileControllerService(
                 $"buckets_{userGuid}_{string.Join(",", roles)}",
                 async _ =>
                 {
-                    var res = (await bucketRepository.GetAllAvailableBucketsAsync(roles, userGuid))
+                    var res = (await bucketRepository.GetAllAvailableBucketsAsync(roles, userGuid, cancellationToken))
                         .Select(bucket =>
                             new AllBucketsItem
                             {
@@ -40,8 +41,8 @@ public class FileControllerService(
 
                     return new AllBucketsViewModel { Items = res };
                 },
-                logger
-            );
+                logger,
+                cancellationToken: cancellationToken);
         }
         catch (CustomApiException e)
         {
@@ -50,7 +51,7 @@ public class FileControllerService(
     }
 
     public async Task<Result<AllFilesInBucketViewModel>> GetAllFilesInBucket(Guid userGuid, List<RoleType> roles,
-        Guid bucketId, string orderBy)
+        Guid bucketId, string orderBy, CancellationToken cancellationToken)
     {
         try
         {
@@ -65,13 +66,16 @@ public class FileControllerService(
                                                   !f.IsHidden &&
                                                   f.Id == bucketId &&
                                                   f.AccessRoles.Intersect(roles).Any() &&
-                                                  (f.UserId == userGuid || f.UserId == null), null, true);
+                                                  (f.UserId == userGuid || f.UserId == null), null, cancellationToken,
+                            true);
 
                     if (bucket == null) throw new CustomApiException("Bucket not found");
 
-                    var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
+                    var allUserReadings =
+                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken);
 
-                    var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Id, roles))
+                    var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Id, roles,
+                            cancellationToken))
                         .Select(file =>
                         {
                             var reading = allUserReadings.FirstOrDefault(reading => reading.FileId == file.Id);
@@ -100,7 +104,8 @@ public class FileControllerService(
                     };
                 },
                 logger,
-                tags: [$"files_{userGuid}"]
+                tags: [$"files_{userGuid}"],
+                cancellationToken: cancellationToken
             );
         }
         catch (CustomApiException e)
@@ -110,18 +115,18 @@ public class FileControllerService(
     }
 
     public async Task<Result<AllFilesInBucketViewModel>> GetAllPartsInFile(Guid userGuid, List<RoleType> roles,
-        Guid bucketId, Guid fileId, string orderBy)
+        Guid bucketId, Guid fileId, string orderBy, CancellationToken cancellationToken)
     {
         try
         {
             return await cache.GetOrCreateWithLoggingAsync(
                 $"parts_in_file_{userGuid}_{string.Join(",", roles)}_{bucketId}_{fileId}_{orderBy}",
-                async ctx =>
+                async _ =>
                 {
                     var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
 
-                    using var contextBucket = contextFactory.CreateDbContextAsync(ctx);
-                    using var contextFile = contextFactory.CreateDbContextAsync(ctx);
+                    using var contextBucket = contextFactory.CreateDbContextAsync(cancellationToken);
+                    using var contextFile = contextFactory.CreateDbContextAsync(cancellationToken);
 
                     Task.WaitAll(contextBucket, contextFile);
 
@@ -131,24 +136,26 @@ public class FileControllerService(
                                                                            f.AccessRoles.Intersect(roles)
                                                                                .Any() &&
                                                                            (f.UserId == userGuid || f.UserId == null),
-                        contextBucket.Result, true);
+                        contextBucket.Result, cancellationToken, true);
 
                     var file = fileRepository.FirstOrDefaultAsync(f => f.IsAvailable &&
                                                                        !f.IsHidden &&
                                                                        f.Id == fileId &&
                                                                        f.AccessRoles.Intersect(roles).Any(),
-                        contextFile.Result, true);
+                        contextFile.Result, cancellationToken, true);
 
                     Task.WaitAll(bucket, file);
 
                     if (bucket.Result == null || file.Result == null)
                         throw new CustomApiException("Bucket or File not found");
 
-                    var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
+                    var allUserReadings =
+                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken);
 
-                    var headedFile = await fileRepository.GetHeadedPartedObjectAsync(fileId);
+                    var headedFile = await fileRepository.GetHeadedPartedObjectAsync(fileId, cancellationToken);
 
-                    var files = await fileRepository.GetAllAvailableObjectsWithPartsAsync(headedFile.Id);
+                    var files = await fileRepository.GetAllAvailableObjectsWithPartsAsync(headedFile.Id,
+                        cancellationToken);
 
                     var res = files.Select(f =>
                     {
@@ -177,7 +184,8 @@ public class FileControllerService(
                     };
                 },
                 logger,
-                tags: [$"files_{userGuid}"]
+                tags: [$"files_{userGuid}"],
+                cancellationToken: cancellationToken
             );
         }
         catch (CustomApiException e)
@@ -186,7 +194,8 @@ public class FileControllerService(
         }
     }
 
-    public async Task<Result<AllFilesReadingViewModel>> GetReading(Guid userGuid, List<RoleType> roles)
+    public async Task<Result<AllFilesReadingViewModel>> GetReading(Guid userGuid, List<RoleType> roles,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -194,7 +203,8 @@ public class FileControllerService(
                 $"reading_{userGuid}_{string.Join(",", roles)}",
                 async _ =>
                 {
-                    var allUserReadings = await readingRepository.AllAsync(f => f.UserId == userGuid);
+                    var allUserReadings =
+                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken);
 
                     var allUserReadingsGroupedByFile = allUserReadings
                         .GroupBy(reading => reading.FileId)
@@ -216,11 +226,11 @@ public class FileControllerService(
                     }
 
                     var delete = idsToDelete.Count != 0
-                        ? readingRepository.DeleteAllAsync(idsToDelete)
+                        ? readingRepository.DeleteAllAsync(idsToDelete, cancellationToken)
                         : Task.CompletedTask;
 
                     var update = readingsToUpdate.Count != 0
-                        ? readingRepository.SetCurrPageAndScaleAndIsDoneAsync(readingsToUpdate)
+                        ? readingRepository.SetCurrPageAndScaleAndIsDoneAsync(readingsToUpdate, cancellationToken)
                         : Task.CompletedTask;
 
                     await Task.WhenAll(delete, update);
@@ -229,6 +239,7 @@ public class FileControllerService(
                                                                           !f.File!.IsHidden &&
                                                                           !f.IsDone &&
                                                                           f.File.AccessRoles.Intersect(roles).Any(),
+                        cancellationToken,
                         f => f.File!,
                         f => f.File!.Bucket!)).ToList();
 
@@ -253,7 +264,8 @@ public class FileControllerService(
                     return new AllFilesReadingViewModel { Items = res };
                 },
                 logger,
-                tags: [$"files_{userGuid}"]
+                tags: [$"files_{userGuid}"],
+                cancellationToken: cancellationToken
             );
         }
         catch (CustomApiException e)
@@ -263,20 +275,20 @@ public class FileControllerService(
     }
 
     public async Task<Result<FileViewModel>> GetFile(Guid userGuid, List<RoleType> roles, Guid bucketId,
-        Guid fileId)
+        Guid fileId, CancellationToken cancellationToken)
     {
         try
         {
             var file = await fileRepository.FirstOrDefaultAsync(f =>
                     f.BucketId == bucketId &&
                     f.Id == fileId &&
-                    f.AccessRoles.Intersect(roles).Any(), null, true,
+                    f.AccessRoles.Intersect(roles).Any(), null, cancellationToken, true,
                 f => f.Bucket!) ?? throw new CustomApiException("File not found");
 
             var reading = await readingRepository
                 .FirstOrDefaultAsync(f => f.UserId == userGuid
                                           && f.File!.BucketId == bucketId
-                                          && f.FileId == fileId, null, true);
+                                          && f.FileId == fileId, null, cancellationToken, true);
 
             return new FileViewModel
             {
@@ -293,7 +305,7 @@ public class FileControllerService(
                 PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
                     f.BucketId == bucketId &&
                     f.NextPartId == file.Id &&
-                    f.AccessRoles.Intersect(roles).Any(), null, true))?.Id,
+                    f.AccessRoles.Intersect(roles).Any(), null, cancellationToken, true))?.Id,
                 Settings = file.Settings,
                 Type = file.Type
             };

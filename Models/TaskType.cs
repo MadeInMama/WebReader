@@ -13,7 +13,8 @@ public enum TaskType
     AutoDownloadNewPartsWorldAfterDestruction,
 
     DeleteOldCompletedTasks,
-    DeleteOldErroredTasks
+    DeleteOldErroredTasks,
+    DeleteOldInProgressTasks
 
     //TODO: delete in s3 tasks
 }

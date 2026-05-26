@@ -18,28 +18,30 @@ public class MinioService(IMinioClient minioClient)
         return url ?? throw new Exception("Failed to get url");
     }
 
-    public async Task<IEnumerable<Bucket>> ListBucketsAsync()
+    public async Task<IEnumerable<Bucket>> ListBucketsAsync(CancellationToken cancellationToken)
     {
-        return (await minioClient.ListBucketsAsync()).Buckets;
+        return (await minioClient.ListBucketsAsync(cancellationToken)).Buckets;
     }
 
-    public async Task<IEnumerable<Item>> ListObjectsAsync(string bucketName)
+    public async Task<IEnumerable<Item>> ListObjectsAsync(string bucketName, CancellationToken cancellationToken)
     {
-        return await minioClient.ListObjectsEnumAsync(new ListObjectsArgs().WithBucket(bucketName)).ToListAsync();
+        return await minioClient
+            .ListObjectsEnumAsync(new ListObjectsArgs().WithBucket(bucketName), cancellationToken)
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task CreateBucketAsync(string bucketName)
+    public async Task CreateBucketAsync(string bucketName, CancellationToken cancellationToken)
     {
-        await minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName));
+        await minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName), cancellationToken);
     }
 
-    public async Task RemoveBucketAsync(string? bucketName)
+    public async Task RemoveBucketAsync(string? bucketName, CancellationToken cancellationToken)
     {
         if (bucketName == null) return;
 
         var observable = minioClient.ListObjectsEnumAsync(new ListObjectsArgs()
             .WithBucket(bucketName)
-            .WithRecursive(true));
+            .WithRecursive(true), cancellationToken);
 
         var objNames = new List<string>();
 
@@ -47,21 +49,22 @@ public class MinioService(IMinioClient minioClient)
             if (item != null)
                 objNames.Add(item.Key);
 
-        await RemoveObjectsAsync(bucketName, objNames);
-        await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(bucketName));
+        await RemoveObjectsAsync(bucketName, objNames, cancellationToken);
+        await minioClient.RemoveBucketAsync(new RemoveBucketArgs().WithBucket(bucketName), cancellationToken);
     }
 
-    public async Task RemoveObjectsAsync(string? bucketName, List<string>? objectNames)
+    public async Task RemoveObjectsAsync(string? bucketName, List<string>? objectNames,
+        CancellationToken cancellationToken)
     {
         if (bucketName == null) return;
         if (objectNames == null || objectNames.Count == 0) return;
 
         await minioClient.RemoveObjectsAsync(new RemoveObjectsArgs()
             .WithBucket(bucketName)
-            .WithObjects(objectNames));
+            .WithObjects(objectNames), cancellationToken);
     }
 
-    public async Task<bool> ObjectExistsAsync(string bucketName, string objectName)
+    public async Task<bool> ObjectExistsAsync(string bucketName, string objectName, CancellationToken cancellationToken)
     {
         try
         {
@@ -69,7 +72,7 @@ public class MinioService(IMinioClient minioClient)
                 .WithBucket(bucketName)
                 .WithObject(objectName);
 
-            await minioClient.StatObjectAsync(args);
+            await minioClient.StatObjectAsync(args, cancellationToken);
 
             return true;
         }
@@ -83,16 +86,17 @@ public class MinioService(IMinioClient minioClient)
         }
     }
 
-    public async Task<bool> UploadObjectAsync(string bucketName, Stream stream, string fileName, string contentType)
+    public async Task<bool> UploadObjectAsync(string bucketName, Stream stream, string fileName, string contentType,
+        CancellationToken cancellationToken)
     {
-        if (await ObjectExistsAsync(bucketName, fileName)) return false;
+        if (await ObjectExistsAsync(bucketName, fileName, cancellationToken)) return false;
 
         var res = await minioClient.PutObjectAsync(new PutObjectArgs()
             .WithBucket(bucketName)
             .WithObject(fileName)
             .WithStreamData(stream)
             .WithContentType(contentType)
-            .WithObjectSize(stream.Length));
+            .WithObjectSize(stream.Length), cancellationToken);
 
         stream.Close();
         await stream.DisposeAsync();

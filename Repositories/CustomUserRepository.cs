@@ -9,6 +9,7 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
 {
     public async Task<CustomUser?> FirstOrDefaultAsync(Expression<Func<CustomUser, bool>> predicate,
         ApplicationDbContext? ctx,
+        CancellationToken cancellationToken,
         bool asNoTracking = false,
         params Expression<Func<CustomUser, object>>[] includes)
     {
@@ -20,24 +21,25 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate);
+        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
     public Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate,
+        CancellationToken cancellationToken,
         params Expression<Func<CustomUser, object>>[] includes)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<CustomUser> AddAsync(CustomUser entity)
+    public async Task<CustomUser> AddAsync(CustomUser entity, CancellationToken cancellationToken)
     {
-        var res = await context.Users.AddAsync(entity);
+        var res = await context.Users.AddAsync(entity, cancellationToken);
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync()
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync();
+        return await context.SaveChangesAsync(cancellationToken);
     }
 
     public void UpdateAsync(CustomUser entity)
@@ -45,7 +47,7 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         context.Users.Update(entity);
     }
 
-    public async Task DeleteAllAsync(IEnumerable<Guid>? ids)
+    public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
@@ -53,13 +55,13 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
 
         await context.Users
             .Where(r => idsArray.Contains(r.Id))
-            .ExecuteDeleteAsync();
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid? id)
+    public async Task DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
         if (id == null) return;
 
-        await DeleteAllAsync([id.Value]);
+        await DeleteAllAsync([id.Value], cancellationToken);
     }
 }

@@ -5,8 +5,8 @@ namespace WebReader.Models.Entities;
 
 public class ScheduledTask : BaseEntity
 {
-    public TaskType Type { get; init; }
-    public sbyte Priority { get; init; }
+    public required TaskType Type { get; init; }
+    public required sbyte Priority { get; init; }
     public TaskStatus Status { get; set; } = TaskStatus.Pending;
     public string? Result { get; set; }
 
@@ -14,8 +14,6 @@ public class ScheduledTask : BaseEntity
     [Range(0.00, 1.00, ErrorMessage = "The value must be between 0.00 and 1.00.")]
     public decimal Progress { get; set; }
 
-    //TODO: Progress
-
-    public Guid? ScheduledTaskConfigId { get; init; }
+    public required Guid ScheduledTaskConfigId { get; init; }
     public ScheduledTaskConfig? ScheduledTaskConfig { get; init; }
 }
