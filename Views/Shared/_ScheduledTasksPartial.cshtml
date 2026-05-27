@@ -4,7 +4,6 @@
 <table>
     <thead>
     <tr>
-        <th>ID</th>
         <th>Type</th>
         <th>Status</th>
         <th>Progress</th>
@@ -15,8 +14,7 @@
     <tbody>
     @foreach (var item in Model.Items)
     {
-        <tr>
-            <td>@item.Id</td>
+        <tr onclick="openModalClicked(`<pre>${JSON.stringify(@(JsonSerializer.Serialize(item)), null, 2)}</pre>`)">
             <td>@item.Type (@((int)item.Type))</td>
             <td>@item.Status</td>
             <td>
@@ -35,7 +33,7 @@
                 </div>
             </td>
             <td>@item.Result</td>
-            <td>@item.UpdatedDate</td>
+            <td>@item.UpdatedDate.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss")</td>
         </tr>
     }
     </tbody>

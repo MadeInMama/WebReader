@@ -15,8 +15,10 @@ using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
+using WebReader.Repositories;
 using WebReader.Services;
 using File = WebReader.Models.Entities.File;
+using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.AutoDownloadNewParts;
 
@@ -26,7 +28,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
     ILogger<T> logger,
-    IHubContext<ScheduledTaskHub> scheduledTaskHubContext)
+    IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
+    ScheduledTaskRepository taskRepository)
     : IBackgroundTasked
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
@@ -92,9 +95,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             try
             {
-                task.Progress = new decimal(0.01);
-                context.ScheduledTasks.Attach(task);
-                await context.SaveChangesAsync(cancellationToken);
+                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress, new decimal(0.01),
+                    null, cancellationToken);
 
                 await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
             }
@@ -119,23 +121,24 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 }
 
                 if (res.ValueOrDefault.isSkipped) startIndex = link.Index;
+                else
+                    try
+                    {
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress,
+                            new decimal((link.Index + 1 - startIndex) * 1f / (links.Count - startIndex)),
+                            null, cancellationToken);
+
+                        await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogWarning("Can't save progress: {}", e.Message);
+                    }
 
                 lastFile = res.ValueOrDefault.file;
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-
-                try
-                {
-                    task.Progress = new decimal((link.Index + 1 - startIndex) * 1f / (links.Count - startIndex));
-                    await context.SaveChangesAsync(cancellationToken);
-
-                    await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    logger.LogWarning("Can't save progress: {}", e.Message);
-                }
             }
 
             if (result.IsSuccess)
@@ -454,8 +457,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        await BroadcastAllSubs(context, botClient,
-            $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
+        // await BroadcastAllSubs(context, botClient,
+        //     $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
 
         var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 

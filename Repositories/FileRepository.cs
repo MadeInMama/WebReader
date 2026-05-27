@@ -49,15 +49,14 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         return await context.SaveChangesAsync(cancellationToken);
     }
 
-    public File Update(File entity)
+    public void Attach(File entity)
     {
-        var res = context.Files.Update(entity);
-        return res.Entity;
+        context.Files.Attach(entity);
     }
 
-    public void UpdateAll(IEnumerable<File> entities)
+    public void AttachAll(IEnumerable<File> entities)
     {
-        context.Files.UpdateRange(entities);
+        foreach (var entity in entities) Attach(entity);
     }
 
     public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(string bucketName,

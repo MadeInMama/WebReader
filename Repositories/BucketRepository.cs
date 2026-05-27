@@ -48,9 +48,9 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         return await context.SaveChangesAsync(cancellationToken);
     }
 
-    public void UpdateAll(IEnumerable<Bucket> entities)
+    public void AttachAll(IEnumerable<Bucket> entities)
     {
-        context.Buckets.UpdateRange(entities);
+        foreach (var entity in entities) context.Buckets.Attach(entity);
     }
 
     public async Task<IEnumerable<Bucket>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles, Guid userId,

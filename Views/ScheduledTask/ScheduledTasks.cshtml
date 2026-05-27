@@ -17,6 +17,8 @@
     }
 }
 
+@await Html.PartialAsync("_ModalInfoWithCustomHtml")
+
 <div id="partialContainer">
     @await Html.PartialAsync("_ScheduledTasksPartial", Model)
 </div>
@@ -33,26 +35,26 @@
             .build();
 
         connection.on("ScheduledTaskHub", function () {
-            console.log("Получен сигнал на обновление. Запрашиваю свежий HTML...");
             loadPartialView();
         });
 
         async function loadPartialView() {
             try {
                 const response = await fetch('/ScheduledTask/ScheduledTasksPartial');
+
                 if (response.ok) {
-                    const html = await response.text();
-                    document.getElementById('partialContainer').innerHTML = html;
+                    document.getElementById('partialContainer').innerHTML = await response.text();
                 } else {
-                    console.error("Не удалось загрузить данные:", response.statusText);
+                    alert(`Не удалось загрузить данные: ${response.statusText}`);
                 }
             } catch (error) {
-                console.error("Ошибка при выполнении AJAX-запроса:", error);
+                alert(`Ошибка при выполнении AJAX-запроса: ${error}`);
             }
         }
 
         connection.start()
-            .then(() => console.log("SignalR подключен"))
+            .then(() => {
+            })
             .catch(err => console.error(err.toString()));
     </script>
 }

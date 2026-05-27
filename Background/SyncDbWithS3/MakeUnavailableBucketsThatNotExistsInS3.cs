@@ -45,7 +45,7 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
             toSave.Add(bucketInDb);
         }
 
-        if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
+        if (toSave.Count != 0) bucketRepository.AttachAll(toSave);
 
         var result = await bucketRepository.SaveChangesAsync(cancellationToken);
 

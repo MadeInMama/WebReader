@@ -75,7 +75,7 @@ public class UpdateFilesData(IServiceProvider services, ILogger<UpdateFilesData>
             if (isChanged) toSave.Add(fileInDb);
         }
 
-        if (toSave.Count != 0) fileRepository.UpdateAll(toSave);
+        if (toSave.Count != 0) fileRepository.AttachAll(toSave);
 
         var result = await fileRepository.SaveChangesAsync(cancellationToken);
         logger.LogTrace($"{nameof(UpdateFilesData)}: Total update count {{updated}}", result);

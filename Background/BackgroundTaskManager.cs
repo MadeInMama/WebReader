@@ -164,15 +164,8 @@ public class BackgroundTaskManager(
             var task = await taskRepository.GetNextTaskAsync(cancellationToken);
 
             if (task == null)
-            {
-                await Task.Delay(5000, cancellationToken);
+                // await Task.Delay(5000, cancellationToken);
                 continue;
-            }
-
-            task.Status = TaskStatus.InProgress;
-            task.Progress = new decimal(0.0);
-
-            await taskRepository.SaveChangesAsync(cancellationToken);
 
             var taskExecutor = scope.ServiceProvider.GetKeyedService<IBackgroundTasked>(task.Type);
 
@@ -180,11 +173,14 @@ public class BackgroundTaskManager(
             {
                 logger.LogError("No TaskExecutorClass for type: {type}({typeCode})", task.Type, (int)task.Type);
 
-                task.Status = TaskStatus.Error;
-                task.Result = $"No TaskExecutorClass for type: {task.Type}({(int)task.Type})";
+                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, new decimal(0.0),
+                    $"No TaskExecutorClass for type: {task.Type}({(int)task.Type})", cancellationToken);
             }
             else
             {
+                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress, new decimal(0.0),
+                    null, cancellationToken);
+
                 //TODO: set execution time limit from settings
                 try
                 {
@@ -198,25 +194,19 @@ public class BackgroundTaskManager(
                     logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
 
                     if (result.IsSuccess)
-                    {
-                        task.Progress = new decimal(1.0);
-                        task.Result = result.ValueOrDefault;
-                    }
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed,
+                            new decimal(1.0), result.ValueOrDefault, cancellationToken);
                     else if (result.Reasons.Count != 0)
-                    {
-                        task.Result = string.Join(", ", result.Reasons.Select(f => f.Message));
-                    }
-
-                    task.Status = TaskStatus.Completed;
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed,
+                            new decimal(1.0), string.Join(", ", result.Reasons.Select(f => f.Message)),
+                            cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    task.Status = TaskStatus.Error;
-                    task.Result = e.Message;
+                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, new decimal(1.0),
+                        e.Message, cancellationToken);
                 }
             }
-
-            await taskRepository.SaveChangesAsync(cancellationToken);
 
             await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }

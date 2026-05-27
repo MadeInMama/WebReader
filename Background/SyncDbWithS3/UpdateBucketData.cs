@@ -31,7 +31,7 @@ public class UpdateBucketData(IServiceProvider services, ILogger<UpdateBucketDat
             toSave.Add(bucketInDb);
         }
 
-        if (toSave.Count != 0) bucketRepository.UpdateAll(toSave);
+        if (toSave.Count != 0) bucketRepository.AttachAll(toSave);
 
         var result = await bucketRepository.SaveChangesAsync(cancellationToken);
 

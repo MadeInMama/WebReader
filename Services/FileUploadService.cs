@@ -74,7 +74,7 @@ public class FileUploadService(
             asPartOfFile.NextPartId = currentFile.Id;
             asPartOfFile.NextPart = currentFile;
 
-            fileRepository.Update(asPartOfFile);
+            fileRepository.Attach(asPartOfFile);
         }
         else
         {

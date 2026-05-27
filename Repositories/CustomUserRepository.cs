@@ -42,11 +42,6 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         return await context.SaveChangesAsync(cancellationToken);
     }
 
-    public void UpdateAsync(CustomUser entity)
-    {
-        context.Users.Update(entity);
-    }
-
     public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
