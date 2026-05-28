@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Collections.Immutable;
+using AngleSharp.Common;
+using Microsoft.AspNetCore.SignalR;
 using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
@@ -15,17 +17,14 @@ public class BackgroundTaskManager(
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await Task.WhenAll(
-            RunHourlyTask(cancellationToken),
-            RunDailyTask(cancellationToken),
-            RunWeeklyTask(cancellationToken),
-            RunMonthlyTask(cancellationToken),
+            RunSpreadTasks(cancellationToken),
             RunAsSoonAsPossible(cancellationToken)
         );
     }
 
-    private async Task RunHourlyTask(CancellationToken cancellationToken)
+    private async Task RunSpreadTasks(CancellationToken cancellationToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromHours(1));
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(10));
 
         using var scope = serviceScopeFactory.CreateScope();
 
@@ -41,112 +40,64 @@ public class BackgroundTaskManager(
 
         async Task DoWork()
         {
-            var taskConfigs =
-                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryHour && f.IsActive,
-                    cancellationToken);
+            var taskConfigs = (await taskConfigRepository.AllAsync(f => f.IsActive, cancellationToken, true))
+                .GroupBy(f => f.Cron)
+                .ToImmutableDictionary(f => f.Key, f => f.ToList());
 
-            var tasks = CreateTasksFromConfigs(taskConfigs);
+            var tasks = new List<ScheduledTask>(
+                await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryHour, [])));
+            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryDay, [])));
+            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryWeek, [])));
+            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryMonth, [])));
 
-            await taskRepository.AddRangeAsync(tasks, cancellationToken);
+            if (tasks.Count > 0)
+            {
+                await taskRepository.AddRangeAsync(tasks, cancellationToken);
 
-            await taskRepository.SaveChangesAsync(cancellationToken);
+                await taskRepository.SaveChangesAsync(cancellationToken);
 
-            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+                await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+            }
         }
-    }
 
-    private async Task RunDailyTask(CancellationToken cancellationToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromDays(1));
-
-        using var scope = serviceScopeFactory.CreateScope();
-
-        var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
-        var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
-        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
-
-        await DoWork();
-
-        while (await timer.WaitForNextTickAsync(cancellationToken)) await DoWork();
-
-        return;
-
-        async Task DoWork()
+        async Task<IEnumerable<ScheduledTask>> CreateTasksFromConfigs(List<ScheduledTaskConfig> configs)
         {
-            var taskConfigs = await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryDay && f.IsActive,
-                cancellationToken);
+            var res = new List<ScheduledTask>();
 
-            var tasks = CreateTasksFromConfigs(taskConfigs);
+            foreach (var config in configs)
+            {
+                var lastTask = await taskRepository.GetLastTaskByConfigIdAsync(config.Id, cancellationToken);
 
-            await taskRepository.AddRangeAsync(tasks, cancellationToken);
+                if (lastTask == null) res.Add(MapConfigToTask(config));
+                else if (lastTask.Status != TaskStatus.Pending)
+                    res.Add(
+                        MapConfigToTask(config, GetNextHaveToStartAtByCronType(lastTask.HaveToStartAt, config.Cron)));
+            }
 
-            await taskRepository.SaveChangesAsync(cancellationToken);
-
-            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+            return res;
         }
-    }
 
-    private async Task RunWeeklyTask(CancellationToken cancellationToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromDays(7));
-
-        using var scope = serviceScopeFactory.CreateScope();
-
-        var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
-        var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
-        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
-
-        await DoWork();
-
-        while (await timer.WaitForNextTickAsync(cancellationToken)) await DoWork();
-
-        return;
-
-        async Task DoWork()
+        DateTimeOffset GetNextHaveToStartAtByCronType(DateTimeOffset lastHaveToStartAt, TaskConfigCron cron)
         {
-            var taskConfigs =
-                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryWeek && f.IsActive,
-                    cancellationToken);
-
-            var tasks = CreateTasksFromConfigs(taskConfigs);
-
-            await taskRepository.AddRangeAsync(tasks, cancellationToken);
-
-            await taskRepository.SaveChangesAsync(cancellationToken);
-
-            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+            return cron switch
+            {
+                TaskConfigCron.EveryHour => lastHaveToStartAt.AddHours(1),
+                TaskConfigCron.EveryDay => lastHaveToStartAt.AddDays(1),
+                TaskConfigCron.EveryWeek => lastHaveToStartAt.AddDays(7),
+                TaskConfigCron.EveryMonth => lastHaveToStartAt.AddDays(30),
+                _ => throw new ArgumentOutOfRangeException(nameof(cron), cron, null)
+            };
         }
-    }
 
-    private async Task RunMonthlyTask(CancellationToken cancellationToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromDays(30));
-
-        using var scope = serviceScopeFactory.CreateScope();
-
-        var taskConfigRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskConfigRepository>();
-        var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
-        var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
-
-        await DoWork();
-
-        while (await timer.WaitForNextTickAsync(cancellationToken)) await DoWork();
-
-        return;
-
-        async Task DoWork()
+        ScheduledTask MapConfigToTask(ScheduledTaskConfig config, DateTimeOffset? haveToStartAt = null)
         {
-            var taskConfigs =
-                await taskConfigRepository.AllAsync(f => f.Cron == TaskConfigCron.EveryMonth && f.IsActive,
-                    cancellationToken);
-
-            var tasks = CreateTasksFromConfigs(taskConfigs);
-
-            await taskRepository.AddRangeAsync(tasks, cancellationToken);
-
-            await taskRepository.SaveChangesAsync(cancellationToken);
-
-            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+            return new ScheduledTask
+            {
+                Type = config.Type,
+                Priority = config.DefaultPriority,
+                ScheduledTaskConfigId = config.Id,
+                HaveToStartAt = haveToStartAt ?? DateTimeOffset.UtcNow
+            };
         }
     }
 
@@ -164,8 +115,10 @@ public class BackgroundTaskManager(
             var task = await taskRepository.GetNextTaskAsync(cancellationToken);
 
             if (task == null)
-                // await Task.Delay(5000, cancellationToken);
+            {
+                await Task.Delay(5000, cancellationToken);
                 continue;
+            }
 
             var taskExecutor = scope.ServiceProvider.GetKeyedService<IBackgroundTasked>(task.Type);
 
@@ -185,7 +138,7 @@ public class BackgroundTaskManager(
                 try
                 {
                     using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    linkedCts.CancelAfter(TimeSpan.FromHours(1));
+                    linkedCts.CancelAfter(TimeSpan.FromMinutes(60));
                     var combinedToken = linkedCts.Token;
 
                     logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
@@ -197,29 +150,22 @@ public class BackgroundTaskManager(
                         await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed,
                             new decimal(1.0), result.ValueOrDefault, cancellationToken);
                     else if (result.Reasons.Count != 0)
-                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed,
-                            new decimal(1.0), string.Join(", ", result.Reasons.Select(f => f.Message)),
-                            cancellationToken);
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed, null,
+                            string.Join(", ", result.Reasons.Select(f => f.Message)), cancellationToken);
+                }
+                catch (OperationCanceledException e)
+                {
+                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Canceled, null, e.Message,
+                        cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, new decimal(1.0),
-                        e.Message, cancellationToken);
+                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null, e.Message,
+                        cancellationToken);
                 }
             }
 
             await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }
-    }
-
-    private static IEnumerable<ScheduledTask> CreateTasksFromConfigs(IEnumerable<ScheduledTaskConfig> taskConfigs)
-    {
-        return taskConfigs.Select(f => new ScheduledTask
-        {
-            Type = f.Type,
-            Priority = f.DefaultPriority,
-            ScheduledTaskConfigId = f.Id,
-            ScheduledTaskConfig = f
-        });
     }
 }

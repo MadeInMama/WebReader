@@ -38,12 +38,16 @@ public class UserReadingRepository(
     }
 
     public async Task<IEnumerable<UserReading>> AllAsync(Expression<Func<UserReading, bool>> predicate,
-        CancellationToken cancellationToken, params Expression<Func<UserReading, object>>[] includes)
+        CancellationToken cancellationToken, bool asNoTracking = false,
+        params Expression<Func<UserReading, object>>[] includes)
     {
         IQueryable<UserReading> query = context.Set<UserReading>();
 
         foreach (var include in includes)
             query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
 
         return await query.Where(predicate).ToListAsync(cancellationToken);
     }
@@ -84,18 +88,6 @@ public class UserReadingRepository(
 
         await context.UserReadings
             .Where(r => idsArray.Contains(r.Id))
-            .ExecuteDeleteAsync(cancellationToken);
-    }
-
-    public async Task DeleteAllByFileIdAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
-    {
-        var idsArray = ids?.ToArray() ?? [];
-
-        if (idsArray.Length == 0)
-            return;
-
-        await context.UserReadings
-            .Where(r => idsArray.Contains(r.FileId))
             .ExecuteDeleteAsync(cancellationToken);
     }
 }

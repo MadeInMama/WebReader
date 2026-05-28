@@ -2,11 +2,7 @@
 
 namespace WebReader.Services;
 
-public class FileService(
-    FileRepository fileRepository,
-    UserReadingRepository readingRepository,
-    MinioService minioService,
-    ILogger<FileService> logger)
+public class FileService(FileRepository fileRepository, ILogger<FileService> logger)
 {
     public async Task DeleteFileAsync(List<Guid> guids, CancellationToken cancellationToken)
     {
@@ -36,8 +32,6 @@ public class FileService(
             await fileRepository.SaveChangesAsync(cancellationToken);
 
             await fileRepository.DeleteAsync(guid.Item, cancellationToken);
-            await readingRepository.DeleteAllByFileIdAsync([guid.Item], cancellationToken);
-            await minioService.RemoveObjectsAsync(file.Bucket!.Name, [file.Name], cancellationToken);
         }
 
         logger.LogInformation("Deleting files done");

@@ -35,3 +35,7 @@ th:nth-child(2) {
 th:nth-child(3) {
     width: 10em;
 }
+
+pre {
+    text-wrap-mode: wrap;
+}

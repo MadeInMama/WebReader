@@ -26,13 +26,16 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
     }
 
     public async Task<IEnumerable<Bucket>> AllAsync(Expression<Func<Bucket, bool>> predicate,
-        CancellationToken cancellationToken,
+        CancellationToken cancellationToken, bool asNoTracking = false,
         params Expression<Func<Bucket, object>>[] includes)
     {
         IQueryable<Bucket> query = context.Set<Bucket>();
 
         foreach (var include in includes)
             query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
 
         return await query.Where(predicate).ToListAsync(cancellationToken);
     }

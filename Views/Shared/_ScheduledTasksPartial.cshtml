@@ -8,7 +8,7 @@
         <th>Status</th>
         <th>Progress</th>
         <th>Result</th>
-        <th>Updated Date</th>
+        <th>Have To Start At</th>
     </tr>
     </thead>
     <tbody>
@@ -32,8 +32,8 @@
                         style="position: absolute; left: 50%; transform: translateX(-50%);">@((int)(item.Progress * 100))</span>
                 </div>
             </td>
-            <td>@item.Result</td>
-            <td>@item.UpdatedDate.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss")</td>
+            <td>@item.Result.LimitToNullable(50)</td>
+            <td>@item.HaveToStartAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss")</td>
         </tr>
     }
     </tbody>

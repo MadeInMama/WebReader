@@ -3,17 +3,12 @@ using WebReader.Repositories;
 
 namespace WebReader.Services;
 
-public class BucketService(
-    MinioService minioService,
-    BucketRepository bucketRepository)
+public class BucketService(BucketRepository bucketRepository)
 {
     public async Task RemoveBucketAsync(Bucket? bucket, CancellationToken cancellationToken)
     {
         if (bucket == null) return;
 
-        var dbTask = bucketRepository.DeleteAsync(bucket.Id, cancellationToken);
-        var s3Task = minioService.RemoveBucketAsync(bucket.Name, cancellationToken);
-
-        await Task.WhenAll(s3Task, dbTask);
+        await bucketRepository.DeleteAsync(bucket.Id, cancellationToken);
     }
 }

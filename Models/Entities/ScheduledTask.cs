@@ -16,4 +16,6 @@ public class ScheduledTask : BaseEntity
 
     public required Guid ScheduledTaskConfigId { get; init; }
     public ScheduledTaskConfig? ScheduledTaskConfig { get; init; }
+
+    public required DateTimeOffset HaveToStartAt { get; init; }
 }

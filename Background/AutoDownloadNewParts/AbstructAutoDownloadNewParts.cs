@@ -22,6 +22,7 @@ using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.AutoDownloadNewParts;
 
+//TODO: refactor
 public abstract partial class AbstractAutoDownloadNewParts<T>(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
@@ -457,8 +458,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        // await BroadcastAllSubs(context, botClient,
-        //     $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
+        await BroadcastAllSubs(context, botClient,
+            $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
 
         var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 

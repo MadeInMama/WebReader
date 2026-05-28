@@ -4,6 +4,7 @@ using WebReader.Models;
 using WebReader.Models.Dtos;
 using WebReader.Models.Dtos.Item;
 using WebReader.Repositories;
+using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Controllers;
 
@@ -11,26 +12,41 @@ namespace WebReader.Controllers;
 public class ScheduledTaskController(ScheduledTaskRepository scheduledTaskRepository) : Controller
 {
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> ScheduledTasks(CancellationToken cancellationToken = default)
+    public IActionResult ScheduledTasks()
     {
         if (!User.GetUserRoles().Contains(RoleType.Admin)) return RedirectToAction("AccessDenied", "Account");
 
-
-        return View(await GetScheduledTasks(cancellationToken));
+        return View(new AllScheduledTasksViewModel
+        {
+            Items = []
+        });
     }
 
-    [HttpGet]
-    public async Task<IActionResult> ScheduledTasksPartial(CancellationToken cancellationToken = default)
+    [HttpPost]
+    public async Task<IActionResult> ScheduledTasksPartial([FromBody] FilterRequest filters,
+        CancellationToken cancellationToken = default)
     {
         if (!User.GetUserRoles().Contains(RoleType.Admin)) return RedirectToAction("AccessDenied", "Account");
 
-
-        return PartialView("_ScheduledTasksPartial", await GetScheduledTasks(cancellationToken));
+        return PartialView("_ScheduledTasksPartial", await GetScheduledTasks(filters.Values, cancellationToken));
     }
 
-    private async Task<AllScheduledTasksViewModel> GetScheduledTasks(CancellationToken cancellationToken = default)
+    private async Task<AllScheduledTasksViewModel> GetScheduledTasks(IDictionary<string, string> filters,
+        CancellationToken cancellationToken = default)
     {
-        var res = await scheduledTaskRepository.AllAsync(f => f.ScheduledTaskConfig!.IsActive, cancellationToken,
+        filters.TryGetValue("Type", out var typeStr);
+        filters.TryGetValue("Status", out var statusStr);
+        filters.TryGetValue("Cron", out var cronStr);
+
+        StaticFunctions.TryParseNullable(typeStr, out TaskType? type);
+        StaticFunctions.TryParseNullable(statusStr, out TaskStatus? status);
+        StaticFunctions.TryParseNullable(cronStr, out TaskConfigCron? cron);
+
+        var res = await scheduledTaskRepository.AllAsync(f => f.ScheduledTaskConfig!.IsActive &&
+                                                              (type == null || f.Type == type) &&
+                                                              (status == null || f.Status == status) &&
+                                                              (cron == null || f.ScheduledTaskConfig.Cron == cron)
+            , cancellationToken, true,
             f => f.ScheduledTaskConfig);
 
         return new AllScheduledTasksViewModel
@@ -40,6 +56,7 @@ public class ScheduledTaskController(ScheduledTaskRepository scheduledTaskReposi
                 Id = f.Id,
                 CreatedDate = f.CreatedDate,
                 UpdatedDate = f.UpdatedDate,
+                HaveToStartAt = f.HaveToStartAt,
                 Type = f.Type,
                 Priority = f.Priority,
                 Status = f.Status,

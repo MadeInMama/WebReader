@@ -25,7 +25,7 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
     }
 
     public async Task<IEnumerable<ScheduledTaskConfig>> AllAsync(Expression<Func<ScheduledTaskConfig, bool>> predicate,
-        CancellationToken cancellationToken,
+        CancellationToken cancellationToken, bool asNoTracking = false,
         params Expression<Func<ScheduledTaskConfig, object>>[] includes)
     {
         IQueryable<ScheduledTaskConfig> query = context.Set<ScheduledTaskConfig>();
@@ -33,7 +33,13 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         foreach (var include in includes)
             query = query.Include(include);
 
-        return await query.Where(predicate).OrderBy(f => f.Type).ToListAsync(cancellationToken);
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate)
+            .OrderByDescending(f => f.DefaultPriority)
+            .ThenBy(f => f.Type)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<ScheduledTaskConfig> AddAsync(ScheduledTaskConfig entity, CancellationToken cancellationToken)

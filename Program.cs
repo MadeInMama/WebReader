@@ -198,9 +198,9 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 
     // await context.ScheduledTasks.ExecuteDeleteAsync();
-    // var files = await context.Files.Where(f => f.CurrentPartNumber > 302).ToListAsync();
+    // var files = await context.Files.Where(f => f.CurrentPartNumber > 303).ToListAsync();
     // await scope.ServiceProvider.GetRequiredService<FileService>()
-    //    .DeleteFileAsync(files.Select(f => f.Id).ToList(), CancellationToken.None);
+    // .DeleteFileAsync(files.Select(f => f.Id).ToList(), CancellationToken.None);
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);

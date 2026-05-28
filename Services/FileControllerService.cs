@@ -72,7 +72,7 @@ public class FileControllerService(
                     if (bucket == null) throw new CustomApiException("Bucket not found");
 
                     var allUserReadings =
-                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken);
+                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken, true);
 
                     var res = (await fileRepository.GetAllAvailableObjectsInBucketTopLevelAsync(bucket.Id, roles,
                             cancellationToken))
@@ -150,7 +150,7 @@ public class FileControllerService(
                         throw new CustomApiException("Bucket or File not found");
 
                     var allUserReadings =
-                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken);
+                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken, true);
 
                     var headedFile = await fileRepository.GetHeadedPartedObjectAsync(fileId, cancellationToken);
 
@@ -204,7 +204,7 @@ public class FileControllerService(
                 async _ =>
                 {
                     var allUserReadings =
-                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken);
+                        await readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken, true);
 
                     var allUserReadingsGroupedByFile = allUserReadings
                         .GroupBy(reading => reading.FileId)
@@ -240,6 +240,7 @@ public class FileControllerService(
                                                                           !f.IsDone &&
                                                                           f.File.AccessRoles.Intersect(roles).Any(),
                         cancellationToken,
+                        true,
                         f => f.File!,
                         f => f.File!.Bucket!)).ToList();
 

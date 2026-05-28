@@ -25,36 +25,59 @@
 
 @section Scripts
 {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"
             integrity="sha512-kkMt8UThSmWcdXLYFaGZ/U6vyWSNLZMUWQ5SMeF80pGqrEkH5ei9D/3MbVQpB8p7D5C3A4vlX7BpsWTT2BfB6A=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
+        const rawValues = {
+            "Type": null,
+            "Status": null,
+            "Cron": null,
+        };
+
+        const filteredValues = Object.fromEntries(
+            Object.entries(rawValues)
+                .filter(([_, val]) => val !== null && val !== undefined)
+                .map(([key, value]) => [key, String(value)])
+        );
+
+        reload();
+
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/ScheduledTaskHub")
             .build();
 
-        connection.on("ScheduledTaskHub", function () {
-            loadPartialView();
-        });
-
-        async function loadPartialView() {
-            try {
-                const response = await fetch('/ScheduledTask/ScheduledTasksPartial');
-
-                if (response.ok) {
-                    document.getElementById('partialContainer').innerHTML = await response.text();
-                } else {
-                    alert(`Не удалось загрузить данные: ${response.statusText}`);
-                }
-            } catch (error) {
-                alert(`Ошибка при выполнении AJAX-запроса: ${error}`);
-            }
-        }
+        connection.on("ScheduledTaskHub", reload)
 
         connection.start()
             .then(() => {
             })
             .catch(err => console.error(err.toString()));
+
+        function reload() {
+            requestQueue.enqueue({
+                method: 'POST',
+                url: '/ScheduledTask/ScheduledTasksPartial',
+                data: {Values: filteredValues},
+                options: {
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
+                },
+                beforeSend: () => {
+                },
+                setProgress: (val) => {
+                }
+            })
+                .then(async response => {
+                    document.getElementById('partialContainer').innerHTML = await response.data;
+                })
+                .catch(error => {
+                    console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
+                });
+        }
     </script>
 }

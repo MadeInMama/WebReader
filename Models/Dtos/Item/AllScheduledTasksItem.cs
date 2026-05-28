@@ -7,6 +7,7 @@ public class AllScheduledTasksItem
     public Guid Id { get; init; }
     public DateTimeOffset CreatedDate { get; init; }
     public DateTimeOffset UpdatedDate { get; init; }
+    public DateTimeOffset HaveToStartAt { get; init; }
     public TaskType Type { get; init; }
     public sbyte Priority { get; init; }
     public TaskStatus Status { get; init; }

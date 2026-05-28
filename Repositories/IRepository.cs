@@ -13,6 +13,7 @@ public interface IRepository<T> where T : class
 
     Task<IEnumerable<T>> AllAsync(Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken,
+        bool asNoTracking = false,
         params Expression<Func<T, object>>[] includes);
 
     Task<T> AddAsync(T entity, CancellationToken cancellationToken);

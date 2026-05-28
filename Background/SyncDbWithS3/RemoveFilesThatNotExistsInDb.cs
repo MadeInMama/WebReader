@@ -16,7 +16,7 @@ public class RemoveFilesThatNotExistsInDb(IServiceProvider services, ILogger<Rem
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, f => f.Bucket)).ToList();
+        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, true, f => f.Bucket)).ToList();
         var allBucketsInS3 = (await minioService.ListBucketsAsync(cancellationToken)).ToList();
         var allFilesInS3 =
             allBucketsInS3.ToDictionary(f => f.Name,

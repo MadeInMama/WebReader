@@ -26,7 +26,7 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
     }
 
     public async Task<IEnumerable<ScheduledTask>> AllAsync(Expression<Func<ScheduledTask, bool>> predicate,
-        CancellationToken cancellationToken,
+        CancellationToken cancellationToken, bool asNoTracking = false,
         params Expression<Func<ScheduledTask, object>>[] includes)
     {
         IQueryable<ScheduledTask> query = context.Set<ScheduledTask>();
@@ -34,12 +34,14 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
         foreach (var include in includes)
             query = query.Include(include);
 
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
         return await query.Where(predicate)
             .OrderBy(f => f.Status)
-            .ThenByDescending(f => f.UpdatedDate)
+            .ThenByDescending(f => f.HaveToStartAt)
             .ThenBy(f => f.Priority)
             .ThenByDescending(f => f.Type)
-            .ThenByDescending(f => f.CreatedDate)
             .ToListAsync(cancellationToken);
     }
 
@@ -58,11 +60,21 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
     {
         return await context.ScheduledTasks
             .Where(f => f.Status == TaskStatus.Pending &&
-                        f.ScheduledTaskConfig!.IsActive) //TODO: is config active & delete not active pending tasks
+                        f.ScheduledTaskConfig!.IsActive &&
+                        f.HaveToStartAt < DateTimeOffset.UtcNow) //TODO: delete not active pending tasks
             .OrderByDescending(f => f.Priority)
+            .ThenBy(f => f.HaveToStartAt)
             .ThenBy(f => f.Type)
-            .ThenBy(f => f.CreatedDate)
             .Include(f => f.ScheduledTaskConfig)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<ScheduledTask?> GetLastTaskByConfigIdAsync(Guid configId, CancellationToken cancellationToken)
+    {
+        return await context.ScheduledTasks
+            .Where(f => f.ScheduledTaskConfigId == configId)
+            .OrderByDescending(f => f.HaveToStartAt)
             .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -80,16 +92,16 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task SetStatusProgressResultAsync(Guid id, TaskStatus status, decimal progress, string? result,
+    public async Task SetStatusProgressResultAsync(Guid id, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken)
     {
         await context.ScheduledTasks
             .Where(r => r.Id == id)
-            .ExecuteUpdateAsync(f =>
-                    f.SetProperty(e => e.Status, status)
-                        .SetProperty(e => e.Progress, progress)
-                        .SetProperty(e => e.Result, result)
-                        .SetProperty(e => e.UpdatedDate, DateTimeOffset.UtcNow),
+            .ExecuteUpdateAsync(f => f
+                    .SetProperty(e => e.Status, status)
+                    .SetProperty(e => e.Progress, e => progress ?? e.Progress)
+                    .SetProperty(e => e.Result, e => result ?? e.Result)
+                    .SetProperty(e => e.UpdatedDate, DateTimeOffset.UtcNow),
                 cancellationToken);
     }
 }

@@ -57,8 +57,7 @@ public class UserService(
         return entity;
     }
 
-    public async Task DeleteUserAsync(Guid id,
-        CancellationToken cancellationToken)
+    public async Task DeleteUserAsync(Guid id, CancellationToken cancellationToken)
     {
         var user = await userRepository.FirstOrDefaultAsync(
             f => f.Id == id && f.IsActive,

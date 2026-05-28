@@ -87,8 +87,6 @@ public class FileUploadService(
         }
         catch (Exception ex)
         {
-            await minioService.RemoveObjectsAsync(bucket.Name, [currentFile.Name], cancellationToken);
-
             return Result.Fail(new Error("File save failed. Try again later.").CausedBy(ex));
         }
 

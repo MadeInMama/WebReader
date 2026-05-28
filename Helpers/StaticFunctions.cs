@@ -90,6 +90,11 @@ public static class StaticFunctions
         return string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value);
     }
 
+    public static string? LimitToNullable(this string? src, int limit = 2000)
+    {
+        return string.IsNullOrEmpty(src) || src.Length <= limit ? src : src[..(limit - 3)] + "...";
+    }
+
     public static string LimitTo(this string src, int limit = 2000)
     {
         return string.IsNullOrEmpty(src) || src.Length <= limit ? src : src[..(limit - 3)] + "...";
@@ -105,5 +110,17 @@ public static class StaticFunctions
     {
         var hashOfInput = HashPassword(password);
         return hashOfInput == hash;
+    }
+
+    public static bool TryParseNullable<T>(string? srcStr, out T? res) where T : struct, Enum
+    {
+        if (Enum.TryParse<T>(srcStr, out var temp))
+        {
+            res = temp;
+            return true;
+        }
+
+        res = null;
+        return false;
     }
 }
