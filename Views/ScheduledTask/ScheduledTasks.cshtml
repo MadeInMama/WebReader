@@ -1,4 +1,4 @@
-﻿@model WebReader.Models.Dtos.AllScheduledTasksViewModel
+﻿@model WebReader.Models.Dtos.AllScheduledTaskConfigsViewModel
 
 @{
     ViewBag.Title = "Scheduled Tasks";
@@ -19,8 +19,26 @@
 
 @await Html.PartialAsync("_ModalInfoWithCustomHtml")
 
-<div id="partialContainer">
-    @await Html.PartialAsync("_ScheduledTasksPartial", Model)
+<form id="create-task-form">
+    <div>
+        <label for="options">Select Type:</label>
+        <select id="options" required>
+            @foreach (var item in Model.Items)
+            {
+                <option value="@Html.Raw(item.Id)">@item.Type</option>
+            }
+        </select>
+    </div>
+
+    <div>
+        <label for="dateTime">Have To Start At:</label>
+        <input type="datetime-local" id="dateTime" step="1" required value="">
+    </div>
+
+    <button id="submitBtn" type="submit">Confirm</button>
+</form>
+
+<div id="scheduled_tasks_partial">
 </div>
 
 @section Scripts
@@ -73,11 +91,68 @@
                 }
             })
                 .then(async response => {
-                    document.getElementById('partialContainer').innerHTML = await response.data;
+                    document.getElementById('scheduled_tasks_partial').innerHTML = await response.data;
                 })
                 .catch(error => {
                     console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
                 });
         }
+
+        function setDefaultDateTime() {
+            const now = new Date();
+
+            const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+
+            document.getElementById('dateTime').value = new Date(now.getTime() - offsetMs).toISOString().slice(0, 19);
+        }
+
+        setDefaultDateTime();
+
+        document.getElementById('create-task-form').onsubmit = (event) => {
+            event.preventDefault();
+
+            const form = event.target;
+            const optionSelect = document.getElementById('options');
+            const dateTimeInput = document.getElementById('dateTime');
+            const submitBtn = document.getElementById('submitBtn');
+
+            optionSelect.disabled = true;
+            dateTimeInput.disabled = true;
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Sending...';
+
+            const dateTimeOffset = new Date(dateTimeInput.value).toISOString();
+
+            requestQueue.enqueue({
+                method: 'POST',
+                url: '/ScheduledTask/CreateTask',
+                data: {
+                    ScheduledTaskConfigId: optionSelect.value,
+                    HaveToStartAt: dateTimeOffset
+                },
+                options: {
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
+                },
+                beforeSend: () => {
+                },
+                setProgress: (val) => {
+                }
+            })
+                .then(async response => {
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке:', error);
+                })
+                .finally(_ => {
+                    optionSelect.disabled = false;
+                    dateTimeInput.disabled = false;
+                    submitBtn.disabled = false;
+                    setDefaultDateTime();
+                    submitBtn.innerText = 'Confirm';
+                });
+        };
     </script>
 }
