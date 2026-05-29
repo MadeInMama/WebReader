@@ -1,4 +1,8 @@
-﻿footer {
+﻿main {
+    padding: 0.5em;
+}
+
+footer {
     gap: 0.5em;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
