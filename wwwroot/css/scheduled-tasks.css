@@ -206,19 +206,6 @@ pre {
     }
 }
 
-@media (width < 700px) {
-    footer {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr 1fr;
-        top: calc(100vh - 7.5em);
-    }
-
-    #scheduled_tasks_partial {
-        max-height: calc(100dvh - 24.5em);
-        margin-bottom: 7.5em;
-    }
-}
-
 @media (width < 690px) {
     th.table-task-type-name {
         width: 10em;
