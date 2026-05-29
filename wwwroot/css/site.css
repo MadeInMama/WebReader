@@ -44,7 +44,6 @@
     list-style-type: none;
     font-family: 'Comfortaa', sans-serif;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.05em;
     font-weight: 300;
     box-sizing: border-box;
     outline: none;
@@ -109,7 +108,7 @@ header {
     z-index: 10000;
 }
 
-header, main, footer {
+header, main {
     padding: 0.5em 1em;
 }
 
@@ -188,6 +187,7 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 0.5em;
 }
 
 button {

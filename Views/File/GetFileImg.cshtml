@@ -159,10 +159,10 @@ else
         })
             .then(async response => {
                 await loadImages(response);
-                //customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
-                //customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
-                //customSendCurrPageEvent.detail.millis = 3000;
-                //targetElement.dispatchEvent(customSendCurrPageEvent);
+                customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
+                customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
+                customSendCurrPageEvent.detail.millis = 3000;
+                targetElement.dispatchEvent(customSendCurrPageEvent);
             })
             .catch(_ => {
                 customSendCurrPageEvent.detail.message = `<div class="error"></div>`;
