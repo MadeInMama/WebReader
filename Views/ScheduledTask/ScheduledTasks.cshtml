@@ -1,4 +1,6 @@
-﻿@model WebReader.Models.Dtos.AllScheduledTaskConfigsViewModel
+﻿@using WebReader.Models
+@using TaskStatus = WebReader.Models.TaskStatus
+@model WebReader.Models.Dtos.AllScheduledTaskConfigsViewModel
 
 @{
     ViewBag.Title = "Scheduled Tasks";
@@ -19,23 +21,86 @@
 
 @await Html.PartialAsync("_ModalInfoWithCustomHtml")
 
-<form id="create-task-form">
+<form id="create-task">
     <div>
-        <label for="options">Select Type:</label>
-        <select id="options" required>
-            @foreach (var item in Model.Items)
+        <label for="create-task-types">Type:</label>
+        <select id="create-task-types" required>
+            <optgroup label="S3">
+                @foreach (var item in Model.Items.Where(f => GetS3Types().Contains(f.Type)))
+                {
+                    <option value="@Html.Raw(item.Id)">@item.Type</option>
+                }
+            </optgroup>
+            <optgroup label="Download">
+                @foreach (var item in Model.Items.Where(f => GetDownloadTypes().Contains(f.Type)))
+                {
+                    <option value="@Html.Raw(item.Id)">@item.Type</option>
+                }
+            </optgroup>
+            <optgroup label="Delete">
+                @foreach (var item in Model.Items.Where(f => GetDeleteTypes().Contains(f.Type)))
+                {
+                    <option value="@Html.Raw(item.Id)">@item.Type</option>
+                }
+            </optgroup>
+        </select>
+    </div>
+
+    <div>
+        <label for="create-task-have-to-start-at">Have To Start At:</label>
+        <input type="datetime-local" id="create-task-have-to-start-at" step="1" required value="">
+    </div>
+
+    <button id="create-task-submit-btn" type="submit">Confirm</button>
+</form>
+
+<form>
+    <div>
+        <label for="task-filter-types">Type:</label>
+        <select id="task-filter-types">
+            <option value="All">All</option>
+            <optgroup label="S3">
+                @foreach (var item in GetS3Types())
+                {
+                    <option value="@((int)item)">@item</option>
+                }
+            </optgroup>
+            <optgroup label="Download">
+                @foreach (var item in GetDownloadTypes())
+                {
+                    <option value="@((int)item)">@item</option>
+                }
+            </optgroup>
+            <optgroup label="Delete">
+                @foreach (var item in GetDeleteTypes())
+                {
+                    <option value="@((int)item)">@item</option>
+                }
+            </optgroup>
+        </select>
+    </div>
+
+    <div>
+        <label for="task-filter-statuses">Status:</label>
+        <select id="task-filter-statuses">
+            <option value="All">All</option>
+            @foreach (var item in Enum.GetValues<TaskStatus>())
             {
-                <option value="@Html.Raw(item.Id)">@item.Type</option>
+                <option value="@((int)item)">@item</option>
             }
         </select>
     </div>
 
     <div>
-        <label for="dateTime">Have To Start At:</label>
-        <input type="datetime-local" id="dateTime" step="1" required value="">
+        <label for="task-filter-crons">Cron:</label>
+        <select id="task-filter-crons">
+            <option value="All">All</option>
+            @foreach (var item in Enum.GetValues<TaskConfigCron>())
+            {
+                <option value="@((int)item)">@item</option>
+            }
+        </select>
     </div>
-
-    <button id="submitBtn" type="submit">Confirm</button>
 </form>
 
 <div id="scheduled_tasks_partial">
@@ -55,12 +120,6 @@
             "Cron": null,
         };
 
-        const filteredValues = Object.fromEntries(
-            Object.entries(rawValues)
-                .filter(([_, val]) => val !== null && val !== undefined)
-                .map(([key, value]) => [key, String(value)])
-        );
-
         reload();
 
         const connection = new signalR.HubConnectionBuilder()
@@ -75,6 +134,12 @@
             .catch(err => console.error(err.toString()));
 
         function reload() {
+            const filteredValues = Object.fromEntries(
+                Object.entries(rawValues)
+                    .filter(([_, val]) => val !== null && val !== undefined && val !== 'All')
+                    .map(([key, value]) => [key, String(value)])
+            );
+
             requestQueue.enqueue({
                 method: 'POST',
                 url: '/ScheduledTask/ScheduledTasksPartial',
@@ -103,18 +168,17 @@
 
             const offsetMs = now.getTimezoneOffset() * 60 * 1000;
 
-            document.getElementById('dateTime').value = new Date(now.getTime() - offsetMs).toISOString().slice(0, 19);
+            document.getElementById('create-task-have-to-start-at').value = new Date(now.getTime() - offsetMs).toISOString().slice(0, 19);
         }
 
         setDefaultDateTime();
 
-        document.getElementById('create-task-form').onsubmit = (event) => {
+        document.getElementById('create-task').onsubmit = (event) => {
             event.preventDefault();
 
-            const form = event.target;
-            const optionSelect = document.getElementById('options');
-            const dateTimeInput = document.getElementById('dateTime');
-            const submitBtn = document.getElementById('submitBtn');
+            const optionSelect = document.getElementById('create-task-types');
+            const dateTimeInput = document.getElementById('create-task-have-to-start-at');
+            const submitBtn = document.getElementById('create-task-submit-btn');
 
             optionSelect.disabled = true;
             dateTimeInput.disabled = true;
@@ -153,6 +217,19 @@
                     setDefaultDateTime();
                     submitBtn.innerText = 'Confirm';
                 });
+        };
+
+        document.getElementById('task-filter-types').onchange = (event) => {
+            rawValues.Type = event.target.value;
+            reload();
+        };
+        document.getElementById('task-filter-statuses').onchange = (event) => {
+            rawValues.Status = event.target.value;
+            reload();
+        };
+        document.getElementById('task-filter-crons').onchange = (event) => {
+            rawValues.Cron = event.target.value;
+            reload();
         };
     </script>
 }
