@@ -309,7 +309,7 @@ else
             convertNode(body, imageMap);
 
             pages = pages.filter(page => page !== '')
-                .map(f => f.replaceAll("…", "<span style='font-family: monospace'>…</span>"));
+            //.map(f => f.replaceAll("…", "<span style='font-family: monospace'>…</span>"));
         }
 
         function convertNode(node, imageMap, isPage = true) {
