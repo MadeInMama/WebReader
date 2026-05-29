@@ -26,17 +26,18 @@ form {
     width: 100%;
     max-width: 20em;
     font-size: 1em;
-    padding: 0.5em 1em;
-    border-width: 0.1em;
+    border-width: 1px;
     border-color: var(--drop-shadow-color);
     border-style: solid;
-    border-radius: 1em;
     background-color: var(--background-backdrop-color);
     box-shadow: 0 0 0.5em var(--drop-shadow-color);
 }
 
 .remember-me {
     margin-bottom: 1em;
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
 }
 
 .remember-me > label {

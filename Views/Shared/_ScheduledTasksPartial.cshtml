@@ -3,18 +3,20 @@
 <table>
     <thead>
     <tr>
-        <th><h4>Type</h4></th>
-        <th><h4>Status</h4></th>
-        <th><h4>Progress</h4></th>
-        <th><h4>Result</h4></th>
-        <th><h4>Have To Start At</h4></th>
+        <th><h3>#</h3></th>
+        <th><h3>Type</h3></th>
+        <th><h3>Status</h3></th>
+        <th><h3>Progress</h3></th>
+        <th><h3>Result</h3></th>
+        <th><h3>Start At</h3></th>
     </tr>
     </thead>
     <tbody>
     @foreach (var item in Model.Items)
     {
         <tr onclick="openModalClicked(`<pre>${JSON.stringify(@(JsonSerializer.Serialize(item)), null, 2)}</pre>`)">
-            <td>@($"{item.Type}({(int)item.Type})".LimitToNullable(30))</td>
+            <td>@($"{(int)item.Type}")</td>
+            <td>@item.Type</td>
             <td>@item.Status</td>
             <td>
                 <div>
@@ -25,8 +27,9 @@
                          class="progress-bar-inner progress-bar-inner-text">@((int)(item.Progress * 100))</div>
                 </div>
             </td>
-            <td>@item.Result.LimitToNullable(50)</td>
-            <td>@item.HaveToStartAt.LocalDateTime.ToString("dd.MM.yyyy HH:mm:ss")</td>
+            <td>@item.Result</td>
+            <td utc="'@item.HaveToStartAt'"
+                class="to-local-date-time"></td>
         </tr>
     }
     </tbody>

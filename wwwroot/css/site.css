@@ -398,7 +398,13 @@ button.btn {
 
 select, input {
     border-radius: 0.5em;
-    padding: 0.25em 0.35em;
+    padding: 0.5em 0.5em;
+    height: 2.5em;
+    cursor: pointer;
+}
+
+input[type="text"],
+input[type="password"] {
     height: 2em;
 }
 

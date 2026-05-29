@@ -32,19 +32,19 @@
                     <optgroup label="S3">
                         @foreach (var item in Model.Items.Where(f => GetS3Types().Contains(f.Type)))
                         {
-                            <option value="@Html.Raw(item.Id)">@item.Type</option>
+                            <option value="@Html.Raw(item.Id)">@($"{item.Type}({(int)item.Type})")</option>
                         }
                     </optgroup>
                     <optgroup label="Download">
                         @foreach (var item in Model.Items.Where(f => GetDownloadTypes().Contains(f.Type)))
                         {
-                            <option value="@Html.Raw(item.Id)">@item.Type</option>
+                            <option value="@Html.Raw(item.Id)">@($"{item.Type}({(int)item.Type})")</option>
                         }
                     </optgroup>
                     <optgroup label="Delete">
                         @foreach (var item in Model.Items.Where(f => GetDeleteTypes().Contains(f.Type)))
                         {
-                            <option value="@Html.Raw(item.Id)">@item.Type</option>
+                            <option value="@Html.Raw(item.Id)">@($"{item.Type}({(int)item.Type})")</option>
                         }
                     </optgroup>
                 </select>
@@ -70,19 +70,19 @@
                     <optgroup label="S3">
                         @foreach (var item in GetS3Types())
                         {
-                            <option value="@((int)item)">@item</option>
+                            <option value="@((int)item)">@($"{item}({(int)item})")</option>
                         }
                     </optgroup>
                     <optgroup label="Download">
                         @foreach (var item in GetDownloadTypes())
                         {
-                            <option value="@((int)item)">@item</option>
+                            <option value="@((int)item)">@($"{item}({(int)item})")</option>
                         }
                     </optgroup>
                     <optgroup label="Delete">
                         @foreach (var item in GetDeleteTypes())
                         {
-                            <option value="@((int)item)">@item</option>
+                            <option value="@((int)item)">@($"{item}({(int)item})")</option>
                         }
                     </optgroup>
                 </select>
@@ -94,7 +94,7 @@
                     <option value="All">All</option>
                     @foreach (var item in Enum.GetValues<TaskStatus>())
                     {
-                        <option value="@((int)item)">@item</option>
+                        <option value="@((int)item)">@($"{item}({(int)item})")</option>
                     }
                 </select>
             </div>
@@ -105,7 +105,7 @@
                     <option value="All">All</option>
                     @foreach (var item in Enum.GetValues<TaskConfigCron>())
                     {
-                        <option value="@((int)item)">@item</option>
+                        <option value="@((int)item)">@($"{item}({(int)item})")</option>
                     }
                 </select>
             </div>
@@ -167,6 +167,8 @@
             })
                 .then(async response => {
                     document.getElementById('scheduled_tasks_partial').innerHTML = await response.data;
+
+                    toLocalDateTime();
                 })
                 .catch(error => {
                     console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);

@@ -30,7 +30,7 @@
                    asp-route-bucketId="@item.Id" style="width: 100%;">
                     <span class="main-info-span importance-0">@item.CustomName</span>
                     <span
-                        class="secondary-info-span importance-2">@item.DateTime.LocalDateTime.ToString("dd.MM.yyyy")</span>
+                        class="secondary-info-span importance-2 to-local-date" utc="'@item.DateTime'"></span>
                     <span class="secondary-info-span importance-1">@FormatSize(item.Size)</span>
                 </a>
             </div>
@@ -45,5 +45,8 @@
         const lineSelector = '.item-line';
     </script>
     <script src="~/js/empty-row-control.js"></script>
-    <script>CheckOnEmpty()</script>
+    <script>
+        CheckOnEmpty();
+        toLocalDate();
+    </script>
 }

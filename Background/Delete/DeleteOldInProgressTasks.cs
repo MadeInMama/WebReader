@@ -8,7 +8,7 @@ namespace WebReader.Background.Delete;
 public class DeleteOldInProgressTasks(IServiceProvider services, ILogger<DeleteOldInProgressTasks> logger)
     : IBackgroundTasked
 {
-    private const string SettingOlderThenInDaysToDelete = "older_then_in_days";
+    private const string SettingOlderThenInDaysToDelete = "older_then_in_hours";
 
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
@@ -20,7 +20,7 @@ public class DeleteOldInProgressTasks(IServiceProvider services, ILogger<DeleteO
         var scheduledTaskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
 
         var result = await scheduledTaskRepository.DeleteAllOlderThenAsync(
-            DateTimeOffset.UtcNow.AddDays(-days), [TaskStatus.InProgress], cancellationToken);
+            DateTimeOffset.UtcNow.AddHours(-days), [TaskStatus.InProgress], cancellationToken);
 
         logger.LogTrace($"{nameof(DeleteOldErroredTasks)}: Deleted rows count: {{}}", result);
 

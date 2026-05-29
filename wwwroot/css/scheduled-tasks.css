@@ -1,19 +1,23 @@
 ﻿main {
-    padding-top: 1em;
+    padding-top: 0;
     padding-left: 0;
     padding-right: 0;
 }
 
 .tools {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 1em;
     z-index: 2;
+    position: relative;
+    top: 1em;
+    max-width: var(--max-width);
+    width: var(--max-width);
 }
 
 form {
     display: flex;
     flex-direction: column;
+    width: calc(50% - 0.5em);
     gap: 0.5em;
     align-items: center;
     justify-content: space-between;
@@ -24,6 +28,11 @@ form {
     backdrop-filter: blur(var(--backdrop-blur));
 }
 
+form select,
+form input {
+    width: 100%;
+}
+
 form > h3 {
     text-align: center;
 }
@@ -32,20 +41,22 @@ form > div {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
+    width: 100%;
 }
 
 form > div > div {
     display: grid;
     grid-template-columns: 4.5em 1fr;
     gap: 0.5em;
+    flex-grow: 1;
 }
 
 form > .btn {
     width: min-content;
 }
 
-#partialContainer {
-    width: 100%;
+#scheduled_tasks_partial {
+    max-width: var(--max-width);
 }
 
 table {
@@ -74,64 +85,85 @@ tbody > tr:not(:last-child) {
 
 th, td {
     padding: 0.25em;
-    text-align: left;
+    text-align: center;
 }
 
-th > h4 {
+th > h3 {
     display: flex;
     align-items: end;
     justify-content: center;
-    height: 4.5em;
+    height: 4em;
+    text-wrap-mode: nowrap;
 }
 
 th:nth-child(1) {
-    width: 25em;
+    width: 3em;
 }
 
 th:nth-child(2) {
-    width: 8em;
+    width: 25em;
 }
 
-td:nth-child(3) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+th:nth-child(3) {
+    width: 7em;
 }
 
-td:nth-child(3) > div {
+th:nth-child(4) {
+    width: 5.5em;
+}
+
+th:nth-child(6) {
+    width: 7em;
+}
+
+td:nth-child(4) > div {
     position: relative;
     width: 3em;
     height: 3em;
     padding: 0.5em;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-td:nth-child(3) > div > * {
+td:nth-child(4) > div > * {
     position: absolute;
 }
 
-td:nth-child(3) > div > .progress-bar {
+td:nth-child(4) > div > .progress-bar {
     top: 35%;
 }
 
-td:nth-child(3) > div > .progress-bar-inner-linear {
+td:nth-child(4) > div > .progress-bar-inner-linear {
     top: 58%;
 }
 
-td:nth-child(3) > div > .progress-bar-inner-text {
+td:nth-child(4) > div > .progress-bar-inner-text {
     top: -25%;
 }
 
-pre {
-    text-wrap-mode: wrap;
+td:nth-child(2),
+td:nth-child(5) {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-@media (width < 875px) {
-    .tools {
-        grid-template-columns: 1fr;
-    }
+pre {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
 
+@media (width < 1000px) {
+    .tools {
+        padding-left: 1em;
+        padding-right: 1em;
+    }
+}
+
+@media (width < 916px) {
     form > div {
-        flex-direction: row;
+        flex-direction: column;
     }
 
     form > div > div {
@@ -146,22 +178,38 @@ pre {
     }
 }
 
-@media (width < 720px) {
-    th:nth-child(4),
-    td:nth-child(4) {
+@media (width < 915px) {
+    th:nth-child(1),
+    td:nth-child(1) {
         display: none;
     }
 }
 
+@media (width < 802px) {
+    th:nth-child(5),
+    td:nth-child(5) {
+        display: none;
+    }
+
+    th:nth-child(2) {
+        width: 20em;
+    }
+}
+
+@media (width < 690px) {
+    th:nth-child(2) {
+        width: 10em;
+    }
+}
+
 @media (width < 600px) {
-    form > div {
+    .tools {
+        width: var(--max-width);
         flex-direction: column;
     }
 
-    form > div > div {
-        display: grid;
-        grid-template-columns: 4.5em 1fr;
-        gap: 0.5em;
+    .tools > form {
+        width: 100%;
     }
 
     th:nth-child(3),

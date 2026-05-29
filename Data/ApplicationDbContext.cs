@@ -142,8 +142,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldCompletedTasks,
                     DefaultPriority = 0,
-                    Cron = TaskConfigCron.EveryWeek,
-                    Settings = JsonDocument.Parse("{\"older_then_in_days\": 7}"),
+                    Cron = TaskConfigCron.EveryDay,
+                    Settings = JsonDocument.Parse("{\"older_then_in_hours\": 24}"),
                     IsActive = true
                 });
 
@@ -153,8 +153,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldErroredTasks,
                     DefaultPriority = 0,
-                    Cron = TaskConfigCron.EveryMonth,
-                    Settings = JsonDocument.Parse("{\"older_then_in_days\": 30}"),
+                    Cron = TaskConfigCron.EveryDay,
+                    Settings = JsonDocument.Parse("{\"older_then_in_hours\": 48}"),
                     IsActive = true
                 });
 
@@ -165,7 +165,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.DeleteOldInProgressTasks,
                     DefaultPriority = 0,
                     Cron = TaskConfigCron.EveryHour,
-                    Settings = JsonDocument.Parse("{\"older_then_in_days\": 1}"),
+                    Settings = JsonDocument.Parse("{\"older_then_in_hours\": 12}"),
                     IsActive = true
                 });
 
