@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
 namespace WebReader.Models.Entities;
@@ -14,8 +15,9 @@ public class ScheduledTask : BaseEntity
     [Range(0.00, 1.00, ErrorMessage = "The value must be between 0.00 and 1.00.")]
     public decimal Progress { get; set; }
 
-    public required Guid ScheduledTaskConfigId { get; init; }
+    public Guid? ScheduledTaskConfigId { get; init; }
     public ScheduledTaskConfig? ScheduledTaskConfig { get; init; }
+    public JsonDocument Settings { get; set; } = JsonDocument.Parse("{}");
 
     public required DateTimeOffset HaveToStartAt { get; init; }
 }

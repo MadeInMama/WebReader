@@ -54,6 +54,11 @@
             <input type="datetime-local" id="create-task-have-to-start-at" step="1" required value="">
         </div>
 
+        <div style="display: none">
+            <label for="create-task-priority">Priority</label>
+            <input type="range" id="create-task-priority" min="-128" max="127"/>
+        </div>
+
         <button id="create-task-submit-btn" class="btn" type="submit">Confirm</button>
     </form>
 </div>
@@ -174,10 +179,12 @@
 
             const optionSelect = document.getElementById('create-task-types');
             const dateTimeInput = document.getElementById('create-task-have-to-start-at');
+            const priorityInput = document.getElementById('create-task-priority');
             const submitBtn = document.getElementById('create-task-submit-btn');
 
             optionSelect.disabled = true;
             dateTimeInput.disabled = true;
+            priorityInput.disabled = true;
             submitBtn.disabled = true;
             submitBtn.innerText = 'Sending...';
 
@@ -188,7 +195,8 @@
                 url: '/ScheduledTask/CreateTask',
                 data: {
                     ScheduledTaskConfigId: optionSelect.value,
-                    HaveToStartAt: dateTimeOffset
+                    HaveToStartAt: dateTimeOffset,
+                    Priority: priorityInput.value
                 },
                 options: {
                     headers: {
@@ -210,6 +218,7 @@
                     optionSelect.disabled = false;
                     dateTimeInput.disabled = false;
                     submitBtn.disabled = false;
+                    priorityInput.disabled = true;
                     setDefaultDateTime();
                     submitBtn.innerText = 'Confirm';
                 });

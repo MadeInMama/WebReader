@@ -12,7 +12,7 @@ public class DeleteOldInProgressTasks(IServiceProvider services, ILogger<DeleteO
 
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        if (task.ScheduledTaskConfig == null || !task.ScheduledTaskConfig.Settings.RootElement
+        if (task.ScheduledTaskConfig == null || !task.ScheduledTaskConfig.DefaultSettings.RootElement
                 .GetProperty(SettingOlderThenInDaysToDelete).TryGetUInt16(out var days))
             return Result.Fail($"Can't get '{nameof(SettingOlderThenInDaysToDelete)}' param.");
 

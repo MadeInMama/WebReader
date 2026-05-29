@@ -72,7 +72,8 @@ public class ScheduledTaskController(
                 Progress = f.Progress,
                 ScheduledTaskConfigId = f.ScheduledTaskConfigId,
                 Cron = f.ScheduledTaskConfig!.Cron,
-                Settings = f.ScheduledTaskConfig.Settings
+                //TODO: settings from task
+                Settings = f.ScheduledTaskConfig.DefaultSettings
             })
         });
     }
@@ -91,7 +92,7 @@ public class ScheduledTaskController(
         await taskRepository.AddAsync(new ScheduledTask
         {
             Type = config.Type,
-            Priority = config.DefaultPriority,
+            Priority = request.Priority,
             ScheduledTaskConfigId = request.ScheduledTaskConfigId,
             HaveToStartAt = request.HaveToStartAt
         }, cancellationToken);

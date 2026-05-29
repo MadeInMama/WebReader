@@ -207,7 +207,7 @@ pre {
     footer {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr 1fr;
-        top: calc(100vh - 7.5em);
+        top: calc(100dvh - 7.5em);
     }
 
     #scheduled_tasks_partial {

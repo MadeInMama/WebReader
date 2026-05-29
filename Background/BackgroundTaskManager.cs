@@ -142,7 +142,7 @@ public class BackgroundTaskManager(
                     var combinedToken = linkedCts.Token;
 
                     logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
-                        task.ScheduledTaskConfig!.Settings.RootElement.ToString());
+                        task.ScheduledTaskConfig!.DefaultSettings.RootElement.ToString());
                     var result = await taskExecutor.ExecuteAsync(task, combinedToken);
                     logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
 

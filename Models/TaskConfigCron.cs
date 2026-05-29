@@ -5,6 +5,5 @@ public enum TaskConfigCron
     EveryHour,
     EveryDay,
     EveryWeek,
-    EveryMonth,
-    Manual
+    EveryMonth
 }

@@ -15,7 +15,7 @@ public class AllScheduledTasksItem
 
     public decimal Progress { get; init; }
 
-    public Guid ScheduledTaskConfigId { get; init; }
+    public Guid? ScheduledTaskConfigId { get; init; }
     public TaskConfigCron Cron { get; init; }
     public JsonDocument Settings { get; init; }
 }

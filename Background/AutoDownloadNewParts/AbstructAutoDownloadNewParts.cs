@@ -180,7 +180,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     {
         const uint toByteMultiplier = 1024u * 1024u;
 
-        if (config != null && config.Settings.RootElement.GetProperty(SettingSizeName).TryGetUInt64(out var res))
+        if (config != null && config.DefaultSettings.RootElement.GetProperty(SettingSizeName).TryGetUInt64(out var res))
             return res * toByteMultiplier;
 
         return DefaultMaxSize * toByteMultiplier;
