@@ -1,4 +1,5 @@
 ﻿const htmlElement = document.querySelector('html');
+const mainElement = document.querySelector('main');
 const header = document.querySelector('header');
 const headerToggleBtn = document.querySelector('.header-toggle');
 const footer = document.querySelector('footer');
@@ -29,10 +30,15 @@ document.querySelectorAll(".always-open-details").forEach((details) => {
 
 function onNoScrollApplied() {
     const defWidth = getBrowserScrollbarWidth();
-    htmlElement.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(htmlElement).paddingRight) - 1}px`;
+    const footerStyles = window.getComputedStyle(footer);
+    footer.style.width = `${parseInt(footerStyles.width)}px`;
+    footer.style.left = `${parseInt(footerStyles.left)}px`;
+    htmlElement.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(htmlElement).paddingRight)}px`;
     htmlElement.classList.add('no-scroll');
-    header.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(header).paddingRight) - 1}px`;
-    footer.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(footer).paddingRight) - 1}px`;
+    mainElement.classList.add('no-scroll');
+    if (window.getComputedStyle(header).position === 'fixed') {
+        header.style.paddingRight = `${defWidth + parseInt(window.getComputedStyle(header).paddingRight)}px`;
+    }
     document.onscroll = function (e) {
         e.preventDefault();
     }
@@ -49,9 +55,11 @@ function onNoScrollApplied() {
 
 function onNoScrollRemoved() {
     htmlElement.classList.remove('no-scroll');
+    mainElement.classList.remove('no-scroll');
     htmlElement.style.removeProperty('padding-right');
     header.style.removeProperty('padding-right');
-    footer.style.removeProperty('padding-right');
+    footer.style.removeProperty('left');
+    footer.style.removeProperty('width');
     document.onscroll = function (e) {
         return true;
     }

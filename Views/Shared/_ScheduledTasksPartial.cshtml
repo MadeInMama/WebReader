@@ -3,24 +3,24 @@
 <table>
     <thead>
     <tr>
-        <th><h3>#</h3></th>
-        <th><h3>Type</h3></th>
-        <th><h3>Status</h3></th>
-        <th><h3>Progress</h3></th>
-        <th><h3>Result</h3></th>
-        <th><h3>Start At</h3></th>
+        <th class="table-task-type-number"><h3>#</h3></th>
+        <th class="table-task-type-name"><h3>Type</h3></th>
+        <th class="table-task-status"><h3>Status</h3></th>
+        <th class="table-task-progress"><h3>Progress</h3></th>
+        <th class="table-task-result"><h3>Result</h3></th>
+        <th class="table-task-have-to-start-at"><h3>Start At</h3></th>
     </tr>
     </thead>
     <tbody>
     @foreach (var item in Model.Items)
     {
         <tr onclick="openModalClicked(`<pre>${JSON.stringify(@(JsonSerializer.Serialize(item)), null, 2)}</pre>`)">
-            <td>@($"{(int)item.Type}")</td>
-            <td>
+            <td class="table-task-type-number">@($"{(int)item.Type}")</td>
+            <td class="table-task-type-name">
                 <div>@item.Type</div>
             </td>
-            <td>@item.Status</td>
-            <td>
+            <td class="table-task-status">@item.Status</td>
+            <td class="table-task-progress">
                 <div>
                     <div class="progress-bar"></div>
                     <div progress="@((int)(item.Progress * 100))" progress-multiplier="47"
@@ -29,11 +29,11 @@
                          class="progress-bar-inner progress-bar-inner-text">@((int)(item.Progress * 100))</div>
                 </div>
             </td>
-            <td>
+            <td class="table-task-result">
                 <div>@item.Result</div>
             </td>
             <td utc="@item.HaveToStartAt.ToString("O")"
-                class="to-local-date-time"></td>
+                class="table-task-have-to-start-at to-local-date-time"></td>
         </tr>
     }
     </tbody>

@@ -1,25 +1,28 @@
-﻿main {
-    padding-top: 0;
-    padding-left: 0;
-    padding-right: 0;
+﻿footer {
+    padding: 0.5em;
+    gap: 0.5em;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+input,
+select {
+    width: 100%;
+    text-overflow: ellipsis;
 }
 
 .tools {
-    display: flex;
-    gap: 1em;
-    z-index: 2;
-    position: relative;
-    top: 1em;
+    width: 100%;
     max-width: var(--max-width);
-    width: var(--max-width);
 }
 
-form {
-    display: flex;
-    flex-direction: column;
-    width: calc(50% - 0.5em);
+.tools > form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 2em auto;
     gap: 0.5em;
-    align-items: center;
+    place-items: center;
+    width: 100%;
     border-radius: 0.75em;
     padding: 0.5em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
@@ -27,41 +30,41 @@ form {
     backdrop-filter: blur(var(--backdrop-blur));
 }
 
-form select,
-form input {
-    width: 100%;
+.tools > form > h3 {
+    grid-column-start: 1;
+    grid-column-end: 4;
+    grid-row: 1;
 }
 
-form > h3 {
-    text-align: center;
-}
-
-form > div {
+.tools > form > div {
+    align-self: stretch;
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
+    justify-content: space-between;
+    gap: 0.25em;
     width: 100%;
 }
 
-form > div > div {
-    display: grid;
-    grid-template-columns: 5em 1fr;
-    gap: 0.5em;
-    flex-grow: 1;
-}
-
-form > div > div > label {
-    display: flex;
-    align-items: center;
-}
-
-form > .btn {
-    width: min-content;
-    margin-top: auto;
+.tools > form > button[type="submit"] {
+    align-self: end;
+    justify-self: end;
 }
 
 #scheduled_tasks_partial {
     max-width: var(--max-width);
+    max-height: calc(100dvh - 7em);
+    overflow-y: auto;
+    border-radius: 0.75em;
+    padding: 0 0.5em 0 0.5em;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+    background-color: var(--background-backdrop-color);
+    backdrop-filter: blur(var(--backdrop-blur));
+    margin-top: 0.5em;
+    margin-bottom: 3em;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 table {
@@ -74,8 +77,7 @@ table {
 thead {
     position: sticky;
     top: 0;
-    backdrop-filter: blur(var(--backdrop-blur));
-    background: linear-gradient(to top, var(--foreground-color) 2px, transparent 1px) no-repeat;
+    background: linear-gradient(to top, var(--foreground-color) 2px, var(--background-color) 1px) no-repeat;
     z-index: 1;
 }
 
@@ -94,33 +96,33 @@ th, td {
 
 th > h3 {
     display: flex;
-    align-items: end;
+    align-items: center;
     justify-content: center;
-    height: 4em;
+    height: 2em;
     text-wrap-mode: nowrap;
 }
 
-th:nth-child(1) {
+th.table-task-type-number {
     width: 3em;
 }
 
-th:nth-child(2) {
+th.table-task-type-name {
     width: 25em;
 }
 
-th:nth-child(3) {
+th.table-task-status {
     width: 7em;
 }
 
-th:nth-child(4) {
+th.table-task-progress {
     width: 5.5em;
 }
 
-th:nth-child(6) {
+th.table-task-have-to-start-at {
     width: 7em;
 }
 
-td:nth-child(4) > div {
+td.table-task-progress > div {
     position: relative;
     width: 3em;
     height: 3em;
@@ -129,24 +131,24 @@ td:nth-child(4) > div {
     transform: translateX(-50%);
 }
 
-td:nth-child(4) > div > * {
+td.table-task-progress > div > * {
     position: absolute;
 }
 
-td:nth-child(4) > div > .progress-bar {
+td.table-task-progress > div > .progress-bar {
     top: 35%;
 }
 
-td:nth-child(4) > div > .progress-bar-inner-linear {
+td.table-task-progress > div > .progress-bar-inner-linear {
     top: 58%;
 }
 
-td:nth-child(4) > div > .progress-bar-inner-text {
+td.table-task-progress > div > .progress-bar-inner-text {
     top: -25%;
 }
 
-td:nth-child(2) > div,
-td:nth-child(5) > div {
+td.table-task-type-name > div,
+td.table-task-result > div {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -158,70 +160,71 @@ pre {
     white-space: pre-wrap;
 }
 
-@media (width < 1000px) {
-    .tools {
-        padding-left: 1em;
-        padding-right: 1em;
-    }
-}
-
-@media (width < 916px) {
-    form > div {
-        flex-direction: column;
-    }
-
-    form > div > div {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-    }
-
-    form > div > div > label {
-        margin-bottom: 0.5em;
-    }
-
-    form > div > div > * {
-        width: 100%;
-    }
-}
 
 @media (width < 915px) {
-    th:nth-child(1),
-    td:nth-child(1) {
+    th.table-task-type-number,
+    td.table-task-type-number {
         display: none;
     }
 }
 
 @media (width < 802px) {
-    th:nth-child(5),
-    td:nth-child(5) {
+    th.table-task-result,
+    td.table-task-result {
         display: none;
     }
 
-    th:nth-child(2) {
+    th.table-task-type-name {
         width: 20em;
     }
 }
 
+@media (width < 800px) {
+    .tools > form {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto auto auto;
+    }
+
+    .tools > form > h3 {
+        grid-column-end: 1;
+    }
+
+    .tools > form > *:nth-child(2) {
+        grid-row: 2;
+    }
+
+    .tools > form > *:nth-child(3) {
+        grid-row: 3;
+    }
+
+    .tools > form > *:nth-child(4) {
+        grid-row: 4;
+    }
+}
+
+@media (width < 700px) {
+    footer {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+        top: calc(100vh - 7.5em);
+    }
+
+    #scheduled_tasks_partial {
+        max-height: calc(100dvh - 11.5em);
+        margin-bottom: 7.5em;
+    }
+}
+
 @media (width < 690px) {
-    th:nth-child(2) {
+    th.table-task-type-name {
         width: 10em;
     }
 }
 
 @media (width < 600px) {
-    .tools {
-        width: var(--max-width);
-        flex-direction: column;
-    }
-
-    .tools > form {
-        width: 100%;
-    }
-
-    th:nth-child(3),
-    td:nth-child(3) {
+    th.table-task-status,
+    td.table-task-status {
         display: none;
     }
 }

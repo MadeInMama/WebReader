@@ -45,7 +45,7 @@
     font-family: 'Comfortaa', sans-serif;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.05em;
-    font-weight: 500;
+    font-weight: 300;
     box-sizing: border-box;
     outline: none;
     border: none;
@@ -274,7 +274,7 @@ header.opened > .header-toggle {
     top: 0;
     left: 0;
     width: 100%;
-    font-weight: 800;
+    font-weight: 700;
     text-align: center;
     display: flex;
     align-items: center;
@@ -355,7 +355,7 @@ button.btn {
 select, input {
     border-radius: 0.5em;
     padding: 0.5em 0.5em;
-    height: 2.5em;
+    height: 2.2em;
     cursor: pointer;
 }
 
@@ -388,6 +388,10 @@ input[type="password"] {
 
 .no-scroll {
     overflow: hidden;
+
+    &::-webkit-scrollbar {
+        display: block;
+    }
 }
 
 @media (hover: none) and (pointer: coarse) {
