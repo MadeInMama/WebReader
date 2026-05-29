@@ -143,7 +143,7 @@ else
             },
             beforeSend: () => {
                 customSendCurrPageEvent.detail.message = `<div class="progress-bar"></div>
-                                                          <div progress="0" class="progress-bar-inner progress-bar-inner-linear"></div>
+                                                          <div progress="0" progress-multiplier="46" class="progress-bar-inner progress-bar-inner-linear"></div>
                                                           <div progress="0" style="visibility: hidden" class="progress-bar-inner progress-bar-inner-text">0</div>`;
                 customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
                 targetElement.dispatchEvent(customSendCurrPageEvent);
@@ -152,9 +152,7 @@ else
                 Array.from(document.getElementsByClassName("progress-bar-inner")).forEach(value => {
                     value.setAttribute('progress', val);
 
-                    if (value.classList.contains('progress-bar-inner-linear')) {
-                        value.style.width = `${46 * val / 100}%`;
-                    } else if (value.classList.contains('progress-bar-inner-text')) {
+                    if (value.classList.contains('progress-bar-inner-text')) {
                         value.innerHTML = val;
                     }
                 });

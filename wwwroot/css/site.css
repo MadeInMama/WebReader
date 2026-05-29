@@ -59,6 +59,7 @@
     --background-backdrop-color: #222222A5;
     --background-backdrop-color-sub: #222222A5;
     --background-color: #222;
+    --background-color-with-transparency: #222222A5;
     --foreground-color: #ccc;
     --foreground-color-waiting-progress: #045778;
     --success-foreground-color: #047857;
@@ -73,6 +74,7 @@
         --background-backdrop-color: #ddddddA5;
         --background-backdrop-color-sub: #e9e9e9a5;
         --background-color: #eee;
+        --background-color-with-transparency: #eeeeeeA5;
         --foreground-color: #000;
         --foreground-color-waiting-progress: #1081B9;
         --success-foreground-color: #10B981;
@@ -283,30 +285,32 @@ header.opened > .header-toggle {
     -webkit-mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
 }
 
-.event-output > .progress-bar {
+.progress-bar {
     background-color: var(--foreground-color);
     mask: url("../icons/progress-0-svgrepo-com.svg") no-repeat center;
     -webkit-mask: url("../icons/progress-0-svgrepo-com.svg") no-repeat center;
     cursor: pointer;
 }
 
-.event-output > .progress-bar-inner {
+.progress-bar-inner {
     position: absolute;
     cursor: pointer;
     pointer-events: none;
 }
 
-.event-output > .progress-bar-inner-linear {
+.progress-bar-inner-linear {
     background-color: var(--foreground-color);
     color: transparent;
-    width: 0;
+    /* @formatter:off */
+    width: calc(attr(progress-multiplier type(<integer>)) * attr(progress%, 0%) / 100);
+    /* @formatter:on */
     border-radius: 0.1em;
     height: 20%;
-    top: 40%;
+    top: 41%;
     left: 0.8em;
 }
 
-.event-output > .progress-bar-inner-text {
+.progress-bar-inner-text {
     background-color: transparent;
     color: var(--foreground-color);
     font-size: 0.75em;
@@ -361,7 +365,7 @@ header.opened > .header-toggle {
 .upload-btn,
 .dark-view-toggle,
 .parted,
-.event-output > .progress-bar,
+.progress-bar,
 .header-toggle,
 .background-cover-toggle {
     mask-size: cover !important;
@@ -382,13 +386,20 @@ details > summary > span {
     cursor: text;
 }
 
-a.btn {
+a.btn,
+button.btn {
     padding: 0.5em 1em;
     background-color: var(--background-backdrop-color);
     box-shadow: 0 0 1em var(--drop-shadow-color);
-    border-radius: 1em;
+    border-radius: 0.5em;
     text-decoration: none;
     color: var(--foreground-color);
+}
+
+select, input {
+    border-radius: 0.5em;
+    padding: 0.25em 0.35em;
+    height: 2em;
 }
 
 .settings-container {
@@ -438,10 +449,6 @@ a.btn {
 @media (width < 1000px) {
     :root {
         --max-width: 100%;
-    }
-
-    html {
-        font-size: 16px;
     }
 
     .special-info-small {
@@ -508,7 +515,7 @@ a.btn {
 
 @media (width < 700px) {
     html {
-        font-size: 18px;
+        font-size: 16px;
     }
 }
 
