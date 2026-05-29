@@ -168,7 +168,7 @@
                 .then(async response => {
                     document.getElementById('scheduled_tasks_partial').innerHTML = await response.data;
 
-                    toLocalDateTime();
+                    convertUtcToLocal();
                 })
                 .catch(error => {
                     console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);

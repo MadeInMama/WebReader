@@ -1,44 +1,30 @@
-﻿function toLocalDateTime() {
-    document.querySelectorAll(".to-local-date-time").forEach(el => {
-        el.classList.remove("to-local-date-time");
+﻿function convertUtcToLocal() {
+    document.querySelectorAll("[utc]").forEach(el => {
+        const utcAttr = el.getAttribute("utc").replace(/['"]/g, '');
+        const date = new Date(utcAttr);
 
-        const date = new Date(el.getAttribute("utc"));
+        if (isNaN(date.getTime())) return;
 
-        const dd = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const yyyy = date.getFullYear();
-        const HH = String(date.getHours()).padStart(2, '0');
-        const mm = String(date.getMinutes()).padStart(2, '0');
-        const ss = String(date.getSeconds()).padStart(2, '0');
+        const timeOptions = {hourCycle: 'h23', hour: "2-digit", minute: "2-digit"};
 
-        el.innerHTML = `${dd}.${MM}.${yyyy} ${HH}:${mm}:${ss}`;
-    });
-}
+        const formats = {
+            "to-local-date-time": {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric", ...timeOptions,
+                second: "2-digit"
+            },
+            "to-local-date": {day: "2-digit", month: "2-digit", year: "numeric"},
+            "to-local-time": {...timeOptions, second: "2-digit"},
+            "to-local-date-text": {day: "numeric", month: "long", year: "numeric"},
+            "to-local-time-short": timeOptions
+        };
 
-function toLocalDate() {
-    document.querySelectorAll(".to-local-date").forEach(el => {
-        el.classList.remove("to-local-date");
+        const activeClass = Object.keys(formats).find(className => el.classList.contains(className));
 
-        const date = new Date(el.getAttribute("utc"));
-
-        const dd = String(date.getDate()).padStart(2, '0');
-        const MM = String(date.getMonth() + 1).padStart(2, '0');
-        const yyyy = date.getFullYear();
-
-        el.innerHTML = `${dd}.${MM}.${yyyy}`;
-    });
-}
-
-function toLocalTime() {
-    document.querySelectorAll(".to-local-time").forEach(el => {
-        el.classList.remove("to-local-time");
-
-        const date = new Date(el.getAttribute("utc"));
-
-        const HH = String(date.getHours()).padStart(2, '0');
-        const mm = String(date.getMinutes()).padStart(2, '0');
-        const ss = String(date.getSeconds()).padStart(2, '0');
-
-        el.innerHTML = `${HH}:${mm}:${ss}`;
+        if (activeClass) {
+            el.innerHTML = new Intl.DateTimeFormat(navigator.language, formats[activeClass]).format(date);
+            el.classList.remove(activeClass);
+        }
     });
 }

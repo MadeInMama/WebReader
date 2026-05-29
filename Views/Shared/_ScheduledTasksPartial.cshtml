@@ -16,7 +16,9 @@
     {
         <tr onclick="openModalClicked(`<pre>${JSON.stringify(@(JsonSerializer.Serialize(item)), null, 2)}</pre>`)">
             <td>@($"{(int)item.Type}")</td>
-            <td>@item.Type</td>
+            <td>
+                <div>@item.Type</div>
+            </td>
             <td>@item.Status</td>
             <td>
                 <div>
@@ -27,8 +29,10 @@
                          class="progress-bar-inner progress-bar-inner-text">@((int)(item.Progress * 100))</div>
                 </div>
             </td>
-            <td>@item.Result</td>
-            <td utc="'@item.HaveToStartAt'"
+            <td>
+                <div>@item.Result</div>
+            </td>
+            <td utc="@item.HaveToStartAt.ToString("O")"
                 class="to-local-date-time"></td>
         </tr>
     }

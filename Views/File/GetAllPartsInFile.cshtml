@@ -56,7 +56,8 @@
                     <span class="left main-info-span importance-0">@item.CurrentPartName</span>
                     <span class="right secondary-info-span importance-3">@item.Type?.ToLower()</span>
                     <span
-                        class="right secondary-info-span importance-2 to-local-date" utc="'@item.DateTime'"></span>
+                        class="right secondary-info-span importance-2 to-local-date"
+                        utc="@item.DateTime.ToString("O")"></span>
                     <span class="right secondary-info-span importance-1">@FormatSize(item.Size)</span>
                 </a>
                 <div class="event-output">
@@ -92,6 +93,6 @@
     <script src="~/js/empty-row-control.js"></script>
     <script>
         CheckOnEmpty();
-        toLocalDate();
+        convertUtcToLocal();
     </script>
 }
