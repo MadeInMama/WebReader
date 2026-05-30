@@ -25,38 +25,48 @@
     <form id="create-task">
         <h3>Create new task</h3>
 
-        <div>
+        <div class="create-task-types-container">
             <label for="create-task-types">Type:</label>
             <select id="create-task-types" required>
                 <optgroup label="S3">
                     @foreach (var item in Model.Items.Where(f => GetS3Types().Contains(f.Type)))
                     {
-                        <option value="@Html.Raw(item.Id)">@($"{item.Type}({(int)item.Type})")</option>
+                        <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
                 </optgroup>
                 <optgroup label="Download">
                     @foreach (var item in Model.Items.Where(f => GetDownloadTypes().Contains(f.Type)))
                     {
-                        <option value="@Html.Raw(item.Id)">@($"{item.Type}({(int)item.Type})")</option>
+                        <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
                 </optgroup>
                 <optgroup label="Delete">
                     @foreach (var item in Model.Items.Where(f => GetDeleteTypes().Contains(f.Type)))
                     {
-                        <option value="@Html.Raw(item.Id)">@($"{item.Type}({(int)item.Type})")</option>
+                        <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
                 </optgroup>
             </select>
         </div>
 
-        <div>
+        <div class="create-task-have-to-start-at-container">
             <label for="create-task-have-to-start-at">Start At:</label>
             <input type="datetime-local" id="create-task-have-to-start-at" step="1" required value="">
         </div>
 
-        <div style="display: none">
-            <label for="create-task-priority">Priority</label>
-            <input type="range" id="create-task-priority" min="-128" max="127"/>
+        <div class="create-task-priority-container">
+            <label for="create-task-priority">Priority:</label>
+            <input type="range" id="create-task-priority" min="-128" max="127" value="0" list="priority-marks"/>
+            <datalist id="priority-marks">
+                <option value="-128"></option>
+                <option value="0"></option>
+                <option value="127"></option>
+            </datalist>
+        </div>
+
+        <div class="create-task-settings-container">
+            <label for="create-task-settings">Settings:</label>
+            <textarea id="create-task-settings" spellcheck="false"></textarea>
         </div>
 
         <button id="create-task-submit-btn" class="btn" type="submit">Confirm</button>
@@ -98,7 +108,7 @@
     </select>
     <select id="task-filter-crons">
         <option value="All">All Crons</option>
-        @foreach (var item in Enum.GetValues<TaskConfigCron>())
+        @foreach (var item in Enum.GetValues<TaskCron>())
         {
             <option value="@((int)item)">@($"{item}({(int)item})")</option>
         }
@@ -112,129 +122,16 @@
             integrity="sha512-kkMt8UThSmWcdXLYFaGZ/U6vyWSNLZMUWQ5SMeF80pGqrEkH5ei9D/3MbVQpB8p7D5C3A4vlX7BpsWTT2BfB6A=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+    <script src="~/js/scheduled-task/scheduled-task.js"></script>
+    <script src="~/js/scheduled-task/scheduled-task-websocket.js"></script>
+    <script src="~/js/scheduled-task/scheduled-task-filters.js"></script>
+    <script src="~/js/scheduled-task/scheduled-task-form.js"></script>
+
     <script>
-        const rawValues = {
-            "Type": null,
-            "Status": null,
-            "Cron": null,
-        };
+        const taskConfigDefinitions = @Html.Raw(JsonSerializer.Serialize(Model.Items));
 
         reload();
-
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/ScheduledTaskHub")
-            .build();
-
-        connection.on("ScheduledTaskHub", reload)
-
-        connection.start()
-            .then(() => {
-            })
-            .catch(err => console.error(err.toString()));
-
-        function reload() {
-            const filteredValues = Object.fromEntries(
-                Object.entries(rawValues)
-                    .filter(([_, val]) => val !== null && val !== undefined && val !== 'All')
-                    .map(([key, value]) => [key, String(value)])
-            );
-
-            requestQueue.enqueue({
-                method: 'POST',
-                url: '/ScheduledTask/ScheduledTasksPartial',
-                data: {Values: filteredValues},
-                options: {
-                    headers: {
-                        'RequestVerificationToken': GetAntiForgeryToken()
-                    },
-                    withCredentials: true
-                },
-                beforeSend: () => {
-                },
-                setProgress: (val) => {
-                }
-            })
-                .then(async response => {
-                    document.getElementById('scheduled_tasks_partial').innerHTML = await response.data;
-
-                    convertUtcToLocal();
-                })
-                .catch(error => {
-                    console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
-                });
-        }
-
-        function setDefaultDateTime() {
-            const now = new Date();
-
-            const offsetMs = now.getTimezoneOffset() * 60 * 1000;
-
-            document.getElementById('create-task-have-to-start-at').value = new Date(now.getTime() - offsetMs).toISOString().slice(0, 19);
-        }
-
         setDefaultDateTime();
-
-        document.getElementById('create-task').onsubmit = (event) => {
-            event.preventDefault();
-
-            const optionSelect = document.getElementById('create-task-types');
-            const dateTimeInput = document.getElementById('create-task-have-to-start-at');
-            const priorityInput = document.getElementById('create-task-priority');
-            const submitBtn = document.getElementById('create-task-submit-btn');
-
-            optionSelect.disabled = true;
-            dateTimeInput.disabled = true;
-            priorityInput.disabled = true;
-            submitBtn.disabled = true;
-            submitBtn.innerText = 'Sending...';
-
-            const dateTimeOffset = new Date(dateTimeInput.value).toISOString();
-
-            requestQueue.enqueue({
-                method: 'POST',
-                url: '/ScheduledTask/CreateTask',
-                data: {
-                    ScheduledTaskConfigId: optionSelect.value,
-                    HaveToStartAt: dateTimeOffset,
-                    Priority: priorityInput.value
-                },
-                options: {
-                    headers: {
-                        'RequestVerificationToken': GetAntiForgeryToken()
-                    },
-                    withCredentials: true
-                },
-                beforeSend: () => {
-                },
-                setProgress: (val) => {
-                }
-            })
-                .then(async response => {
-                })
-                .catch(error => {
-                    console.error('Ошибка при отправке:', error);
-                })
-                .finally(_ => {
-                    optionSelect.disabled = false;
-                    dateTimeInput.disabled = false;
-                    submitBtn.disabled = false;
-                    priorityInput.disabled = true;
-                    setDefaultDateTime();
-                    submitBtn.innerText = 'Confirm';
-                });
-        };
-
-        document.getElementById('task-filter-types').onchange = (event) => {
-            rawValues.Type = event.target.value;
-            reload();
-        };
-        document.getElementById('task-filter-statuses').onchange = (event) => {
-            rawValues.Status = event.target.value;
-            reload();
-        };
-        document.getElementById('task-filter-crons').onchange = (event) => {
-            rawValues.Cron = event.target.value;
-            reload();
-        };
+        updateCreateTaskFromField(typeSelect.value);
     </script>
 }

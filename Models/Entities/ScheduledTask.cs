@@ -10,6 +10,7 @@ public class ScheduledTask : BaseEntity
     public required sbyte Priority { get; init; }
     public TaskStatus Status { get; set; } = TaskStatus.Pending;
     public string? Result { get; set; }
+    public required TaskCron Cron { get; init; }
 
     [Precision(3, 2)]
     [Range(0.00, 1.00, ErrorMessage = "The value must be between 0.00 and 1.00.")]
@@ -17,7 +18,7 @@ public class ScheduledTask : BaseEntity
 
     public Guid? ScheduledTaskConfigId { get; init; }
     public ScheduledTaskConfig? ScheduledTaskConfig { get; init; }
-    public JsonDocument Settings { get; set; } = JsonDocument.Parse("{}");
+    public JsonDocument Settings { get; init; } = JsonDocument.Parse("{}");
 
     public required DateTimeOffset HaveToStartAt { get; init; }
 }

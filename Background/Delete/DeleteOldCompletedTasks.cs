@@ -8,13 +8,14 @@ namespace WebReader.Background.Delete;
 public class DeleteOldCompletedTasks(IServiceProvider services, ILogger<DeleteOldCompletedTasks> logger)
     : IBackgroundTasked
 {
-    private const string SettingOlderThenInDaysToDelete = "older_then_in_hours";
+    private const string SettingOlderThenInHoursToDelete = "older_then_in_hours";
 
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        if (task.ScheduledTaskConfig == null || !task.ScheduledTaskConfig.DefaultSettings.RootElement
-                .GetProperty(SettingOlderThenInDaysToDelete).TryGetUInt16(out var days))
-            return Result.Fail($"Can't get '{nameof(SettingOlderThenInDaysToDelete)}' param.");
+        if (!task.Settings.RootElement
+                .GetProperty(SettingOlderThenInHoursToDelete)
+                .TryGetUInt16(out var days))
+            return Result.Fail($"Can't get '{nameof(SettingOlderThenInHoursToDelete)}' param.");
 
         using var scope = services.CreateScope();
         var scheduledTaskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();

@@ -59,7 +59,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.RemoveBucketsThatNotExistsInDb,
                     DefaultPriority = sbyte.MaxValue,
-                    Cron = TaskConfigCron.EveryHour,
+                    Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
 
@@ -69,7 +69,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.MakeUnavailableBucketsThatNotExistsInS3,
                     DefaultPriority = sbyte.MaxValue - 1,
-                    Cron = TaskConfigCron.EveryHour,
+                    Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
 
@@ -79,7 +79,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.RemoveFilesThatNotExistsInDb,
                     DefaultPriority = sbyte.MaxValue - 2,
-                    Cron = TaskConfigCron.EveryHour,
+                    Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
 
@@ -89,7 +89,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.UpdateBucketData,
                     DefaultPriority = sbyte.MaxValue - 3,
-                    Cron = TaskConfigCron.EveryHour,
+                    Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
 
@@ -99,7 +99,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.UpdateFilesData,
                     DefaultPriority = sbyte.MaxValue - 4,
-                    Cron = TaskConfigCron.EveryHour,
+                    Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
 
@@ -109,7 +109,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsOmniscientReader,
                     DefaultPriority = 100,
-                    Cron = TaskConfigCron.EveryDay,
+                    Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 1000}"),
                     IsActive = true
                 });
@@ -120,7 +120,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsSoloLeveling,
                     DefaultPriority = 90,
-                    Cron = TaskConfigCron.EveryWeek,
+                    Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 1000}"),
                     IsActive = true
                 });
@@ -131,7 +131,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
                     DefaultPriority = 90,
-                    Cron = TaskConfigCron.EveryWeek,
+                    Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 1000}"),
                     IsActive = true
                 });
@@ -142,7 +142,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldCompletedTasks,
                     DefaultPriority = 0,
-                    Cron = TaskConfigCron.EveryDay,
+                    Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 24}"),
                     IsActive = true
                 });
@@ -153,7 +153,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldErroredTasks,
                     DefaultPriority = 0,
-                    Cron = TaskConfigCron.EveryDay,
+                    Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 48}"),
                     IsActive = true
                 });
@@ -164,7 +164,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldInProgressTasks,
                     DefaultPriority = 0,
-                    Cron = TaskConfigCron.EveryHour,
+                    Cron = TaskCron.EveryHour,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 12}"),
                     IsActive = true
                 });

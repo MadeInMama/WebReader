@@ -1,9 +1,10 @@
 ﻿namespace WebReader.Models;
 
-public enum TaskConfigCron
+public enum TaskCron
 {
     EveryHour,
     EveryDay,
     EveryWeek,
-    EveryMonth
+    EveryMonth,
+    Manually
 }

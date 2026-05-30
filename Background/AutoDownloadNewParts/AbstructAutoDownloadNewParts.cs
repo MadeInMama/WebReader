@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
@@ -50,7 +51,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         try
         {
-            MaxSize = GetMaxSize(task.ScheduledTaskConfig);
+            MaxSize = GetMaxSize(task.Settings);
 
             var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 
@@ -176,11 +177,11 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         return result;
     }
 
-    protected virtual ulong GetMaxSize(ScheduledTaskConfig? config)
+    protected virtual ulong GetMaxSize(JsonDocument settings)
     {
         const uint toByteMultiplier = 1024u * 1024u;
 
-        if (config != null && config.DefaultSettings.RootElement.GetProperty(SettingSizeName).TryGetUInt64(out var res))
+        if (settings.RootElement.GetProperty(SettingSizeName).TryGetUInt64(out var res))
             return res * toByteMultiplier;
 
         return DefaultMaxSize * toByteMultiplier;

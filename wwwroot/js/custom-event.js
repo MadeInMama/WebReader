@@ -14,13 +14,13 @@ const customSendCurrPageEvent = new CustomEvent('SendCurrPageEvent', {
 
 let sendCurrPageEventTimeout;
 
-targetElement.addEventListener('SendCurrPageEvent', (event) => {
+targetElement.addEventListener('SendCurrPageEvent', (e) => {
     Array.from(document.getElementsByClassName("event-output")).forEach(el => {
         el.style.opacity = '1';
-        el.innerHTML = event.detail.message;
+        el.innerHTML = e.detail.message;
         clearTimeout(sendCurrPageEventTimeout);
-        if (event.detail.type === EventTypes.FROM_MILLIS) {
-            sendCurrPageEventTimeout = setTimeout(() => el.style.opacity = '0', event.detail.millis);
+        if (e.detail.type === EventTypes.FROM_MILLIS) {
+            sendCurrPageEventTimeout = setTimeout(() => el.style.opacity = '0', e.detail.millis);
         }
     });
 });

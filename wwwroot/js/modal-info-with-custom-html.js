@@ -22,8 +22,8 @@ function openModalClicked(html) {
     document.getElementById('close-custom-modal-btn').onclick = () => closeModal();
 }
 
-modal.onclick = (event) => {
-    if (event.target === modal) closeModal();
+modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
 };
 
 function closeModal() {

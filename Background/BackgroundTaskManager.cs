@@ -45,10 +45,10 @@ public class BackgroundTaskManager(
                 .ToImmutableDictionary(f => f.Key, f => f.ToList());
 
             var tasks = new List<ScheduledTask>(
-                await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryHour, [])));
-            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryDay, [])));
-            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryWeek, [])));
-            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskConfigCron.EveryMonth, [])));
+                await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryHour, [])));
+            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryDay, [])));
+            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryWeek, [])));
+            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryMonth, [])));
 
             if (tasks.Count > 0)
             {
@@ -77,14 +77,14 @@ public class BackgroundTaskManager(
             return res;
         }
 
-        DateTimeOffset GetNextHaveToStartAtByCronType(DateTimeOffset lastHaveToStartAt, TaskConfigCron cron)
+        DateTimeOffset GetNextHaveToStartAtByCronType(DateTimeOffset lastHaveToStartAt, TaskCron cron)
         {
             return cron switch
             {
-                TaskConfigCron.EveryHour => lastHaveToStartAt.AddHours(1),
-                TaskConfigCron.EveryDay => lastHaveToStartAt.AddDays(1),
-                TaskConfigCron.EveryWeek => lastHaveToStartAt.AddDays(7),
-                TaskConfigCron.EveryMonth => lastHaveToStartAt.AddDays(30),
+                TaskCron.EveryHour => lastHaveToStartAt.AddHours(1),
+                TaskCron.EveryDay => lastHaveToStartAt.AddDays(1),
+                TaskCron.EveryWeek => lastHaveToStartAt.AddDays(7),
+                TaskCron.EveryMonth => lastHaveToStartAt.AddDays(30),
                 _ => throw new ArgumentOutOfRangeException(nameof(cron), cron, null)
             };
         }
@@ -96,7 +96,9 @@ public class BackgroundTaskManager(
                 Type = config.Type,
                 Priority = config.DefaultPriority,
                 ScheduledTaskConfigId = config.Id,
-                HaveToStartAt = haveToStartAt ?? DateTimeOffset.UtcNow
+                HaveToStartAt = haveToStartAt ?? DateTimeOffset.UtcNow,
+                Cron = config.Cron,
+                Settings = config.DefaultSettings
             };
         }
     }
@@ -142,7 +144,7 @@ public class BackgroundTaskManager(
                     var combinedToken = linkedCts.Token;
 
                     logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
-                        task.ScheduledTaskConfig!.DefaultSettings.RootElement.ToString());
+                        task.Settings.RootElement.ToString());
                     var result = await taskExecutor.ExecuteAsync(task, combinedToken);
                     logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
 
@@ -150,7 +152,7 @@ public class BackgroundTaskManager(
                         await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed,
                             new decimal(1.0), result.ValueOrDefault, cancellationToken);
                     else if (result.Reasons.Count != 0)
-                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed, null,
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null,
                             string.Join(", ", result.Reasons.Select(f => f.Message)), cancellationToken);
                 }
                 catch (OperationCanceledException e)

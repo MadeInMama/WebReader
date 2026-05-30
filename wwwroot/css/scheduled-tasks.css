@@ -21,8 +21,8 @@ select {
 
 .tools > form {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 2em auto;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 2em 1fr 1fr;
     gap: 0.5em;
     place-items: center;
     width: 100%;
@@ -48,7 +48,35 @@ select {
     width: 100%;
 }
 
+.tools > form > div.create-task-types-container {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.tools > form > div.create-task-have-to-start-at-container {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+.tools > form > div.create-task-priority-container {
+    grid-column: 4;
+    grid-row: 2;
+}
+
+.tools > form > div.create-task-settings-container {
+    grid-column-start: 2;
+    grid-column-end: 4;
+    grid-row-start: 2;
+    grid-row-end: 4;
+}
+
+.tools > form > div.create-task-settings-container > textarea {
+    height: stretch;
+}
+
 .tools > form > button[type="submit"] {
+    grid-column: 4;
+    grid-row: 3;
     align-self: end;
     justify-self: end;
 }
@@ -184,24 +212,38 @@ pre {
 
 @media (width < 800px) {
     .tools > form {
-        display: grid;
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr auto auto auto;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 2em 1fr 2fr 1fr;
     }
 
     .tools > form > h3 {
-        grid-column-end: 1;
+        grid-column-end: 3;
     }
 
-    .tools > form > *:nth-child(2) {
+    .tools > form > div.create-task-types-container {
+        grid-column: 1;
         grid-row: 2;
     }
 
-    .tools > form > *:nth-child(3) {
-        grid-row: 3;
+    .tools > form > div.create-task-have-to-start-at-container {
+        grid-column: 2;
+        grid-row: 2;
     }
 
-    .tools > form > *:nth-child(4) {
+    .tools > form > div.create-task-priority-container {
+        grid-column: 1;
+        grid-row: 4;
+    }
+
+    .tools > form > div.create-task-settings-container {
+        grid-column-start: 1;
+        grid-column-end: 3;
+        grid-row-start: 3;
+        grid-row-end: 4;
+    }
+
+    .tools > form > button[type="submit"] {
+        grid-column: 2;
         grid-row: 4;
     }
 }

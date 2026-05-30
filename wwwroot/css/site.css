@@ -352,16 +352,114 @@ button.btn {
     color: var(--foreground-color);
 }
 
-select, input {
+select, input, textarea {
     border-radius: 0.5em;
     padding: 0.5em 0.5em;
     height: 2.2em;
+    resize: none;
+}
+
+/*safari*/
+input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+
+    box-sizing: border-box;
+    width: 100%;
+    line-height: 1.4em;
+}
+
+/* Настройка встроенных индикаторов Safari */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    display: block;
+    padding: 0;
+    margin: 0;
     cursor: pointer;
 }
 
 input[type="text"],
-input[type="password"] {
-    height: 2em;
+input[type="password"],
+textarea {
+    cursor: text;
+}
+
+select,
+input[type="range"] {
+    cursor: pointer;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 0.5em;
+    background: radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 0.625em center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 50.2% center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat calc(100% - 0.625em) center / 0.375em 0.375em,
+    var(--foreground-color);
+    border-radius: 0.25em;
+    transition: background var(--animation-time) ease;
+}
+
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 0.5em;
+    background: radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 0.625em center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 50.2% center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat calc(100% - 0.625em) center / 0.375em 0.375em,
+    var(--foreground-color);
+    border-radius: 0.25em;
+    transition: background var(--animation-time) ease;
+}
+
+input[type="range"]:hover::-webkit-slider-runnable-track {
+    filter: brightness(1);
+}
+
+input[type="range"]:hover::-moz-range-track {
+    filter: brightness(1);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -0.375em;
+    height: 1.25em;
+    width: 1.25em;
+    border-radius: 50%;
+    background: var(--foreground-color);
+    border: 0.25em solid var(--background-color);
+    box-shadow: 0 0 0.5em var(--drop-shadow-color);
+    transition: transform var(--animation-time) ease-in-out;
+}
+
+input[type="range"]::-moz-range-thumb {
+    height: 1.25em;
+    width: 1.25em;
+    border-radius: 50%;
+    background: var(--foreground-color);
+    border: 0.25em solid var(--background-color);
+    box-shadow: 0 0 0.5em var(--drop-shadow-color);
+    transition: transform var(--animation-time) ease-in-out;
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+    transform: scale(1.1);
+}
+
+input[type="range"]:active::-moz-range-thumb {
+    transform: scale(1.1);
 }
 
 .settings-container {
@@ -415,6 +513,10 @@ input[type="password"] {
 @media (width < 1000px) {
     :root {
         --max-width: 100%;
+    }
+
+    html {
+        font-size: 16px;
     }
 
     .special-info-small {
@@ -476,12 +578,6 @@ input[type="password"] {
 
     main {
         margin-top: 3em;
-    }
-}
-
-@media (width < 700px) {
-    html {
-        font-size: 16px;
     }
 }
 

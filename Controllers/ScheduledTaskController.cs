@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -30,8 +31,9 @@ public class ScheduledTaskController(
         {
             Items = configs.Select(f => new AllScheduledTaskConfigsItem
             {
-                Id = f.Id,
-                Type = f.Type
+                Type = f.Type,
+                Priority = f.DefaultPriority,
+                Settings = f.DefaultSettings.RootElement
             })
         });
     }
@@ -48,14 +50,12 @@ public class ScheduledTaskController(
 
         _ = StaticFunctions.TryParseNullable(typeStr, out TaskType? type);
         _ = StaticFunctions.TryParseNullable(statusStr, out TaskStatus? status);
-        _ = StaticFunctions.TryParseNullable(cronStr, out TaskConfigCron? cron);
+        _ = StaticFunctions.TryParseNullable(cronStr, out TaskCron? cron);
 
-        var res = await taskRepository.AllAsync(f => f.ScheduledTaskConfig!.IsActive &&
-                                                     (type == null || f.Type == type) &&
+        var res = await taskRepository.AllAsync(f => (type == null || f.Type == type) &&
                                                      (status == null || f.Status == status) &&
-                                                     (cron == null || f.ScheduledTaskConfig.Cron == cron),
-            cancellationToken, true,
-            f => f.ScheduledTaskConfig);
+                                                     (cron == null || f.Cron == cron),
+            cancellationToken, true);
 
         return PartialView("_ScheduledTasksPartial", new AllScheduledTasksViewModel
         {
@@ -71,9 +71,8 @@ public class ScheduledTaskController(
                 Result = f.Result,
                 Progress = f.Progress,
                 ScheduledTaskConfigId = f.ScheduledTaskConfigId,
-                Cron = f.ScheduledTaskConfig!.Cron,
-                //TODO: settings from task
-                Settings = f.ScheduledTaskConfig.DefaultSettings
+                Cron = f.Cron,
+                Settings = f.Settings
             })
         });
     }
@@ -84,17 +83,13 @@ public class ScheduledTaskController(
     {
         if (!User.GetUserRoles().Contains(RoleType.Admin)) return RedirectToAction("AccessDenied", "Account");
 
-        var config = await configRepository.FirstOrDefaultAsync(f => f.Id == request.ScheduledTaskConfigId,
-            null, cancellationToken);
-
-        if (config is not { IsActive: true }) return NotFound();
-
         await taskRepository.AddAsync(new ScheduledTask
         {
-            Type = config.Type,
+            Type = request.Type,
             Priority = request.Priority,
-            ScheduledTaskConfigId = request.ScheduledTaskConfigId,
-            HaveToStartAt = request.HaveToStartAt
+            HaveToStartAt = request.HaveToStartAt,
+            Cron = TaskCron.Manually,
+            Settings = JsonDocument.Parse(request.Settings)
         }, cancellationToken);
 
         await taskRepository.SaveChangesAsync(cancellationToken);

@@ -60,12 +60,11 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
     {
         return await context.ScheduledTasks
             .Where(f => f.Status == TaskStatus.Pending &&
-                        (f.ScheduledTaskConfig!.IsActive || f.ScheduledTaskConfigId == null) &&
+                        (f.ScheduledTaskConfigId == null || f.ScheduledTaskConfig!.IsActive) &&
                         f.HaveToStartAt < DateTimeOffset.UtcNow) //TODO: delete not active pending tasks
             .OrderByDescending(f => f.Priority)
             .ThenBy(f => f.HaveToStartAt)
             .ThenBy(f => f.Type)
-            .Include(f => f.ScheduledTaskConfig)
             .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
     }
