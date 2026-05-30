@@ -4,6 +4,13 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0"/>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="WebReader">
+    <link rel="apple-touch-icon" href="~/images/icon-512.png">
+    <link rel="manifest" href="~/manifest.json">
+
     <title>@ViewData["Title"] - WebReader</title>
 
     <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon"/>
@@ -84,5 +91,15 @@
 <script src="~/js/custom-axios.js" asp-append-version="true"></script>
 <script src="~/js/to-local-date-time.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", false)
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker зарегистрирован!', reg))
+                .catch(err => console.log('Ошибка регистрации SW:', err));
+        });
+    }
+</script>
 </body>
 </html>
