@@ -12,7 +12,7 @@
     --backdrop-blur: 0.25em;
     --background-backdrop-color: #222222A5;
     --background-backdrop-color-sub: #222222A5;
-    --background-color: #222;
+    --background-color: #222222;
     --background-color-with-transparency: #222222A5;
     --foreground-color: #ccc;
     --foreground-color-waiting-progress: #045778;
@@ -27,7 +27,7 @@
     :root {
         --background-backdrop-color: #ddddddA5;
         --background-backdrop-color-sub: #e9e9e9a5;
-        --background-color: #eee;
+        --background-color: #dddddd;
         --background-color-with-transparency: #eeeeeeA5;
         --foreground-color: #000;
         --foreground-color-waiting-progress: #1081B9;

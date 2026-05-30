@@ -71,7 +71,7 @@ select {
 }
 
 .tools > form > div.create-task-settings-container > textarea {
-    height: stretch;
+    height: 100%;
 }
 
 .tools > form > button[type="submit"] {
