@@ -214,7 +214,7 @@ public class FileController(
         {
             Selected = true,
             Text = "Unselected",
-            Value = null
+            Value = ""
         });
 
         return parts;
