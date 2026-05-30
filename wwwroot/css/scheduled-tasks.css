@@ -35,7 +35,7 @@ select {
 
 .tools > form > h3 {
     grid-column-start: 1;
-    grid-column-end: 4;
+    grid-column-end: 5;
     grid-row: 1;
 }
 
@@ -191,6 +191,12 @@ pre {
     white-space: pre-wrap;
 }
 
+@media (width < 1000px) {
+    th.table-task-result,
+    td.table-task-result {
+        display: none;
+    }
+}
 
 @media (width < 915px) {
     th.table-task-type-number,
@@ -199,12 +205,7 @@ pre {
     }
 }
 
-@media (width < 802px) {
-    th.table-task-result,
-    td.table-task-result {
-        display: none;
-    }
-
+@media (width < 855px) {
     th.table-task-type-name {
         width: 20em;
     }
@@ -248,7 +249,7 @@ pre {
     }
 }
 
-@media (width < 690px) {
+@media (width < 763px) {
     th.table-task-type-name {
         width: 10em;
     }
