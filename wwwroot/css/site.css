@@ -85,7 +85,7 @@ html, body {
 
 body {
     display: grid;
-    grid-template-rows: env(safe-area-inset-top) auto 1fr auto env(safe-area-inset-top);
+    grid-template-rows: env(safe-area-inset-top) auto 1fr auto env(safe-area-inset-bottom);
     grid-template-columns: auto var(--max-width) auto;
     justify-items: stretch;
     align-items: stretch;
