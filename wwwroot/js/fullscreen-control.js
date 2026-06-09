@@ -8,10 +8,10 @@ let enterFullscreenBtn,
     isFullscreen = isFullscreenNow();
 
 checkFullscreenSupport = () => {
-    // if (("ontouchstart" in document.documentElement)) {
-    //     fullscreenContainer.style.display = "none";
-    //     return false;
-    // }
+    if (("ontouchstart" in document.documentElement)) {
+        fullscreenContainer.style.display = "none";
+        return false;
+    }
     return true;
 }
 

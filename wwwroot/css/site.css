@@ -85,10 +85,21 @@ html, body {
 
 body {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: env(safe-area-inset-top) auto 1fr auto;
     grid-template-columns: auto var(--max-width) auto;
     justify-items: stretch;
     align-items: stretch;
+}
+
+#safe-area-inset-top {
+    position: relative;
+
+    grid-column: 1 / 4;
+    grid-row: 1;
+
+    background-color: var(--background-color);
+
+    z-index: 4;
 }
 
 header, main, footer {
@@ -113,7 +124,7 @@ header {
     grid-template-columns: auto 2em;
     grid-template-rows: 2em 0fr;
     align-items: center;
-    grid-row: 1;
+    grid-row: 2;
 }
 
 main {
@@ -121,14 +132,14 @@ main {
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     min-height: 0;
-    grid-row: 2;
+    grid-row: 3;
 }
 
 footer {
     display: none;
     border-radius: 0.75em 0.75em 0 0;
     gap: 0.5em;
-    grid-row: 3;
+    grid-row: 4;
 }
 
 @media (width < 55em) {
@@ -148,7 +159,7 @@ footer {
 #scroll-progress-bar {
     position: relative;
     grid-column: 1 / 4;
-    grid-row: 3;
+    grid-row: 4;
     align-self: end;
 
     height: 0.2em;

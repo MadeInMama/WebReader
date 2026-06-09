@@ -26,6 +26,8 @@
 
 @Html.AntiForgeryToken()
 
+<div id="safe-area-inset-top"></div>
+
 <header class="can-be-opened opened">
     @await RenderSectionAsync("SpecialInfo", false)
     <nav>
