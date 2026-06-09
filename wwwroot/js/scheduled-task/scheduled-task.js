@@ -33,7 +33,11 @@ function reload() {
         }
     })
         .then(async response => {
-            document.getElementById('scheduled_tasks_partial').innerHTML = await response.data;
+            const data = await response.data;
+            document.getElementById('scheduled_tasks_partial').innerHTML = data
+                .trim()
+                .replaceAll('\n', '')
+                .replaceAll('\r', '');
 
             convertUtcToLocal();
         })

@@ -71,9 +71,7 @@ else
     </li>
 }
 
-<div class="img-container common-container">
-    <img style="opacity:0" id="img-canvas" src="" alt="Content render error."/>
-</div>
+<img id="img-canvas" src="" alt="Content render error."/>
 
 <div class="big-page-nav">
     <button disabled class="prev-page-controller">
@@ -90,7 +88,7 @@ else
 {
     <div class="controls">
         <div class="spacer controls-start">
-            @* @await Html.PartialAsync("_FullscreenControl") *@
+            @await Html.PartialAsync("_FullscreenControl")
             <div class="settings-container"></div>
         </div>
         <div class="controls-center">
@@ -187,7 +185,6 @@ else
                 });
 
                 SetPage(currentPage, false);
-                SetScale(currentScale, false);
             } catch (err) {
                 console.error('Failed to load ZIP:', err);
             }
@@ -278,8 +275,8 @@ else
 
             SetScale(currentScale, false);
 
-            window.scrollTo({
-                top: scrollToTop ? 0 : document.body.scrollHeight,
+            mainElement.scrollTo({
+                top: scrollToTop ? 0 : mainElement.scrollHeight,
                 behavior: 'smooth'
             });
 
@@ -294,24 +291,23 @@ else
             });
 
             if (currentScale === -1) {
-                document.querySelector("main").classList.add("max-width-set");
-                document.querySelector("main").classList.remove("main-canvas-fit-height");
-                document.getElementById("img-canvas").classList.remove("image-canvas-fit-height");
-                document.getElementById("img-canvas").style.maxWidth = "100%";
-                document.getElementById("img-canvas").style.removeProperty("height");
-                document.getElementById("img-canvas").style.removeProperty("object-fit");
+                document.querySelector("main").style.removeProperty('grid-column');
+                document.querySelector("main").style.removeProperty('overflow-y');
+                document.querySelector("main").style.removeProperty('display');
+                document.querySelector("#img-canvas").style.removeProperty('height');
+                document.querySelector("#img-canvas").style.removeProperty('width');
             } else if (currentScale === 0) {
-                document.querySelector("main").classList.remove("max-width-set");
-                document.querySelector("main").classList.add("main-canvas-fit-height");
-                document.getElementById("img-canvas").style.maxWidth = "100%";
-                document.getElementById("img-canvas").classList.add("image-canvas-fit-height");
+                document.querySelector("main").style.removeProperty('grid-column');
+                document.querySelector("main").style.overflowY = 'hidden';
+                document.querySelector("main").style.display = 'block';
+                document.querySelector("#img-canvas").style.height = '100%';
+                document.querySelector("#img-canvas").style.removeProperty('width');
             } else {
-                document.querySelector("main").classList.remove("max-width-set");
-                document.querySelector("main").classList.remove("main-canvas-fit-height");
-                document.getElementById("img-canvas").classList.remove("image-canvas-fit-height");
-                document.getElementById("img-canvas").style.maxWidth = currentScale + "%";
-                document.getElementById("img-canvas").style.removeProperty("height");
-                document.getElementById("img-canvas").style.removeProperty("object-fit");
+                document.querySelector("main").style.removeProperty('overflow-y');
+                document.querySelector("main").style.removeProperty('display');
+                document.querySelector("main").style.gridColumn = '1 / 4';
+                document.querySelector("#img-canvas").style.removeProperty('height');
+                document.querySelector("#img-canvas").style.width = currentScale + "%";
             }
 
             if (send) SendCurrPage();

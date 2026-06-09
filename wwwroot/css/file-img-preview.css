@@ -1,14 +1,15 @@
+main {
+    display: grid;
+    grid-template-columns: auto;
+    grid-auto-rows: auto;
+    align-items: center;
+    justify-items: center;
+}
+
 #img-canvas {
+    display: block;
+    opacity: 0;
     width: 100%;
-}
-
-.image-canvas-fit-height {
-    height: calc(100dvh - 6em);
     object-fit: contain;
-}
-
-@media (width < 800px) {
-    .main-canvas-fit-height {
-        margin-bottom: 0;
-    }
+    transition: opacity var(--animation-time) ease-in-out;
 }

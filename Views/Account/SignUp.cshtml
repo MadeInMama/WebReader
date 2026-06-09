@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="~/css/login-register.css" asp-append-version="true"/>
 }
 
+@section SpecialInfo {
+    <h3 class="special-info-big">Web Reader</h3>
+}
+
 <form asp-controller="Account" asp-action="SignUp" method="post">
     <input type="hidden" asp-for="ReturnUrl"/>
 

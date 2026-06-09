@@ -3,10 +3,11 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0"/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0"/>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WebReader">
     <link rel="apple-touch-icon" href="~/images/icon-512.png">
     <link rel="manifest" href="~/manifest.json">
@@ -16,21 +17,19 @@
     <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon"/>
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/site-items.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/header.css" asp-append-version="true"/>
 
     @await RenderSectionAsync("Style", false)
 </head>
 <body>
 
 @Html.AntiForgeryToken()
-<header>
+
+<header class="can-be-opened opened">
     @await RenderSectionAsync("SpecialInfo", false)
-    <button class="header-toggle"></button>
     <nav>
         <ul>
-            <li style="display: none;">
-                <a asp-controller="Home" asp-action="Index">Home</a>
-            </li>
-
             @if (User.Identity is { IsAuthenticated: true })
             {
                 @if (User.GetUserRoles().Contains(RoleType.Admin))
@@ -79,13 +78,19 @@
             }
         </ul>
     </nav>
+    <button class="header-toggle opened-trigger" target="header"></button>
 </header>
+
 <main>
     @RenderBody()
 </main>
+
 <footer>
     @await RenderSectionAsync("Footer", false)
 </footer>
+
+<div id="scroll-progress-bar"></div>
+
 <script src="~/js/site.js" asp-append-version="true"></script>
 <script src="~/js/custom-event.js" asp-append-version="true"></script>
 <script src="~/js/custom-axios.js" asp-append-version="true"></script>

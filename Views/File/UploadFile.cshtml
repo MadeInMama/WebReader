@@ -8,13 +8,6 @@
     <style>
         main {
             justify-content: center;
-            min-height: 100vh;
-        }
-
-        @@media (hover: none) and (pointer: coarse) {
-            main {
-                min-height: 100dvh;
-            }
         }
 
         form {
@@ -93,7 +86,7 @@
         <input asp-for="File" type="file" required/>
     </div>
 
-    @if (Model.Parts.Any())
+    @if (Model.Parts.Count() > 1)
     {
         <label for="prev-select">Previous File:</label>
         <select id="prev-select" asp-for="AsPartOfId" asp-items="Model.Parts"></select>

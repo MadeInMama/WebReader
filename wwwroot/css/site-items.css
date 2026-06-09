@@ -1,0 +1,306 @@
+﻿header > nav > ul > li > a,
+header > nav > ul > li > form > button {
+    position: relative;
+    display: inline-block;
+    color: var(--foreground-color);
+    text-decoration: none;
+}
+
+header > nav > ul > li > a::after,
+header > nav > ul > li > form > button::after {
+    position: absolute;
+    content: "";
+    width: 0;
+    bottom: 0;
+    left: 50%;
+    height: 0.025em;
+    display: block;
+    background: var(--foreground-color);
+    transition: 150ms;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    header > nav > ul > li > a::after,
+    header > nav > ul > li > form > button::after {
+        display: none;
+    }
+}
+
+header > nav > ul > li > a:hover::after,
+header > nav > ul > li > form > button:hover::after {
+    width: 100%;
+    left: 0;
+}
+
+button {
+    border: none;
+    background-color: transparent;
+    opacity: 1;
+    transition: opacity var(--animation-time) ease-in-out;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+button:disabled {
+    opacity: 0.5;
+}
+
+.event-output > .remove,
+.close,
+header.opened > .header-toggle {
+    background-color: var(--foreground-color);
+    mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+}
+
+.dark-view-toggle {
+    background-color: var(--foreground-color);
+    mask: url("../icons/dark-mode-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/dark-mode-svgrepo-com.svg") no-repeat center;
+}
+
+.upload-btn {
+    background-color: var(--foreground-color);
+    mask: url("../icons/upload-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/upload-svgrepo-com.svg") no-repeat center;
+}
+
+.event-output {
+    opacity: 0;
+    transition: opacity var(--animation-time) ease-in-out;
+    position: relative;
+}
+
+.event-output > .waiting, .in-progress {
+    background-color: var(--foreground-color);
+    mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
+}
+
+.progress-bar {
+    background-color: var(--foreground-color);
+    mask: url("../icons/progress-0-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/progress-0-svgrepo-com.svg") no-repeat center;
+    cursor: pointer;
+}
+
+.progress-bar-inner {
+    position: absolute;
+    cursor: pointer;
+    pointer-events: none;
+}
+
+.progress-bar-inner-linear {
+    background-color: var(--foreground-color);
+    color: transparent;
+    /* @formatter:off */
+    width: calc(attr(progress-multiplier type(<integer>)) * attr(progress%, 0%) / 100);
+    /* @formatter:on */
+    border-radius: 0.1em;
+    height: 20%;
+    top: 41%;
+    left: 0.8em;
+}
+
+.progress-bar-inner-text {
+    background-color: transparent;
+    color: var(--foreground-color);
+    font-size: 0.75em;
+    height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    font-weight: 700;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.is-done {
+    background-color: var(--foreground-color);
+    mask: url("../icons/round-done-button-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/round-done-button-svgrepo-com.svg") no-repeat center;
+}
+
+.event-output > .success {
+    background-color: var(--success-foreground-color);
+    mask: url("../icons/success-tick-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/success-tick-svgrepo-com.svg") no-repeat center;
+}
+
+.event-output > .error {
+    background-color: var(--error-foreground-color);
+    mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+}
+
+.parted {
+    background-color: var(--foreground-color);
+    mask: url("../icons/circular-cake-graphic-with-quarter-part-cutted-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/circular-cake-graphic-with-quarter-part-cutted-svgrepo-com.svg") no-repeat center;
+}
+
+.background-cover-toggle {
+    background-color: var(--foreground-color);
+    mask: url("../icons/background-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/background-svgrepo-com.svg") no-repeat center;
+}
+
+.event-output > .remove,
+.close,
+.event-output > .waiting,
+.event-output > .success,
+.event-output > .error,
+.in-progress,
+.is-done,
+.upload-btn,
+.dark-view-toggle,
+.parted,
+.progress-bar,
+.header-toggle,
+.background-cover-toggle {
+    mask-size: cover !important;
+    -webkit-mask-size: cover !important;
+    height: 2em;
+    width: 2em;
+    background-repeat: no-repeat;
+    background-size: cover;
+    flex-shrink: 0;
+}
+
+details > summary > span {
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.always-open-details {
+    cursor: text;
+}
+
+a.btn,
+button.btn {
+    padding: 0.5em;
+    background-color: var(--background-backdrop-color);
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+    border-radius: 0.5em;
+    text-decoration: none;
+    color: var(--foreground-color);
+}
+
+select, input, textarea {
+    border-radius: 0.5em;
+    padding: 0.5em 0.5em;
+    height: 2.2em;
+    resize: none;
+    font-size: 1em;
+}
+
+/*safari*/
+input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+
+    box-sizing: border-box;
+    width: 100%;
+    line-height: 1.4em;
+}
+
+/* Настройка встроенных индикаторов Safari */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    display: block;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+    cursor: text;
+}
+
+select,
+input[type="range"] {
+    cursor: pointer;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 0.5em;
+    background: radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 0.625em center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 50.2% center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat calc(100% - 0.625em) center / 0.375em 0.375em,
+    var(--foreground-color);
+    border-radius: 0.25em;
+    transition: background var(--animation-time) ease;
+}
+
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 0.5em;
+    background: radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 0.625em center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat 50.2% center / 0.375em 0.375em,
+    radial-gradient(circle, var(--background-color) 50%, transparent 60%) no-repeat calc(100% - 0.625em) center / 0.375em 0.375em,
+    var(--foreground-color);
+    border-radius: 0.25em;
+    transition: background var(--animation-time) ease;
+}
+
+input[type="range"]:hover::-webkit-slider-runnable-track {
+    filter: brightness(1);
+}
+
+input[type="range"]:hover::-moz-range-track {
+    filter: brightness(1);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -0.375em;
+    height: 1.25em;
+    width: 1.25em;
+    border-radius: 50%;
+    background: var(--foreground-color);
+    border: 0.25em solid var(--background-color);
+    box-shadow: 0 0 0.5em var(--drop-shadow-color);
+    transition: transform var(--animation-time) ease-in-out;
+}
+
+input[type="range"]::-moz-range-thumb {
+    height: 1.25em;
+    width: 1.25em;
+    border-radius: 50%;
+    background: var(--foreground-color);
+    border: 0.25em solid var(--background-color);
+    box-shadow: 0 0 0.5em var(--drop-shadow-color);
+    transition: transform var(--animation-time) ease-in-out;
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+    transform: scale(1.1);
+}
+
+input[type="range"]:active::-moz-range-thumb {
+    transform: scale(1.1);
+}
+
+header:not(.opened) > .header-toggle {
+    background-color: var(--foreground-color);
+    mask: url("../icons/menu-01-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/menu-01-svgrepo-com.svg") no-repeat center;
+}
