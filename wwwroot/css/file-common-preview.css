@@ -2,34 +2,26 @@ main {
     padding: 0;
 }
 
-.controls {
-    display: flex;
+footer {
+    display: grid;
+    grid-template-columns: auto auto auto;
+}
+
+footer > .controls-start {
+    grid-column: 1;
+}
+
+footer > .controls-center {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     gap: 0.5em;
-    justify-content: space-between;
-    align-items: center;
+    grid-column: 2;
+    justify-self: center;
 }
 
-.controls > .controls-start,
-.controls > .controls-end {
-    width: 5em;
-    display: flex;
-    gap: 0.5em;
-    align-items: center;
-}
-
-.controls > .controls-start {
-    justify-content: start;
-}
-
-.controls > .controls-center {
-    display: flex;
-    gap: 0.5em;
-    justify-content: center;
-    align-items: center;
-}
-
-.controls > .controls-end {
-    justify-content: end;
+footer > .controls-end {
+    grid-column: 3;
+    justify-self: end;
 }
 
 .prev-page, .next-page {
