@@ -16,16 +16,6 @@
 
     <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon"/>
 
-    <script>
-        // Detect iOS reliably (user agent) and mark <html> so CSS can target it
-        (function () {
-            const ua = navigator.userAgent;
-            const isIOS = /iPad|iPhone|iPod/.test(ua) ||
-                (ua.includes('Mac') && 'ontouchend' in document && navigator.maxTouchPoints > 1);
-            if (isIOS) document.documentElement.classList.add('is-ios');
-        })();
-    </script>
-
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/site-items.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/header.css" asp-append-version="true"/>
@@ -103,6 +93,7 @@
 
 <div id="scroll-progress-bar"></div>
 
+<script src="~/js/window-height-setter.js" asp-append-version="true"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 <script src="~/js/custom-event.js" asp-append-version="true"></script>
 <script src="~/js/custom-axios.js" asp-append-version="true"></script>
