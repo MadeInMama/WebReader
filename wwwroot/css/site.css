@@ -83,15 +83,9 @@ html, body {
     background-color: var(--background-color);
 }
 
-@supports (-webkit-touch-callout: none) {
-    html, body {
-        height: 100dvh;
-    }
-}
-
 body {
     display: grid;
-    grid-template-rows: env(safe-area-inset-top) auto 1fr auto env(safe-area-inset-bottom);
+    grid-template-rows: env(safe-area-inset-top) auto 1fr auto;
     grid-template-columns: auto var(--max-width) auto;
     justify-items: stretch;
     align-items: stretch;
@@ -110,10 +104,6 @@ body {
 
 #safe-area-inset-top {
     grid-row: 1;
-}
-
-#safe-area-inset-bottom {
-    grid-row: 5;
 }
 
 header, main, footer {
