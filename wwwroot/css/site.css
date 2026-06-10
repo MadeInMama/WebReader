@@ -83,6 +83,12 @@ html, body {
     background-color: var(--background-color);
 }
 
+@supports (-webkit-touch-callout: none) {
+    html, body {
+        height: 100dvh;
+    }
+}
+
 body {
     display: grid;
     grid-template-rows: env(safe-area-inset-top) auto 1fr auto env(safe-area-inset-bottom);
