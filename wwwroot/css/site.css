@@ -76,11 +76,17 @@ html, body {
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100svh;
+    height: 100vh;          /* fallback for older Android browsers without svh support */
+    height: 100svh;         /* Android + desktop: small viewport (accounts for URL bar) */
     font-size: 14px;
     overflow: hidden;
     overscroll-behavior: none;
     background-color: var(--background-color);
+}
+
+/* iOS only: use dynamic viewport to account for the home indicator */
+html.is-ios, html.is-ios body {
+    height: 100dvh;
 }
 
 body {
