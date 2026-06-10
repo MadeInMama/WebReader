@@ -29,6 +29,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["WebReader.csproj", "./"]
+ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 RUN dotnet restore "WebReader.csproj"
 COPY . .
 WORKDIR "/src/"
