@@ -12,7 +12,7 @@ on:
         type: string
 
 jobs:
-  deploy:
+  checkout:
     runs-on: ubuntu-22.04
     steps:
       - name: Pulling latest changes from master...
@@ -24,6 +24,9 @@ jobs:
           port: 22
           script: /${{ secrets.SERVER_USER }}/Projects/deploy_git_reset.sh
 
+  stopping:
+    runs-on: ubuntu-22.04
+    steps:
       - name: Stopping container...
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -33,6 +36,9 @@ jobs:
           port: 22
           script: /${{ secrets.SERVER_USER }}/Projects/deploy_stop.sh
 
+  starting:
+    runs-on: ubuntu-22.04
+    steps:
       - name: Building and starting new container...
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -42,6 +48,9 @@ jobs:
           port: 22
           script: /${{ secrets.SERVER_USER }}/Projects/deploy_start.sh
 
+  pruning:
+    runs-on: ubuntu-22.04
+    steps:
       - name: Pruning Docker system...
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -51,6 +60,9 @@ jobs:
           port: 22
           script: /${{ secrets.SERVER_USER }}/Projects/deploy_prune.sh
 
+  restarting:
+    runs-on: ubuntu-22.04
+    steps:
       - name: Restarting Docker system...
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -59,4 +71,3 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: /${{ secrets.SERVER_USER }}/Projects/deploy_restart.sh
-
