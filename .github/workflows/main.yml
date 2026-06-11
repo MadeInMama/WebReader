@@ -26,6 +26,7 @@ jobs:
 
   stopping:
     runs-on: ubuntu-22.04
+    needs: checkout
     steps:
       - name: Stopping container...
         uses: appleboy/ssh-action@v1.0.3
@@ -38,6 +39,7 @@ jobs:
 
   starting:
     runs-on: ubuntu-22.04
+    needs: stopping
     steps:
       - name: Building and starting new container...
         uses: appleboy/ssh-action@v1.0.3
@@ -50,6 +52,7 @@ jobs:
 
   pruning:
     runs-on: ubuntu-22.04
+    needs: starting
     steps:
       - name: Pruning Docker system...
         uses: appleboy/ssh-action@v1.0.3
@@ -62,6 +65,7 @@ jobs:
 
   restarting:
     runs-on: ubuntu-22.04
+    needs: pruning
     steps:
       - name: Restarting Docker system...
         uses: appleboy/ssh-action@v1.0.3
