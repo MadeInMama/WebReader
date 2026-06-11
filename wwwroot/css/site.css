@@ -76,9 +76,7 @@ html, body {
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100vh;
-    height: 100svh;
-    height: var(--pwa-height);
+    height: var(--pwa-height, 100vh);
     font-size: 14px;
     overflow: hidden;
     overscroll-behavior: none;
@@ -115,7 +113,7 @@ body {
 header, main, footer {
     -webkit-touch-callout: none;
     grid-column: 2;
-    padding: 0.5em;
+    padding: 0.5em max(env(safe-area-inset-right, 0.5em), 0.5em) 0.5em max(env(safe-area-inset-left, 0.5em), 0.5em);
 }
 
 header, footer {
@@ -150,6 +148,12 @@ footer {
     border-radius: 0.75em 0.75em 0 0;
     gap: 0.5em;
     grid-row: 4;
+}
+
+.special-info-big {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .special-info-small {

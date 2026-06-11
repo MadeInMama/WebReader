@@ -58,7 +58,7 @@
                 <div class="reading-line item-line" id="@("RL_" + obj.ReadingId)">
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@item.Key.BucketId"
-                       asp-route-fileId="@obj.FileId">
+                       asp-route-fileId="@obj.FileId" class="click-effect">
                         <span class="importance-0">@obj.CustomName</span>
                         @if (obj.CurrentPartName != null)
                         {
@@ -67,7 +67,7 @@
                         <span class="importance-2">@obj.Page</span>
                     </a>
                     <div class="event-output">
-                        <button class="remove"
+                        <button class="remove click-effect"
                                 onclick="Delete('@obj.ReadingId', '@obj.CustomName @obj.CurrentPartName')"></button>
                     </div>
                 </div>

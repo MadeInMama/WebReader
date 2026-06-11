@@ -40,7 +40,7 @@ else
     {
         <li>
             <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value" class="click-effect">
                 Previous part
             </a>
         </li>
@@ -49,7 +49,7 @@ else
     {
         <li>
             <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value" class="click-effect">
                 Next part
             </a>
         </li>
@@ -58,14 +58,14 @@ else
     {
         <li>
             <a asp-controller="File" asp-action="GetAllPartsInFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId" class="click-effect">
                 Parts
             </a>
         </li>
     }
     <li>
         <a asp-controller="File" asp-action="GetAllFilesInBucket"
-           asp-route-bucketId="@Model.BucketId">
+           asp-route-bucketId="@Model.BucketId" class="click-effect">
             @Model.BucketName
         </a>
     </li>
@@ -74,10 +74,10 @@ else
 <img id="img-canvas" src="" alt="Content render error."/>
 
 <div class="big-page-nav">
-    <button disabled class="prev-page-controller">
+    <button disabled class="prev-page-controller pass-scroll-to-main click-effect">
         <div class="prev-page"></div>
     </button>
-    <button disabled class="next-page-controller">
+    <button disabled class="next-page-controller pass-scroll-to-main click-effect">
         <div class="next-page"></div>
     </button>
 </div>
@@ -91,12 +91,12 @@ else
         <div class="settings-container"></div>
     </div>
     <div class="controls-center">
-        <button disabled class="prev-page prev-page-controller"></button>
-        <select class="preview-page"></select>
-        <button disabled class="next-page next-page-controller"></button>
+        <button disabled class="prev-page prev-page-controller click-effect"></button>
+        <select class="preview-page click-effect"></select>
+        <button disabled class="next-page next-page-controller click-effect"></button>
     </div>
     <div class="controls-end">
-        <select class="set-scale">
+        <select class="set-scale click-effect">
             <option value="-1">fixed</option>
             <option value="0">fit height</option>
             <option value="10">10%</option>
@@ -113,6 +113,7 @@ else
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="~/js/settings.js"></script>
+    <script src="~/js/nav-btns-pass-scroll-to-main.js"></script>
     <script type="module">
         const url = @Html.Raw(Json.Serialize($"/api/S3/GetFile?bucketId={Model.BucketId}&fileId={Model.FileId}"));
         const decodedString = url.replace(/\\u0026/g, '&')
@@ -138,17 +139,18 @@ else
             },
             beforeSend: () => {
                 customSendCurrPageEvent.detail.message = `<div class="progress-bar"></div>
-                                                          <div progress="0" progress-multiplier="46" class="progress-bar-inner progress-bar-inner-linear"></div>
-                                                          <div progress="0" style="visibility: hidden" class="progress-bar-inner progress-bar-inner-text">0</div>`;
+                                                          <div class="progress-bar-inner progress-bar-inner-linear" style="--progress-multiplier: 46;--progress: 0"></div>
+                                                          <div class="progress-bar-inner progress-bar-inner-text" style="visibility: hidden;">0</div>`;
                 customSendCurrPageEvent.detail.type = EventTypes.INFINITE;
                 targetElement.dispatchEvent(customSendCurrPageEvent);
             },
             setProgress: (val) => {
-                Array.from(document.getElementsByClassName("progress-bar-inner")).forEach(value => {
-                    value.setAttribute('progress', val);
+                Array.from(document.getElementsByClassName("progress-bar-inner")).forEach(el => {
 
-                    if (value.classList.contains('progress-bar-inner-text')) {
-                        value.innerHTML = val;
+                    if (el.classList.contains('progress-bar-inner-text')) {
+                        el.innerHTML = val;
+                    } else if (el.classList.contains('progress-bar-inner-linear')) {
+                        el.style.setProperty('--progress', val);
                     }
                 });
             }
@@ -205,6 +207,7 @@ else
 
         Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
             value.onclick = () => {
+                if (passScrollState.wasDrag) return;
                 SetPage(currentPage - 1);
 
                 Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
@@ -215,6 +218,7 @@ else
 
         Array.from(document.getElementsByClassName("next-page-controller")).forEach(value => {
             value.onclick = () => {
+                if (passScrollState.wasDrag) return;
                 SetPage(currentPage + 1);
 
                 Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {

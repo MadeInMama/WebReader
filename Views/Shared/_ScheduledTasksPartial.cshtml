@@ -23,10 +23,9 @@
             <td class="table-task-progress">
                 <div>
                     <div class="progress-bar"></div>
-                    <div progress="@((int)(item.Progress * 100))" progress-multiplier="47"
+                    <div style="--progress-multiplier: 47;--progress: @((int)(item.Progress * 100))"
                          class="progress-bar-inner progress-bar-inner-linear"></div>
-                    <div progress="@((int)(item.Progress * 100))"
-                         class="progress-bar-inner progress-bar-inner-text">@((int)(item.Progress * 100))</div>
+                    <div class="progress-bar-inner progress-bar-inner-text">@((int)(item.Progress * 100))%</div>
                 </div>
             </td>
             <td class="table-task-result">

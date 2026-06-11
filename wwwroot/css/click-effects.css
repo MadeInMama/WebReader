@@ -1,0 +1,10 @@
+.click-effect {
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: opacity var(--animation-time) ease var(--animation-time);
+}
+
+.click-effect:active {
+    opacity: 0.5;
+    transition: transform var(--animation-time) ease;
+}

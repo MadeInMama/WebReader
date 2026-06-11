@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/site-items.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/header.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/click-effects.css" asp-append-version="true"/>
 
     @await RenderSectionAsync("Style", false)
 </head>
@@ -37,12 +38,13 @@
                 @if (User.GetUserRoles().Contains(RoleType.Admin))
                 {
                     <li>
-                        <a asp-controller="ScheduledTask" asp-action="ScheduledTasks">Scheduled Tasks</a>
+                        <a asp-controller="ScheduledTask" asp-action="ScheduledTasks" class="click-effect">Scheduled
+                            Tasks</a>
                     </li>
                 }
 
                 <li>
-                    <a asp-controller="File" asp-action="GetAllBuckets">Buckets</a>
+                    <a asp-controller="File" asp-action="GetAllBuckets" class="click-effect">Buckets</a>
                 </li>
             }
 
@@ -51,7 +53,7 @@
             @if (User.Identity is { IsAuthenticated: true })
             {
                 <li>
-                    <a asp-controller="File" asp-action="GetReading">Reading</a>
+                    <a asp-controller="File" asp-action="GetReading" class="click-effect">Reading</a>
                 </li>
                 <li style="display: none;">
                     <form asp-controller="Account"
@@ -59,28 +61,28 @@
                           method="post"
                           style="display:inline;">
                         <input type="hidden" name="_method" value="DELETE"/>
-                        <button type="submit"
+                        <button type="submit" class="click-effect"
                                 onclick="return confirm('⚠️ This will permanently delete your profile. Continue?');">
                             Delete Profile
                         </button>
                     </form>
                 </li>
                 <li>
-                    <a asp-controller="Account" asp-action="Logout">Logout</a>
+                    <a asp-controller="Account" asp-action="Logout" class="click-effect">Logout</a>
                 </li>
             }
             else
             {
                 <li>
-                    <a asp-controller="Account" asp-action="SignIn">Sign in</a>
+                    <a asp-controller="Account" asp-action="SignIn" class="click-effect">Sign in</a>
                 </li>
                 <li>
-                    <a asp-controller="Account" asp-action="SignUp">Sing up</a>
+                    <a asp-controller="Account" asp-action="SignUp" class="click-effect">Sing up</a>
                 </li>
             }
         </ul>
     </nav>
-    <button class="header-toggle opened-trigger" target="header"></button>
+    <button class="header-toggle opened-trigger click-effect" target="header"></button>
 </header>
 
 <main>
@@ -110,6 +112,9 @@
                 .catch(err => console.log('Ошибка регистрации SW:', err));
         });
     }
+
+    document.addEventListener('touchstart', () => {
+    }, {passive: true});
 </script>
 </body>
 </html>

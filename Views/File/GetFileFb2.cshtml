@@ -40,7 +40,7 @@ else
     {
         <li>
             <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value" class="click-effect">
                 Previous part
             </a>
         </li>
@@ -49,7 +49,7 @@ else
     {
         <li>
             <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value" class="click-effect">
                 Next part
             </a>
         </li>
@@ -58,14 +58,14 @@ else
     {
         <li>
             <a asp-controller="File" asp-action="GetAllPartsInFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId" class="click-effect">
                 Parts
             </a>
         </li>
     }
     <li>
         <a asp-controller="File" asp-action="GetAllFilesInBucket"
-           asp-route-bucketId="@Model.BucketId">
+           asp-route-bucketId="@Model.BucketId" class="click-effect">
             @Model.BucketName
         </a>
     </li>

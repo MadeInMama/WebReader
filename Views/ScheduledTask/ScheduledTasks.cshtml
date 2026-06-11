@@ -27,7 +27,7 @@
 
         <div class="create-task-types-container">
             <label for="create-task-types">Type:</label>
-            <select id="create-task-types" required>
+            <select id="create-task-types" class="click-effect" required>
                 <optgroup label="S3">
                     @foreach (var item in Model.Items.Where(f => GetS3Types().Contains(f.Type)))
                     {
@@ -51,7 +51,8 @@
 
         <div class="create-task-have-to-start-at-container">
             <label for="create-task-have-to-start-at">Start At:</label>
-            <input type="datetime-local" id="create-task-have-to-start-at" step="1" required value="">
+            <input type="datetime-local" id="create-task-have-to-start-at" step="1" required value=""
+                   class="click-effect">
         </div>
 
         <div class="create-task-priority-container">
@@ -69,7 +70,7 @@
             <textarea id="create-task-settings" spellcheck="false"></textarea>
         </div>
 
-        <button id="create-task-submit-btn" class="btn" type="submit">Confirm</button>
+        <button id="create-task-submit-btn" class="btn click-effect" type="submit">Confirm</button>
     </form>
 </div>
 
@@ -78,7 +79,7 @@
 
 @section Footer
 {
-    <select id="task-filter-types">
+    <select id="task-filter-types" class="click-effect">
         <option value="All">All Types</option>
         <optgroup label="S3">
             @foreach (var item in GetS3Types())
@@ -99,14 +100,14 @@
             }
         </optgroup>
     </select>
-    <select id="task-filter-statuses">
+    <select id="task-filter-statuses" class="click-effect">
         <option value="All">All Statuses</option>
         @foreach (var item in Enum.GetValues<TaskStatus>())
         {
             <option value="@((int)item)">@($"{item}({(int)item})")</option>
         }
     </select>
-    <select id="task-filter-crons">
+    <select id="task-filter-crons" class="click-effect">
         <option value="All">All Crons</option>
         @foreach (var item in Enum.GetValues<TaskCron>())
         {

@@ -19,7 +19,7 @@
 {
     <li>
         <a asp-controller="File" asp-action="GetAllFilesInBucket"
-           asp-route-bucketId="@Model.Id">
+           asp-route-bucketId="@Model.Id" class="click-effect">
             @Model.BucketName
         </a>
     </li>
@@ -35,7 +35,7 @@
             <div class="item-line" id="@("RL_" + item.Id)">
                 <a asp-controller="File" asp-action="GetFile"
                    asp-route-bucketId="@Model.Id"
-                   asp-route-fileId="@item.Id">
+                   asp-route-fileId="@item.Id" class="click-effect">
                     @if (item.IsReading)
                     {
                         <div class="center secondary-info-span">
@@ -61,7 +61,7 @@
                     <span class="right secondary-info-span importance-1">@FormatSize(item.Size)</span>
                 </a>
                 <div class="event-output">
-                    <button class="remove"
+                    <button class="remove click-effect"
                             onclick="Delete('@item.Id', '@item.FileName @item.CurrentPartName')"></button>
                 </div>
             </div>
@@ -74,7 +74,7 @@
 @if (Model.IsBelongsToUser)
 {
     <div class="upload-btn-container">
-        <a class="btn" asp-controller="File"
+        <a class="btn click-effect" asp-controller="File"
            asp-action="UploadFile"
            asp-route-bucketId="@Model.Id">
             Upload File

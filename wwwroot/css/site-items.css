@@ -94,7 +94,7 @@ header.opened > .header-toggle {
     background-color: var(--foreground-color);
     color: transparent;
     /* @formatter:off */
-    width: calc(attr(progress-multiplier type(<integer>)) * attr(progress%, 0%) / 100);
+    width: calc(var(--progress-multiplier, 100) * var(--progress, 0) / 100 * 1%);
     /* @formatter:on */
     border-radius: 0.1em;
     height: 20%;

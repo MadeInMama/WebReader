@@ -71,8 +71,8 @@ footer > .controls-end {
 .big-page-nav > .prev-page-controller,
 .big-page-nav > .next-page-controller {
     position: fixed;
-    top: 20vh;
-    bottom: 20vh;
+    top: 0;
+    bottom: 0;
     width: calc((100vw - var(--max-width) + 2em) / 2);
     cursor: pointer;
     display: flex;
@@ -88,11 +88,11 @@ footer > .controls-end {
 }
 
 .big-page-nav > .prev-page-controller {
-    left: 0;
+    left: env(safe-area-inset-left);
 }
 
 .big-page-nav > .next-page-controller {
-    right: 0;
+    right: env(safe-area-inset-right);
 }
 
 @media (width < 1000px) {
