@@ -33,7 +33,7 @@ jobs:
           port: 22
           script: /${{ secrets.SERVER_USER }}/Projects/deploy_stop.sh
 
-      - name: "Building and starting new container...
+      - name: Building and starting new container...
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
