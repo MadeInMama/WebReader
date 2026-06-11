@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Helpers;
 using WebReader.Repositories;
 using WebReader.Services;
@@ -11,7 +12,9 @@ namespace WebReader.Controllers;
 public class S3Controller(
     MinioService minioService,
     FileRepository fileRepository,
-    IHttpClientFactory httpClientFactory) : Controller
+    IHttpClientFactory httpClientFactory,
+    HybridCache cache,
+    ILogger<S3Controller> logger) : Controller
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -26,7 +29,19 @@ public class S3Controller(
 
         var httpClient = httpClientFactory.CreateClient("S3");
 
-        var presignedUrl = await minioService.GetFileUrlAsync(file.Bucket!.Name, file.Name);
+        var customOptions = new HybridCacheEntryOptions
+        {
+            LocalCacheExpiration = TimeSpan.FromSeconds(3000),
+            Expiration = TimeSpan.FromSeconds(3000)
+        };
+
+        var presignedUrl = await cache.GetOrCreateWithLoggingAsync(
+            $"filePresignedUrl_{file.Id}",
+            async _ => await minioService.GetFileUrlAsync(file.Bucket!.Name, file.Name),
+            logger,
+            cancellationToken: cancellationToken,
+            options: customOptions
+        );
 
         using var response =
             await httpClient.GetAsync(presignedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -56,7 +71,19 @@ public class S3Controller(
 
         var httpClient = httpClientFactory.CreateClient("S3");
 
-        var presignedUrl = await minioService.GetFileUrlAsync(file.Bucket!.Name, file.Name);
+        var customOptions = new HybridCacheEntryOptions
+        {
+            LocalCacheExpiration = TimeSpan.FromSeconds(3000),
+            Expiration = TimeSpan.FromSeconds(3000)
+        };
+
+        var presignedUrl = await cache.GetOrCreateWithLoggingAsync(
+            $"filePresignedUrl_{file.Id}",
+            async _ => await minioService.GetFileUrlAsync(file.Bucket!.Name, file.Name),
+            logger,
+            cancellationToken: cancellationToken,
+            options: customOptions
+        );
 
         using var response =
             await httpClient.GetAsync(presignedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
