@@ -26,7 +26,6 @@ jobs:
 
   stopping:
     runs-on: ubuntu-22.04
-    needs: checkout
     steps:
       - name: Stopping container...
         uses: appleboy/ssh-action@v1.0.3
