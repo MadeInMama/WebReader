@@ -3,67 +3,83 @@ name: Deploy Docker
 on:
   push:
     branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch to run on'
+        required: true
+        default: "master"
+        type: string
+
+defaults:
+  run:
+    shell: sh
 
 jobs:
   checkout:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container: alpine:3.19
     steps:
-      - name: Pulling latest changes from master...
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22
-          script: /${{ secrets.SERVER_USER }}/Projects/deploy_git_reset.sh
+      - name: Install SSH tools
+        run: apk add --no-cache openssh-client sshpass
+      - name: Pulling latest changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BRANCH_NAME="${{ inputs.branch }}"
+          else
+            BRANCH_NAME="${{ github.ref_name }}"
+          fi
+          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "export BRANCH_NAME='$BRANCH_NAME' && /${{ secrets.SERVER_USER }}/Projects/deploy_git_reset.sh"
 
   stopping:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container: alpine:3.19
     steps:
-      - name: Stopping container...
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22
-          script: /${{ secrets.SERVER_USER }}/Projects/deploy_stop.sh
+      - name: Install SSH tools
+        run: apk add --no-cache openssh-client sshpass
+      - name: Stopping container
+        run: |
+          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "/${{ secrets.SERVER_USER }}/Projects/deploy_stop.sh"
 
   starting:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container: alpine:3.19
     needs: [checkout, stopping]
     steps:
-      - name: Building and starting new container...
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22
-          script: /${{ secrets.SERVER_USER }}/Projects/deploy_start.sh
+      - name: Install SSH tools
+        run: apk add --no-cache openssh-client sshpass
+      - name: Building and starting new container
+        run: |
+          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "/${{ secrets.SERVER_USER }}/Projects/deploy_start.sh"
 
   pruning:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container: alpine:3.19
     needs: starting
     steps:
-      - name: Pruning Docker system...
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22
-          script: /${{ secrets.SERVER_USER }}/Projects/deploy_prune.sh
+      - name: Install SSH tools
+        run: apk add --no-cache openssh-client sshpass
+      - name: Pruning Docker system
+        run: |
+          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "/${{ secrets.SERVER_USER }}/Projects/deploy_prune.sh"
 
   restarting:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container: alpine:3.19
     needs: pruning
     steps:
-      - name: Restarting Docker system...
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22
-          script: /${{ secrets.SERVER_USER }}/Projects/deploy_restart.sh
+      - name: Install SSH tools
+        run: apk add --no-cache openssh-client sshpass
+      - name: Restarting Docker system
+        run: |
+          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "/${{ secrets.SERVER_USER }}/Projects/deploy_restart.sh"
