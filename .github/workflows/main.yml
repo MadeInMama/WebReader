@@ -3,13 +3,6 @@ name: Deploy Docker
 on:
   push:
     branches: [ "master" ]
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'The branch to run on'
-        required: true
-        default: "master"
-        type: string
 
 jobs:
   checkout:
@@ -38,7 +31,7 @@ jobs:
 
   starting:
     runs-on: ubuntu-22.04
-    needs: stopping
+    needs: [checkout, stopping]
     steps:
       - name: Building and starting new container...
         uses: appleboy/ssh-action@v1.0.3
