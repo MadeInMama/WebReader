@@ -6,23 +6,21 @@ const heightByRunningType = Object.freeze({
     IosPWA: '100vh',
 });
 
-const isAndroid = /android/i.test(navigator.userAgent || navigator.vendor || window.opera);
+const ua = navigator.userAgent || navigator.vendor;
 
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || navigator.vendor || window.opera)
-    || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+const isAndroid = /android/i.test(ua);
 
-const isPWA = window.matchMedia('(display-mode: standalone)').matches
-    || window.navigator.standalone
-    || document.referrer.includes('android-app://');
+const isIOS = /iPad|iPhone|iPod/.test(ua) || 
+    (navigator.maxTouchPoints > 2 && /Mac/.test(ua));
+
+const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+    navigator.standalone || 
+    document.referrer.includes('android-app://');
 
 function getHeight() {
-    if (isPWA) {
-        if (isIOS) return heightByRunningType.IosPWA;
-        if (isAndroid) return heightByRunningType.AndroidPWA;
-    } else {
-        if (isIOS) return heightByRunningType.Ios;
-        if (isAndroid) return heightByRunningType.Android;
-    }
+    if (isIOS) return isPWA ? heightByRunningType.IosPWA : heightByRunningType.Ios;
+    if (isAndroid) return isPWA ? heightByRunningType.AndroidPWA : heightByRunningType.Android;
+    
     return heightByRunningType.Other;
 }
 
@@ -30,12 +28,22 @@ function apply() {
     document.documentElement.style.setProperty('--pwa-height', getHeight());
 }
 
+function debounce(fn, delay = 100) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+    };
+}
+
+const optimizedApply = debounce(apply, 50);
+
 apply();
 
 window.addEventListener('pageshow', apply);
 window.addEventListener('orientationchange', apply);
-window.addEventListener('resize', apply);
+window.addEventListener('resize', optimizedApply);
 
 if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', apply);
+    window.visualViewport.addEventListener('resize', optimizedApply);
 }
