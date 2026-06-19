@@ -46,6 +46,7 @@ builder.Services.AddHybridCache(options =>
 {
     options.DefaultEntryOptions = new HybridCacheEntryOptions
     {
+        LocalCacheExpiration = TimeSpan.FromSeconds(1),
         Expiration = TimeSpan.FromSeconds(1)
     };
 });

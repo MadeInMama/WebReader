@@ -18,7 +18,7 @@ public class LogRequestAttribute(ILogger<LogRequestAttribute> logger) : ActionFi
         //     context.HttpContext.Request.Method, context.HttpContext.Request.Path,
         //     string.Join(", ", context.HttpContext.Request.Query), requestBody);
 
-        logger.LogInformation("IP: {ip} | UserId: {userId}",
+        logger.LogTrace("IP: {ip} | UserId: {userId}",
             context.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "Unknown",
             context.HttpContext.User.Identity is { IsAuthenticated: true }
                 ? context.HttpContext.User.GetUserGuid()

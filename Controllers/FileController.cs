@@ -72,14 +72,7 @@ public class FileController(
 
         if (res.IsFailed) return RedirectToAction("CustomNotFound", "Account");
 
-        return res.Value.Type switch
-
-        {
-            FileType.Pdf => View("GetFilePdf", res.Value),
-            FileType.Fb2 => View("GetFileFb2", res.Value),
-            FileType.ZipWithImg => View("GetFileImg", res.Value),
-            _ => RedirectToAction("CustomNotFound", "Account")
-        };
+        return View(res.Value);
     }
 
     [HttpGet]

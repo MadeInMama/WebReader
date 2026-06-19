@@ -1,7 +1,4 @@
 .fb2-canvas-container {
-    max-width: calc(var(--max-width) - 2em);
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .fb2-image-container {

@@ -1,0 +1,221 @@
+﻿@using WebReader.Models
+@model WebReader.Models.Dtos.FileViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+@section Style
+{
+    <link rel="stylesheet" href="~/css/file-common-preview.css" asp-append-version="true"/>
+}
+
+@if (Model.CurrentPartName.IsNullOrEmptyOrWhitespace())
+{
+    @section SpecialInfo {
+        <h3 class="special-info-big">@Model.Title</h3>
+    }
+
+    <h3 class="special-info-small">@Model.Title</h3>
+}
+else if (int.TryParse(Model.CurrentPartName, out _))
+{
+    @section SpecialInfo {
+        <h3 class="special-info-big">@Model.Title - @Model.CurrentPartName</h3>
+    }
+
+    <h3 class="special-info-small">@Model.Title - @Model.CurrentPartName</h3>
+}
+else
+{
+    @section SpecialInfo {
+        <h3 class="special-info-big">@Model.CurrentPartName</h3>
+    }
+
+    <h3 class="special-info-small">@Model.CurrentPartName</h3>
+}
+
+@section HeaderMenuItems {
+    @if (Model.PrevPartId.HasValue)
+    {
+        <li>
+            <a asp-controller="File" asp-action="GetFile"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value" class="click-effect">
+                Previous part
+            </a>
+        </li>
+    }
+    @if (Model.NextPartId.HasValue)
+    {
+        <li>
+            <a asp-controller="File" asp-action="GetFile"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value" class="click-effect">
+                Next part
+            </a>
+        </li>
+    }
+    @if (Model.PrevPartId.HasValue || Model.NextPartId.HasValue)
+    {
+        <li>
+            <a asp-controller="File" asp-action="GetAllPartsInFile"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId" class="click-effect">
+                Parts
+            </a>
+        </li>
+    }
+    <li>
+        <a asp-controller="File" asp-action="GetAllFilesInBucket"
+           asp-route-bucketId="@Model.BucketId" class="click-effect">
+            @Model.BucketName
+        </a>
+    </li>
+}
+
+@switch (Model.Type)
+{
+    case FileType.Pdf:
+    case FileType.ZipWithImg:
+        break;
+    case FileType.Fb2:
+        @await Html.PartialAsync("_ModalInfoWithCustomHtml")
+        break;
+    default:
+        throw new ArgumentOutOfRangeException();
+}
+
+<div class="big-page-nav">
+    <button disabled class="prev-page-controller pass-scroll-to-main click-effect">
+        <div class="prev-page"></div>
+    </button>
+    <button disabled class="next-page-controller pass-scroll-to-main click-effect">
+        <div class="next-page"></div>
+    </button>
+</div>
+
+<div class="event-output"></div>
+
+@switch (Model.Type)
+{
+    case FileType.Pdf:
+        @await Html.PartialAsync("GetFile/_Pdf", Model)
+        break;
+    case FileType.ZipWithImg:
+        @await Html.PartialAsync("GetFile/_Img", Model)
+        break;
+    case FileType.Fb2:
+        @await Html.PartialAsync("GetFile/_Fb2", Model)
+        break;
+    default:
+        throw new ArgumentOutOfRangeException();
+}
+
+@section Footer
+{
+    <div class="controls-start">
+        @await Html.PartialAsync("_FullscreenControl")
+        <div class="settings-container"></div>
+    </div>
+    <div class="controls-center">
+        <button disabled class="prev-page prev-page-controller click-effect"></button>
+        <select class="preview-page click-effect"></select>
+        <button disabled class="next-page next-page-controller click-effect"></button>
+    </div>
+    <div class="controls-end">
+        <select class="set-scale click-effect">
+            @switch (Model.Type)
+            {
+                case FileType.Pdf:
+                    <option value="-1">fixed</option>
+                    <option value="10">10%</option>
+                    <option value="25">25%</option>
+                    <option value="50">50%</option>
+                    <option value="75">75%</option>
+                    <option value="100">100%</option>
+                    break;
+                case FileType.ZipWithImg:
+                    <option value="-1">fixed</option>
+                    <option value="0">fit height</option>
+                    <option value="10">10%</option>
+                    <option value="25">25%</option>
+                    <option value="50">50%</option>
+                    <option value="75">75%</option>
+                    <option value="100">100%</option>
+                    break;
+                case FileType.Fb2:
+                    <option value="50">50%</option>
+                    <option value="75">75%</option>
+                    <option value="100">100%</option>
+                    <option value="125">125%</option>
+                    <option value="150">150%</option>
+                    <option value="200">200%</option>
+                    <option value="300">300%</option>
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        </select>
+    </div>
+}
+
+@section Scripts
+{
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    @switch (Model.Type)
+    {
+        case FileType.Pdf:
+            <script src="https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs" type="module"></script>
+            break;
+        case FileType.ZipWithImg:
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+            break;
+        case FileType.Fb2:
+            break;
+        default:
+            throw new ArgumentOutOfRangeException();
+    }
+    <script src="~/js/settings.js"></script>
+    <script src="~/js/nav-btns-pass-scroll-to-main.js"></script>
+
+    <script>
+        const url = @Html.Raw(Json.Serialize($"/api/S3/GetFile?bucketId={Model.BucketId}&fileId={Model.FileId}"));
+        const decodedString = url.replace(/\\u0026/g, '&')
+        const fileId = '@Model.FileId';
+
+        const imageMap = new Map();
+        const noteMap = new Map();
+
+        let pages = [];
+        let pdfDoc = null;
+
+        let currentPage = @Model.Page;
+        let currentScale = @(Model.Type switch
+                           {
+                               FileType.Pdf => Model.Scale ?? -1,
+                               FileType.ZipWithImg => Model.Scale ?? -1,
+                               FileType.Fb2 => Model.Scale ?? 100,
+                               _ => throw new ArgumentOutOfRangeException()
+                           });
+        let maxPage = 1;
+
+        setSettings(
+            document.querySelector(".settings-container"),
+            JSON.parse('@Html.Raw(Model.Settings.RootElement)'));
+    </script>
+
+    @switch (Model.Type)
+    {
+        case FileType.Pdf:
+            <script type="module" src="~/js/get-file/pdf.js"></script>
+            break;
+        case FileType.ZipWithImg:
+            <script src="~/js/get-file/img.js"></script>
+            break;
+        case FileType.Fb2:
+            <script src="~/js/get-file/fb2.js"></script>
+            break;
+        default:
+                throw new ArgumentOutOfRangeException();
+    }
+
+    <script src="~/js/get-file/common.js"></script>
+}
