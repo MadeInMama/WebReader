@@ -17,7 +17,6 @@ function prepareFile(zip) {
             SetPage(currentPage, false);
 
             setTimeout(() => {
-                console.log("here");
                 document.querySelector("header.can-be-opened").classList.remove("opened");
             }, 1000);
         });

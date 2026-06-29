@@ -20,7 +20,6 @@ function prepareFile(data) {
         SetScale(currentScale, false);
 
         setTimeout(() => {
-            console.log("here");
             document.querySelector("header.can-be-opened").classList.remove("opened");
         }, 1000);
     } catch (err) {
