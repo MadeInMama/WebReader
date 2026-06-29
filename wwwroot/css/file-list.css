@@ -3,11 +3,11 @@
 }
 
 .item-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: grid;
+    grid-template-columns: 2em 1fr 4.5em;
+    grid-template-rows: 2em;
+    gap: 0.5em;
     width: 100%;
-    min-height: 2em;
 }
 
 .item-line > a {
@@ -16,7 +16,8 @@
     gap: 0.5em;
     grid-auto-rows: 2em;
     align-items: center;
-    width: calc(100% - 2.5em);
+    grid-column: 2;
+    grid-row: 1;
 }
 
 .item-line > a > span {
@@ -43,10 +44,18 @@
     justify-content: flex-end;
 }
 
-.item-line > a > div > .in-progress,
-.item-line > a > div > .is-done,
-.parted {
+.item-line > .in-progress,
+.item-line > .is-done,
+.item-line > .parted,
+.item-line > .in-progress-empty {
     font-size: 0.75em;
+    align-self: center;
+    justify-self: center;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.item-line > .btn-download-file {
 }
 
 .item-line:not(:last-child) {
@@ -63,7 +72,6 @@
 }
 
 .in-progress-empty {
-    font-size: 0.75em;
     height: 2em;
     width: 2em;
 }
@@ -73,11 +81,14 @@
 }
 
 .event-output {
-    height: 2em;
-    width: 2em;
     opacity: 1;
     transition: none;
-    margin-left: 0.5em;
+    grid-column: 3;
+    grid-row: 1;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 2em 2em;
+    gap: 0.5em;
 }
 
 @media (width < 1000px) {

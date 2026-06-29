@@ -173,8 +173,8 @@ else
         default:
             throw new ArgumentOutOfRangeException();
     }
-    <script src="~/js/settings.js"></script>
-    <script src="~/js/nav-btns-pass-scroll-to-main.js"></script>
+    <script src="~/js/settings.js" asp-append-version="true"></script>
+    <script src="~/js/nav-btns-pass-scroll-to-main.js" asp-append-version="true"></script>
 
     <script>
         const url = @Html.Raw(Json.Serialize($"/api/S3/GetFile?bucketId={Model.BucketId}&fileId={Model.FileId}"));
@@ -205,17 +205,18 @@ else
     @switch (Model.Type)
     {
         case FileType.Pdf:
-            <script type="module" src="~/js/get-file/pdf.js"></script>
+            <script type="module" src="~/js/get-file/pdf.js" asp-append-version="true"></script>
             break;
         case FileType.ZipWithImg:
-            <script src="~/js/get-file/img.js"></script>
+            <script src="~/js/get-file/img.js" asp-append-version="true"></script>
             break;
         case FileType.Fb2:
-            <script src="~/js/get-file/fb2.js"></script>
+            <script src="~/js/get-file/fb2.js" asp-append-version="true"></script>
             break;
         default:
                 throw new ArgumentOutOfRangeException();
     }
 
-    <script src="~/js/get-file/common.js"></script>
+    <script src="~/js/cache/file-cache.js" asp-append-version="true"></script>
+    <script src="~/js/get-file/common.js" asp-append-version="true"></script>
 }

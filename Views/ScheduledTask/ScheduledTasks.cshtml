@@ -123,10 +123,10 @@
             integrity="sha512-kkMt8UThSmWcdXLYFaGZ/U6vyWSNLZMUWQ5SMeF80pGqrEkH5ei9D/3MbVQpB8p7D5C3A4vlX7BpsWTT2BfB6A=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <script src="~/js/scheduled-task/scheduled-task.js"></script>
-    <script src="~/js/scheduled-task/scheduled-task-websocket.js"></script>
-    <script src="~/js/scheduled-task/scheduled-task-filters.js"></script>
-    <script src="~/js/scheduled-task/scheduled-task-form.js"></script>
+    <script src="~/js/scheduled-task/scheduled-task.js" asp-append-version="true"></script>
+    <script src="~/js/scheduled-task/scheduled-task-websocket.js" asp-append-version="true"></script>
+    <script src="~/js/scheduled-task/scheduled-task-filters.js" asp-append-version="true"></script>
+    <script src="~/js/scheduled-task/scheduled-task-form.js" asp-append-version="true"></script>
 
     <script>
         const taskConfigDefinitions = @Html.Raw(JsonSerializer.Serialize(Model.Items));

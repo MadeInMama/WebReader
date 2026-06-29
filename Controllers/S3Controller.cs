@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Net.Http.Headers;
 using WebReader.Helpers;
 using WebReader.Repositories;
 using WebReader.Services;
@@ -52,6 +53,10 @@ public class S3Controller(
         var contentHeaders = response.Content.Headers;
         Response.ContentType = contentHeaders.ContentType?.ToString();
         Response.ContentLength = contentHeaders.ContentLength;
+        Response.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+        {
+            FileName = file.Name
+        }.ToString();
 
         await response.Content.CopyToAsync(Response.Body, cancellationToken);
 

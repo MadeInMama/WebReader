@@ -135,6 +135,12 @@ header.opened > .header-toggle {
     -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
 }
 
+.event-output > .download-file {
+    background-color: var(--foreground-color);
+    mask: url("../icons/download-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/download-svgrepo-com.svg") no-repeat center;
+}
+
 .parted {
     background-color: var(--foreground-color);
     mask: url("../icons/circular-cake-graphic-with-quarter-part-cutted-svgrepo-com.svg") no-repeat center;
@@ -148,6 +154,7 @@ header.opened > .header-toggle {
 }
 
 .event-output > .remove,
+.event-output > .download-file,
 .close,
 .event-output > .waiting,
 .event-output > .success,
