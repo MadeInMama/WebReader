@@ -23,7 +23,7 @@ function prepareFile(data) {
 
         setTimeout(() => {
             document.querySelector("header.can-be-opened").classList.remove("opened");
-        }, 1000);
+        }, 5000);
     });
 }
 
@@ -65,7 +65,8 @@ function SetScale(scale, send = true) {
     currentScale = Number.parseInt(scale);
 
     Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
-        value.value = currentScale
+        value.value = currentScale;
+        value.disabled = false;
     });
 
     if (currentScale === -1) {

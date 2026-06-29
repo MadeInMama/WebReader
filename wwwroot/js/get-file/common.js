@@ -112,6 +112,7 @@ function SetPage(page, send = true) {
 
     Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
         value.value = currentPage.toString();
+        value.disabled = false;
     });
 
     renderPage(currentPage);

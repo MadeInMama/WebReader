@@ -4,23 +4,6 @@
 
 @section Style
 {
-    <style>
-        #under-construction {
-            display: flex;
-            flex-grow: 1;
-            justify-content: center;
-            align-items: center;
-            max-width: var(--max-width);
-            width: 100%;
-            flex-wrap: wrap;
-            flex-direction: column;
-        }
-
-        #under-construction > h1 {
-            font-size: 2em;
-            white-space: pre-wrap;
-        }
-    </style>
 }
 
 @section SpecialInfo {
@@ -34,13 +17,88 @@
     }
 }
 
-<div id="under-construction">
-    <h1>UNDER</h1>
-    <h1>CONSTRUCTION</h1>
+<div id="cache-manager">
+    <h3>Space</h3>
+    <div id="free-space"></div>
+
+    <br/>
+
+    <h3>Files</h3>
+    <div id="file-cache-manager"></div>
+    <button class="btn" onclick="fileCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+
+    <br/>
+    <br/>
+
+    <h3>Core</h3>
+    <div id="core-cache-manager"></div>
+    <button class="btn" onclick="coreCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+
+    <br/>
+    <br/>
+
+    <h3>User</h3>
+    <div id="user-cache-manager"></div>
+    <button class="btn" onclick="userCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
 </div>
 
 @section Scripts
 {
     <script>
+        fileCacheService.getAll().then(response => {
+            document.querySelector("#file-cache-manager").innerHTML = respToStr(response);
+        }).catch(error => {
+            console.error(error);
+        });
+
+        coreCacheService.getAll().then(response => {
+            document.querySelector("#core-cache-manager").innerHTML = respToStr(response);
+        }).catch(error => {
+            console.error(error);
+        });
+
+        userCacheService.getAll().then(response => {
+            document.querySelector("#user-cache-manager").innerHTML = respToStr(response);
+        }).catch(error => {
+            console.error(error);
+        });
+
+        getFreeCacheSpace().then(res => {
+            document.querySelector("#free-space").innerHTML = `USED: ${formatSize(res.used)}(${res.used / res.quota * 100}%) | FREE: ${formatSize(res.free)}(${res.free / res.quota * 100}%) | QUOTA: ${formatSize(res.quota)}`;
+        });
+
+        async function getFreeCacheSpace() {
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                const estimate = await navigator.storage.estimate();
+                const usedSpace = estimate.usage;
+                const totalQuota = estimate.quota;
+                const freeSpace = totalQuota - usedSpace;
+
+                return {
+                    used: usedSpace,
+                    free: freeSpace,
+                    quota: totalQuota
+                };
+            } else {
+                console.log("Storage estimation API not supported.");
+            }
+        }
+
+        function formatSize(size) {
+            if (size === 0) return "0B";
+
+            let digits = size.toString().length;
+
+            if (digits > 10) return (size / 1024 / 1024 / 1024).toFixed(0) + "GB";
+            if (digits > 6) return (size / 1024 / 1024).toFixed(0) + "MB";
+            if (digits > 3) return (size / 1024).toFixed(0) + "KB";
+            return size + "B";
+        }
+
+        function respToStr(resp) {
+            return resp.filter(f => f.key)
+                .map(f => `<div>${f.key} | ${f.data.byteLength}</div>`)
+                .reduce((f1, f2) => `${f1}${f2}`, '');
+        }
     </script>
 }

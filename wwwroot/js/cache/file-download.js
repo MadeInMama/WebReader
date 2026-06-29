@@ -67,7 +67,6 @@ class FileDownloadButton {
         this.btn.addEventListener('click', () => this.handleClick());
 
         fileCacheService.has(this.fileId).then(isDownloaded => {
-            console.log(isDownloaded);
             this.updateState(isDownloaded ? fileDownloadStateType.Saved : fileDownloadStateType.Download);
         }).catch(error => {
             console.error(error);
@@ -78,20 +77,20 @@ class FileDownloadButton {
         this.state = newState;
         this.btn.disabled = false;
 
+        this.btn.classList.remove('unload-file');
+        this.btn.classList.remove('download-file');
+
         switch (newState) {
             case fileDownloadStateType.Download:
-                this.btn.innerHTML = '📥';
-                this.btn.className = 'btn-download';
+                this.btn.classList.add('download-file');
                 break;
             case fileDownloadStateType.Saved:
-                this.btn.innerHTML = '🗑️';
-                this.btn.className = 'btn-delete';
+                this.btn.classList.add('unload-file');
                 break;
             case fileDownloadStateType.Loading:
             case fileDownloadStateType.Deleting:
                 this.btn.disabled = true;
-                this.btn.className = 'btn-loading';
-                this.btn.innerHTML = `⏳-${progress}`;
+                this.btn.innerHTML = `${progress}%`;
                 break;
         }
     }

@@ -6,8 +6,9 @@ async function Delete(id, name) {
 
     if (!confirmRes) return;
 
-    document.querySelectorAll(".remove").forEach(el => el.disabled = true);
-    document.querySelector(`#RL_${id} > .event-output > button`).classList = 'waiting';
+    document.querySelectorAll(".delete-row-btn").forEach(el => el.disabled = true);
+    document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.remove("remove");
+    document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.add("waiting");
 
     requestQueue.enqueue({
         method: 'POST',
@@ -25,20 +26,25 @@ async function Delete(id, name) {
         }
     })
         .then(_ => {
-            document.querySelector(`#RL_${id} > .event-output > button`).classList = 'success';
+            document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.remove("waiting");
+            document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.add("success");
+
+            fileCacheService.delete(id);
 
             setTimeout(() => {
                 document.getElementById(`RL_${id}`).remove();
                 CheckOnEmpty();
-                document.querySelectorAll(".remove").forEach(el => el.disabled = false);
+                document.querySelectorAll(".delete-row-btn").forEach(el => el.disabled = false);
             }, 1000);
         })
         .catch(_ => {
-            document.querySelector(`#RL_${id} > .event-output > button`).classList = 'error';
+            document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.remove("waiting");
+            document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.add("error");
 
             setTimeout(() => {
-                document.querySelector(`#RL_${id} > .event-output > button`).classList = 'remove';
-                document.querySelectorAll(".remove").forEach(el => el.disabled = false);
+                document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.remove("error");
+                document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.add("remove");
+                document.querySelectorAll(".delete-row-btn").forEach(el => el.disabled = false);
             }, 1000);
         });
 }

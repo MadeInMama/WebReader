@@ -13,8 +13,9 @@ public static class GlobalFunctions
 
         return digits switch
         {
-            > 7 => size / 1024 / 1024 + "MB",
-            > 4 => size / 1024 + "KB",
+            > 10 => size / 1024 / 1024 / 1024 + "GB",
+            > 6 => size / 1024 / 1024 + "MB",
+            > 3 => size / 1024 + "KB",
             _ => size + "B"
         };
     }

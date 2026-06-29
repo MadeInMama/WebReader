@@ -29,14 +29,18 @@
             left: 0;
         }
 
+        .item-line {
+            grid-template-columns: 2em 1fr 2em;
+        }
+
+        .event-output {
+            grid-template-columns: 2em;
+        }
+
         @@media (hover: none) and (pointer: coarse) {
             summary > span:hover::after {
                 display: none;
             }
-        }
-
-        .reading-line {
-            padding-left: 2em;
         }
     </style>
 }
@@ -67,7 +71,7 @@
                         <span class="importance-2">@obj.Page</span>
                     </a>
                     <div class="event-output">
-                        <button class="remove click-effect"
+                        <button class="remove click-effect delete-row-btn"
                                 onclick="Delete('@obj.ReadingId', '@obj.CustomName @obj.CurrentPartName')"></button>
                     </div>
                 </div>
@@ -81,6 +85,7 @@
 @section Scripts
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
     <script>
         const url = '/api/FileApi/DeleteReading';
         const lineSelector = '.item-line';

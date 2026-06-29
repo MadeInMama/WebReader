@@ -73,7 +73,7 @@
 
                     @if (!item.IsParted)
                     {
-                        <button class="remove click-effect"
+                        <button class="remove click-effect delete-row-btn"
                                 onclick="Delete('@item.Id', '@item.FileName')"></button>
                     }
                 </div>
@@ -97,6 +97,16 @@
 @section Scripts
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script src="~/js/cache/file-download.js" asp-append-version="true"></script>
+    <script>
+        window.addEventListener("load", () => {
+            Array.from(document.querySelectorAll(".download-file")).forEach(el => {
+                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId);
+            });
+        });
+    </script>
+
     <script>
         const url = '/api/FileApi/DeleteFile';
         const lineSelector = '.item-line';
@@ -107,15 +117,5 @@
     <script>
         CheckOnEmpty();
         convertUtcToLocal();
-    </script>
-
-    <script src="~/js/cache/file-cache.js" asp-append-version="true"></script>
-    <script src="~/js/cache/file-download.js" asp-append-version="true"></script>
-    <script>
-        window.addEventListener("load", () => {
-            Array.from(document.querySelectorAll(".download-file")).forEach(el => {
-                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId);
-            });
-        });
     </script>
 }

@@ -33,26 +33,18 @@
         @foreach (var item in Model.Items)
         {
             <div class="item-line" id="@("RL_" + item.Id)">
+                @if (item.IsReading)
+                {
+                    <div class="center secondary-info-span @(item.IsDone ? "is-done" : "in-progress")"></div>
+                }
+                else
+                {
+                    <div class="in-progress-empty secondary-info-span"></div>
+                }
+
                 <a asp-controller="File" asp-action="GetFile"
                    asp-route-bucketId="@Model.Id"
                    asp-route-fileId="@item.Id" class="click-effect">
-                    @if (item.IsReading)
-                    {
-                        <div class="center secondary-info-span">
-                            @if (item.IsDone)
-                            {
-                                <span class="is-done"></span>
-                            }
-                            else
-                            {
-                                <span class="in-progress"></span>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <span class="in-progress-empty secondary-info-span"></span>
-                    }
                     <span class="left main-info-span importance-0">@item.CurrentPartName</span>
                     <span class="right secondary-info-span importance-3">@item.Type?.ToLower()</span>
                     <span
@@ -60,8 +52,11 @@
                         utc="@item.DateTime.ToString("O")"></span>
                     <span class="right secondary-info-span importance-1">@FormatSize(item.Size)</span>
                 </a>
+
                 <div class="event-output">
-                    <button class="remove click-effect"
+                    <button class="download-file click-effect"
+                            data-file-id="@item.Id" data-bucket-id="@Model.Id"></button>
+                    <button class="remove click-effect delete-row-btn"
                             onclick="Delete('@item.Id', '@item.FileName @item.CurrentPartName')"></button>
                 </div>
             </div>
@@ -85,12 +80,23 @@
 @section Scripts
 {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script src="~/js/cache/file-download.js" asp-append-version="true"></script>
+    <script>
+        window.addEventListener("load", () => {
+            Array.from(document.querySelectorAll(".download-file")).forEach(el => {
+                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId);
+            });
+        });
+    </script>
+
     <script>
         const url = '/api/FileApi/DeleteFile';
         const lineSelector = '.item-line';
     </script>
     <script src="~/js/delete-row.js" asp-append-version="true"></script>
     <script src="~/js/empty-row-control.js" asp-append-version="true"></script>
+
     <script>
         CheckOnEmpty();
         convertUtcToLocal();

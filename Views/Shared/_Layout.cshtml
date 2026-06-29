@@ -6,7 +6,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0"/>
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WebReader">
     <link rel="apple-touch-icon" href="~/images/icon-512.png">
@@ -35,6 +35,10 @@
         <ul>
             @if (User.Identity is { IsAuthenticated: true })
             {
+                <li>
+                    <a asp-controller="Home" asp-action="Index" class="click-effect">Home</a>
+                </li>
+
                 @if (User.GetUserRoles().Contains(RoleType.Admin))
                 {
                     <li>
@@ -97,6 +101,7 @@
 
 <div id="safe-area-inset-bottom"></div>
 
+<script src="~/js/cache/cache.js" asp-append-version="true"></script>
 <script src="~/js/window-height-setter.js" asp-append-version="true"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 <script src="~/js/custom-event.js" asp-append-version="true"></script>

@@ -18,7 +18,7 @@ function prepareFile(zip) {
 
             setTimeout(() => {
                 document.querySelector("header.can-be-opened").classList.remove("opened");
-            }, 1000);
+            }, 5000);
         });
     } catch (err) {
         console.error('Failed to load ZIP:', err);
@@ -34,7 +34,8 @@ function SetScale(scale, send = true) {
     currentScale = Number.parseInt(scale);
 
     Array.from(document.getElementsByClassName("set-scale")).forEach(value => {
-        value.value = currentScale
+        value.value = currentScale;
+        value.disabled = false;
     });
 
     if (currentScale === -1) {

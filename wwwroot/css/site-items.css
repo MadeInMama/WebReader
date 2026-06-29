@@ -141,6 +141,12 @@ header.opened > .header-toggle {
     -webkit-mask: url("../icons/download-svgrepo-com.svg") no-repeat center;
 }
 
+.event-output > .unload-file {
+    background-color: var(--foreground-color);
+    mask: url("../icons/upload-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/upload-svgrepo-com.svg") no-repeat center;
+}
+
 .parted {
     background-color: var(--foreground-color);
     mask: url("../icons/circular-cake-graphic-with-quarter-part-cutted-svgrepo-com.svg") no-repeat center;
@@ -155,6 +161,7 @@ header.opened > .header-toggle {
 
 .event-output > .remove,
 .event-output > .download-file,
+.event-output > .unload-file,
 .close,
 .event-output > .waiting,
 .event-output > .success,

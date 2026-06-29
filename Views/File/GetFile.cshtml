@@ -117,11 +117,11 @@ else
     </div>
     <div class="controls-center">
         <button disabled class="prev-page prev-page-controller click-effect"></button>
-        <select class="preview-page click-effect"></select>
+        <select disabled class="preview-page click-effect"></select>
         <button disabled class="next-page next-page-controller click-effect"></button>
     </div>
     <div class="controls-end">
-        <select class="set-scale click-effect">
+        <select disabled class="set-scale click-effect">
             @switch (Model.Type)
             {
                 case FileType.Pdf:
@@ -191,7 +191,7 @@ else
         let currentScale = @(Model.Type switch
                            {
                                FileType.Pdf => Model.Scale ?? -1,
-                               FileType.ZipWithImg => Model.Scale ?? -1,
+                               FileType.ZipWithImg => Model.Scale ?? 0,
                                FileType.Fb2 => Model.Scale ?? 100,
                                _ => throw new ArgumentOutOfRangeException()
                            });
@@ -217,6 +217,5 @@ else
                 throw new ArgumentOutOfRangeException();
     }
 
-    <script src="~/js/cache/file-cache.js" asp-append-version="true"></script>
     <script src="~/js/get-file/common.js" asp-append-version="true"></script>
 }
