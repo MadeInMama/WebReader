@@ -23,23 +23,29 @@
 
     <br/>
 
-    <h3>Files</h3>
-    <div id="file-cache-manager"></div>
-    <button class="btn" onclick="fileCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+    <details open>
+        <summary><h3>Files</h3></summary>
+        <div id="file-cache-manager"></div>
+        <button class="btn" onclick="fileCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+    </details>
 
     <br/>
     <br/>
 
-    <h3>Core</h3>
-    <div id="core-cache-manager"></div>
-    <button class="btn" onclick="coreCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+    <details open>
+        <summary><h3>User</h3></summary>
+        <div id="user-cache-manager"></div>
+        <button class="btn" onclick="userCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+    </details>
 
     <br/>
     <br/>
 
-    <h3>User</h3>
-    <div id="user-cache-manager"></div>
-    <button class="btn" onclick="userCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+    <details>
+        <summary><h3>Core</h3></summary>
+        <div id="core-cache-manager"></div>
+        <button class="btn" onclick="coreCacheService.deleteAll().then(()=>window.location.reload())">Prune All</button>
+    </details>
 </div>
 
 @section Scripts
@@ -51,14 +57,14 @@
             console.error(error);
         });
 
-        coreCacheService.getAll().then(response => {
-            document.querySelector("#core-cache-manager").innerHTML = respToStr(response);
+        userCacheService.getAll().then(response => {
+            document.querySelector("#user-cache-manager").innerHTML = respToStr(response);
         }).catch(error => {
             console.error(error);
         });
 
-        userCacheService.getAll().then(response => {
-            document.querySelector("#user-cache-manager").innerHTML = respToStr(response);
+        coreCacheService.getAll().then(response => {
+            document.querySelector("#core-cache-manager").innerHTML = respToStr(response);
         }).catch(error => {
             console.error(error);
         });

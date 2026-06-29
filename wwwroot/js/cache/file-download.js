@@ -9,6 +9,9 @@ function downloadFile(bucketId, fileId, clazz) {
     const pageUrl = `/File/GetFile?bucketId=${bucketId}&fileId=${fileId}`;
     fetch(pageUrl).then(response => {
         userCacheService.put(pageUrl, response);
+    }).catch(error => {
+        console.error("Error in downloadFile chain:", error);
+        clazz.updateState(fileDownloadStateType.Download);
     });
 
     requestQueue.enqueue({

@@ -3,7 +3,7 @@ const USER_CACHE = 'pwa-user-selected-v1';
 
 const CORE_ASSETS = [
     '/',
-    '/manifest.json'
+    '/manifest.json',
 ];
 
 self.addEventListener('install', (event) => {
@@ -12,7 +12,7 @@ self.addEventListener('install', (event) => {
             return Promise.all(
                 CORE_ASSETS.map(url => {
                     return cache.add(url).catch(err => {
-                        console.error(`Failed to pre-cache ${url}:`, err);
+                        console.warn(`Could not pre-cache ${url}. It will be cached dynamically later.`, err);
                     });
                 })
             );
@@ -32,8 +32,10 @@ self.addEventListener('activate', (event) => {
                 })
             );
         })
+            .then(() => {
+                return self.clients.claim();
+            })
     );
-    self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -55,30 +57,32 @@ self.addEventListener('fetch', (event) => {
 
     if (isNavigation) {
         const isRootUrl = url.pathname === '/' || url.pathname === '';
-
         const matchOptions = isRootUrl ? {ignoreSearch: true} : {};
 
         event.respondWith(
             caches.match(event.request, matchOptions).then((cachedResponse) => {
                 if (cachedResponse) {
-                    fetch(event.request).then((networkResponse) => {
-                        if (networkResponse && networkResponse.ok) {
-                            const responseClone = networkResponse.clone();
-                            caches.open(USER_CACHE).then((cache) => {
-                                cache.put(event.request, responseClone);
-                            });
-                        }
-                    }).catch(() => {
-                    });
+                    if (navigator.onLine) {
+                        const fetchPromise = fetch(event.request).then((networkResponse) => {
+                            if (networkResponse && networkResponse.ok) {
+                                const cloned = networkResponse.clone();
+                                caches.open(USER_CACHE).then((cache) => {
+                                    cache.put(event.request, cloned);
+                                });
+                            }
+                        }).catch(() => {
+                        });
+                        event.waitUntil(fetchPromise);
+                    }
 
                     return cachedResponse;
                 }
 
                 return fetch(event.request).then((networkResponse) => {
                     if (networkResponse && networkResponse.ok) {
-                        const responseClone = networkResponse.clone();
+                        const cloned = networkResponse.clone();
                         caches.open(USER_CACHE).then((cache) => {
-                            cache.put(event.request, responseClone);
+                            cache.put(event.request, cloned);
                         });
                     }
                     return networkResponse;
@@ -102,9 +106,9 @@ self.addEventListener('fetch', (event) => {
                     if (networkResponse && networkResponse.ok &&
                         !url.pathname.endsWith('favicon.ico') &&
                         !url.pathname.endsWith('icon-512.png')) {
-                        const responseClone = networkResponse.clone();
+                        const cloned = networkResponse.clone();
                         caches.open(CORE_CACHE).then((cache) => {
-                            cache.put(event.request, responseClone);
+                            cache.put(event.request, cloned);
                         });
                     }
                     return networkResponse;
@@ -120,9 +124,9 @@ self.addEventListener('fetch', (event) => {
         fetch(event.request)
             .then((networkResponse) => {
                 if (networkResponse && networkResponse.ok) {
-                    const responseClone = networkResponse.clone();
+                    const cloned = networkResponse.clone();
                     caches.open(USER_CACHE).then((cache) => {
-                        cache.put(event.request, responseClone);
+                        cache.put(event.request, cloned);
                     });
                 }
                 return networkResponse;
