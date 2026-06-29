@@ -55,7 +55,7 @@ self.addEventListener('fetch', (event) => {
 
     if (isNavigation) {
         event.respondWith(
-            caches.match(event.request, {ignoreSearch: true}).then((cachedResponse) => {
+            caches.match(event.request).then((cachedResponse) => {
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
                     const responseClone = networkResponse.clone();
                     if (networkResponse && networkResponse.ok) {
