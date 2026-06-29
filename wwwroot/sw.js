@@ -54,8 +54,12 @@ self.addEventListener('fetch', (event) => {
         url.pathname === '/favicon.ico';
 
     if (isNavigation) {
+        const isRootUrl = url.pathname === '/' || url.pathname === '';
+
+        const matchOptions = isRootUrl ? {ignoreSearch: true} : {};
+
         event.respondWith(
-            caches.match(event.request).then((cachedResponse) => {
+            caches.match(event.request, matchOptions).then((cachedResponse) => {
                 if (cachedResponse) {
                     fetch(event.request).then((networkResponse) => {
                         if (networkResponse && networkResponse.ok) {

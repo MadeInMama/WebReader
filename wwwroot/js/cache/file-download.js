@@ -6,6 +6,11 @@
 });
 
 function downloadFile(bucketId, fileId, clazz) {
+    const pageUrl = `/File/GetFile?bucketId=${bucketId}&fileId=${fileId}`;
+    fetch(pageUrl).then(response => {
+        userCacheService.put(pageUrl, response);
+    });
+
     requestQueue.enqueue({
         method: 'POST',
         url: `/api/S3/GetFile?bucketId=${bucketId}&fileId=${fileId}`,
