@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using WebReader.Configuration;
 using WebReader.Data;
 using WebReader.Models.Entities;
 
@@ -12,7 +14,8 @@ namespace WebReader.Controllers;
 public class TelegramWebhookController(
     ITelegramBotClient botClient,
     ILogger<TelegramWebhookController> logger,
-    IDbContextFactory<ApplicationDbContext> contextFactory)
+    IDbContextFactory<ApplicationDbContext> contextFactory,
+    IOptions<TelegramBotClientConfig> telegramBotClientConfig)
     : ControllerBase
 {
     [HttpPost]
@@ -20,6 +23,16 @@ public class TelegramWebhookController(
     {
         try
         {
+            // Validate Telegram secret token header
+            var secretToken = Request.Headers["X-Telegram-Bot-Api-Secret-Token"].FirstOrDefault();
+            var expectedToken = telegramBotClientConfig.Value.BotToken!;
+
+            if (string.IsNullOrEmpty(secretToken) || secretToken != expectedToken)
+            {
+                logger.LogWarning("Invalid Telegram secret token received");
+                return Unauthorized();
+            }
+
             if (update.Message is { } message)
                 if (message.Text is { } text)
                 {

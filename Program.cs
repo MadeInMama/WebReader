@@ -106,9 +106,13 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldErroredTasks>(
 builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldInProgressTasks>(
     TaskType.DeleteOldInProgressTasks);
 
+builder.Services.Configure<BackgroundTaskConfig>(builder.Configuration.GetSection("BackgroundTasks"));
 builder.Services.AddHostedService<BackgroundTaskManager>();
 
-builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["Telegram:BotToken"]!));
+builder.Services.Configure<TelegramBotClientConfig>(builder.Configuration.GetSection("Telegram"));
+var telegramConfig = new TelegramBotClientConfig();
+builder.Configuration.GetRequiredSection("Telegram").Bind(telegramConfig);
+builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(telegramConfig.BotToken!));
 
 var jwtConfig = new JwtConfig();
 builder.Configuration.GetRequiredSection(nameof(JwtConfig)).Bind(jwtConfig);
@@ -204,7 +208,7 @@ using (var scope = app.Services.CreateScope())
     // .DeleteFileAsync(files.Select(f => f.Id).ToList(), CancellationToken.None);
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
-    await botClient.SetWebhook(builder.Configuration["Telegram:WebhookUrl"]!);
+    await botClient.SetWebhook(telegramConfig.WebhookUrl!);
 }
 
 app.UseResponseCompression();

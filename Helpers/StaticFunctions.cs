@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
+using Microsoft.AspNetCore.Identity;
 using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -102,14 +101,15 @@ public static class StaticFunctions
 
     public static string HashPassword(string password)
     {
-        var hashedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
+        var passwordHasher = new PasswordHasher<string>();
+        return passwordHasher.HashPassword(null, password);
     }
 
     public static bool VerifyPassword(string password, string hash)
     {
-        var hashOfInput = HashPassword(password);
-        return hashOfInput == hash;
+        var passwordHasher = new PasswordHasher<string>();
+        var result = passwordHasher.VerifyHashedPassword(null, hash, password);
+        return result != PasswordVerificationResult.Failed;
     }
 
     public static bool TryParseNullable<T>(string? srcStr, out T? res) where T : struct, Enum

@@ -75,7 +75,7 @@ public class FileApiController(
         //TODO: error if file not deleted or not exists
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        if (!User.GetUserRoles().Contains(RoleType.Admin)) BadRequest(ModelState);
+        if (!User.GetUserRoles().Contains(RoleType.Admin)) return BadRequest(ModelState);
 
         await fileService.DeleteFileAsync([request.Id], cancellationToken);
 

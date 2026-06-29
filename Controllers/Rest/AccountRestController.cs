@@ -14,6 +14,9 @@ public class AccountRestController(AuthRestService authRestService) : Controller
     [AllowAnonymous]
     public async Task<IActionResult> SignIn(LoginRequestDto request)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var res = await authRestService.SignIn(request);
 
         if (res.IsFailed) return Unauthorized(new { message = res.ToString() });

@@ -92,6 +92,8 @@ public class FileRestController(
 
         var res = await fileControllerService.GetReading(User.GetUserGuid(), User.GetUserRoles(), cancellationToken);
 
+        if (res.IsFailed) return BadRequest(res.ToString());
+
         return Ok(new BaseResponseDto<AllFilesReadingViewModel>
         {
             Data = res.Value,

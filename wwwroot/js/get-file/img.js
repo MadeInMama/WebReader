@@ -15,6 +15,11 @@ function prepareFile(zip) {
             });
 
             SetPage(currentPage, false);
+
+            setTimeout(() => {
+                console.log("here");
+                document.querySelector("header.can-be-opened").classList.remove("opened");
+            }, 1000);
         });
     } catch (err) {
         console.error('Failed to load ZIP:', err);
@@ -25,7 +30,6 @@ function renderPage() {
     document.querySelector('#img-canvas').src = pages[currentPage - 1];
     document.querySelector('#img-canvas').style.opacity = '1';
 }
-
 
 function SetScale(scale, send = true) {
     currentScale = Number.parseInt(scale);

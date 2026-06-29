@@ -1,6 +1,8 @@
 ﻿using System.Collections.Immutable;
 using AngleSharp.Common;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
+using WebReader.Configuration;
 using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
@@ -11,11 +13,18 @@ namespace WebReader.Background;
 
 public class BackgroundTaskManager(
     ILogger<BackgroundTaskManager> logger,
-    IServiceScopeFactory serviceScopeFactory)
+    IServiceScopeFactory serviceScopeFactory,
+    IOptions<BackgroundTaskConfig> backgroundTaskConfig)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        if (!backgroundTaskConfig.Value.Enabled)
+        {
+            logger.LogInformation("Background tasks are disabled by configuration");
+            return;
+        }
+
         await Task.WhenAll(
             RunSpreadTasks(cancellationToken),
             RunAsSoonAsPossible(cancellationToken)
