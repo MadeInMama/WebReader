@@ -11,19 +11,56 @@ const passScrollState = {
     wasDrag: false
 };
 
-let startTouchY = 0;
-let startScrollY = 0;
-let dragDistance = 0;
+(function initPassScrollToMain() {
+    const targets = new WeakSet();
+    let mainElement = null;
 
-let velocity = 0;
-let momentumStart = 0;
-let lastFrameTime = 0;
-let momentumFrameId = null;
-let primaryTouchId = null;
-const samples = [];
+    let startTouchY = 0;
+    let startScrollY = 0;
+    let dragDistance = 0;
 
-function passScrollToMain(el) {
-    const getMainElement = () => document.querySelector('main') || document.scrollingElement;
+    let velocity = 0;
+    let momentumStart = 0;
+    let lastFrameTime = 0;
+    let momentumFrameId = null;
+    let primaryTouchId = null;
+    let wasDragResetTimer = null;
+    let pendingScrollTop = null;
+    let touchScrollRafId = null;
+
+    const samples = [];
+
+    function getMainElement() {
+        if (!mainElement || !mainElement.isConnected) {
+            mainElement = document.querySelector('main') || document.scrollingElement || null;
+        }
+        return mainElement;
+    }
+
+    function isPassScrollTarget(node) {
+        if (!(node instanceof Element)) {
+            return false;
+        }
+
+        let element = node;
+        while (element) {
+            if (targets.has(element)) {
+                return true;
+            }
+            element = element.parentElement;
+        }
+
+        return false;
+    }
+
+    function registerTarget(element) {
+        if (!(element instanceof Element) || targets.has(element)) {
+            return;
+        }
+
+        targets.add(element);
+        element.style.touchAction = 'none';
+    }
 
     function sampleTouch(y, t) {
         samples.push({y, t});
@@ -33,65 +70,135 @@ function passScrollToMain(el) {
     }
 
     function calculateVelocity() {
-        if (samples.length < 2) return 0;
+        if (samples.length < 2) {
+            return 0;
+        }
+
         const first = samples[0];
         const last = samples[samples.length - 1];
         const dt = last.t - first.t;
-        if (dt <= 0) return 0;
+        if (dt <= 0) {
+            return 0;
+        }
+
         return (first.y - last.y) / dt;
     }
 
     function stopMomentum() {
         velocity = 0;
-        if (momentumFrameId) {
+        if (momentumFrameId !== null) {
             cancelAnimationFrame(momentumFrameId);
             momentumFrameId = null;
         }
     }
 
+    function cancelPendingTouchScroll() {
+        pendingScrollTop = null;
+        if (touchScrollRafId !== null) {
+            cancelAnimationFrame(touchScrollRafId);
+            touchScrollRafId = null;
+        }
+    }
+
+    function applyPendingScroll() {
+        touchScrollRafId = null;
+        const main = getMainElement();
+        if (main && pendingScrollTop !== null) {
+            main.scrollTop = pendingScrollTop;
+        }
+    }
+
+    function scheduleScrollTop(value) {
+        pendingScrollTop = value;
+        if (touchScrollRafId === null) {
+            touchScrollRafId = requestAnimationFrame(applyPendingScroll);
+        }
+    }
+
     function runMomentumFrame(now) {
-        if (Math.abs(velocity) < MOMENTUM_MIN_VELOCITY) return;
-        if (now - momentumStart > MOMENTUM_MAX_DURATION_MS) return;
+        momentumFrameId = null;
+
+        if (Math.abs(velocity) < MOMENTUM_MIN_VELOCITY) {
+            return;
+        }
+        if (now - momentumStart > MOMENTUM_MAX_DURATION_MS) {
+            return;
+        }
 
         const dt = lastFrameTime ? now - lastFrameTime : 16.6;
         lastFrameTime = now;
 
-        const target = getMainElement();
-        if (target) {
-            target.scrollBy(0, velocity * dt);
+        const main = getMainElement();
+        if (!main) {
+            stopMomentum();
+            return;
         }
 
+        main.scrollBy({top: velocity * dt, behavior: 'auto'});
         velocity *= Math.pow(MOMENTUM_FRICTION, dt / 16.6);
-        momentumFrameId = requestAnimationFrame(runMomentumFrame);
+
+        if (Math.abs(velocity) >= MOMENTUM_MIN_VELOCITY) {
+            momentumFrameId = requestAnimationFrame(runMomentumFrame);
+        }
     }
 
-    el.addEventListener('wheel', (event) => {
+    function resetDragState() {
+        if (wasDragResetTimer !== null) {
+            clearTimeout(wasDragResetTimer);
+        }
+
+        wasDragResetTimer = setTimeout(() => {
+            passScrollState.wasDrag = false;
+            wasDragResetTimer = null;
+        }, 50);
+
+        primaryTouchId = null;
+    }
+
+    function onWheel(event) {
+        if (!isPassScrollTarget(event.target)) {
+            return;
+        }
+
         event.preventDefault();
-        const target = getMainElement();
-        if (target) target.scrollBy(0, event.deltaY);
-    });
 
-    el.addEventListener('touchstart', (event) => {
+        const main = getMainElement();
+        if (main) {
+            main.scrollBy({top: event.deltaY, behavior: 'auto'});
+        }
+    }
+
+    function onTouchStart(event) {
+        if (!isPassScrollTarget(event.target)) {
+            return;
+        }
+
         const touch = event.changedTouches[0];
-        primaryTouchId = touch.identifier;
+        if (!touch) {
+            return;
+        }
 
+        primaryTouchId = touch.identifier;
         startTouchY = touch.clientY;
 
-        const target = getMainElement();
-        startScrollY = target ? target.scrollTop : 0;
+        const main = getMainElement();
+        startScrollY = main ? main.scrollTop : 0;
 
         dragDistance = 0;
         samples.length = 0;
         stopMomentum();
-    });
+        cancelPendingTouchScroll();
+    }
 
-    getMainElement().addEventListener('scroll', (event) => {
-        event.preventDefault();
-    });
+    function onTouchMove(event) {
+        if (primaryTouchId === null) {
+            return;
+        }
 
-    el.addEventListener('touchmove', (event) => {
         const touch = Array.from(event.touches).find(t => t.identifier === primaryTouchId);
-        if (!touch) return;
+        if (!touch) {
+            return;
+        }
 
         event.preventDefault();
 
@@ -103,26 +210,27 @@ function passScrollToMain(el) {
             passScrollState.wasDrag = true;
         }
 
-        const target = getMainElement();
-        if (target) {
-            target.scrollTop = startScrollY + totalDeltaY;
-        }
-
+        scheduleScrollTop(startScrollY + totalDeltaY);
         sampleTouch(currentTouchY, performance.now());
-    });
-
-    function resetDragState() {
-        setTimeout(() => {
-            passScrollState.wasDrag = false;
-        }, 50);
-        primaryTouchId = null;
     }
 
-    el.addEventListener('touchend', (event) => {
-        const touchEnded = Array.from(event.changedTouches).some(t => t.identifier === primaryTouchId);
-        if (!touchEnded) return;
+    function finishTouch(event) {
+        if (primaryTouchId === null) {
+            return false;
+        }
 
-        // event.preventDefault();
+        const touch = Array.from(event.changedTouches).find(t => t.identifier === primaryTouchId);
+        if (!touch) {
+            return false;
+        }
+
+        cancelPendingTouchScroll();
+
+        const totalDeltaY = startTouchY - touch.clientY;
+        const main = getMainElement();
+        if (main) {
+            main.scrollTop = startScrollY + totalDeltaY;
+        }
 
         const rawVelocity = calculateVelocity();
         velocity = Math.max(-MOMENTUM_MAX_VELOCITY, Math.min(MOMENTUM_MAX_VELOCITY, rawVelocity));
@@ -135,17 +243,34 @@ function passScrollToMain(el) {
         }
 
         resetDragState();
-    });
+        return true;
+    }
 
-    el.addEventListener('touchcancel', (event) => {
-        const touchCancelled = Array.from(event.changedTouches).some(t => t.identifier === primaryTouchId);
-        if (!touchCancelled) return;
+    function onTouchEnd(event) {
+        finishTouch(event);
+    }
 
-        // event.preventDefault();
+    function onTouchCancel(event) {
+        if (primaryTouchId === null) {
+            return;
+        }
+
+        const touchCancelled = Array.from(event.changedTouches)
+            .some(t => t.identifier === primaryTouchId);
+        if (!touchCancelled) {
+            return;
+        }
 
         stopMomentum();
+        cancelPendingTouchScroll();
         resetDragState();
-    });
-}
+    }
 
-document.querySelectorAll(PASS_SCROLL_SELECTOR).forEach(passScrollToMain);
+    document.addEventListener('wheel', onWheel, {passive: false});
+    document.addEventListener('touchstart', onTouchStart, {passive: true});
+    document.addEventListener('touchmove', onTouchMove, {passive: false});
+    document.addEventListener('touchend', onTouchEnd, {passive: true});
+    document.addEventListener('touchcancel', onTouchCancel, {passive: true});
+
+    document.querySelectorAll(PASS_SCROLL_SELECTOR).forEach(registerTarget);
+})();
