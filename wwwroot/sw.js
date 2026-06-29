@@ -56,17 +56,34 @@ self.addEventListener('fetch', (event) => {
     if (isNavigation) {
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
-                const fetchPromise = fetch(event.request).then((networkResponse) => {
-                    const responseClone = networkResponse.clone();
+                if (cachedResponse) {
+                    fetch(event.request).then((networkResponse) => {
+                        if (networkResponse && networkResponse.ok) {
+                            const responseClone = networkResponse.clone();
+                            caches.open(USER_CACHE).then((cache) => {
+                                cache.put(event.request, responseClone);
+                            });
+                        }
+                    }).catch(() => {
+                    });
+
+                    return cachedResponse;
+                }
+
+                return fetch(event.request).then((networkResponse) => {
                     if (networkResponse && networkResponse.ok) {
+                        const responseClone = networkResponse.clone();
                         caches.open(USER_CACHE).then((cache) => {
                             cache.put(event.request, responseClone);
                         });
                     }
                     return networkResponse;
-                }).catch(() => cachedResponse);
-
-                return cachedResponse || fetchPromise;
+                }).catch(() => {
+                    return new Response('Офлайн режим. Подключитесь к интернету для первой загрузки.', {
+                        status: 503,
+                        headers: new Headers({'Content-Type': 'text/plain; charset=utf-8'})
+                    });
+                });
             })
         );
         return;
@@ -79,14 +96,16 @@ self.addEventListener('fetch', (event) => {
 
                 return fetch(event.request).then((networkResponse) => {
                     if (networkResponse && networkResponse.ok &&
-                        !url.pathname.includes('favicon.ico') &&
-                        !url.pathname.includes('icon-512.png')) {
+                        !url.pathname.endsWith('favicon.ico') &&
+                        !url.pathname.endsWith('icon-512.png')) {
                         const responseClone = networkResponse.clone();
                         caches.open(CORE_CACHE).then((cache) => {
                             cache.put(event.request, responseClone);
                         });
                     }
                     return networkResponse;
+                }).catch(() => {
+                    return new Response('', {status: 404, statusText: 'Not Found'});
                 });
             })
         );
