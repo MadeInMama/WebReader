@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "OFFLINE";
+}
+
+@section Style
+{
+    <style>
+
+    </style>
+}
+
+@section SpecialInfo {
+    <h3 class="special-info-big">You are offline</h3>
+}
+
+<div id="offline-access-container">
+    <h3>Available readings</h3>
+</div>
+
+@section Scripts
+{
+    <script>
+        userCacheService.getAll().then(cache => {
+            document.querySelector("#offline-access-container").innerHTML +=
+                `${cache.map(f => `<a href='${f.key}'>${f.key}</a>`).reduce((f1, f2) => `${f1}<br/><br/>${f2}`, '')}`;
+        });
+    </script>
+}

@@ -1,146 +1,121 @@
 const CORE_CACHE = 'pwa-core-v1';
 const USER_CACHE = 'pwa-user-selected-v1';
+const OFFLINE_URL = '/Home/Offline';
 
 const CORE_ASSETS = [
-    '/',
+    OFFLINE_URL,
+
+    '/css/click-effects.css',
+    '/css/file-common-preview.css',
+    '/css/file-fb2-preview.css',
+    '/css/file-img-preview.css',
+    '/css/file-list.css',
+    '/css/file-pdf-preview.css',
+    '/css/fullscreen-control.css',
+    '/css/header.css',
+    '/css/login-register.css',
+    '/css/modal-info-with-custom-html.css',
+    '/css/scheduled-tasks.css',
+    '/css/site.css',
+    '/css/site-items.css',
+
+    '/fonts/Comfortaa-VariableFont_wght.ttf',
+
+    '/icons/arrow-circle-up-svgrepo-com.svg',
+    '/icons/background-svgrepo-com.svg',
+    '/icons/circular-cake-graphic-with-quarter-part-cutted-svgrepo-com.svg',
+    '/icons/dark-mode-svgrepo-com.svg',
+    '/icons/download-svgrepo-com.svg',
+    '/icons/error-cross-svgrepo-com.svg',
+    '/icons/fullscreen-exit-svgrepo-com.svg',
+    '/icons/fullscreen-svgrepo-com.svg',
+    '/icons/info-svgrepo-com.svg',
+    '/icons/log-in-3-svgrepo-com.svg',
+    '/icons/menu-01-svgrepo-com.svg',
+    '/icons/progress-0-svgrepo-com.svg',
+    '/icons/progress-33-svgrepo-com.svg',
+    '/icons/round-done-button-svgrepo-com.svg',
+    '/icons/stopwatch-wait-svgrepo-com.svg',
+    '/icons/success-tick-svgrepo-com.svg',
+    '/icons/upload-svgrepo-com.svg',
+    '/icons/user-add-svgrepo-com.svg',
+
+    '/js/db.js',
+    '/js/custom-axios.js',
+    '/js/custom-event.js',
+    '/js/delete-row.js',
+    '/js/empty-row-control.js',
+    '/js/fullscreen-control.js',
+    '/js/modal-info-with-custom-html.js',
+    '/js/nav-btns-pass-scroll-to-main.js',
+    '/js/settings.js',
+    '/js/site.js',
+    '/js/to-local-date-time.js',
+    '/js/window-height-setter.js',
+
+    '/js/scheduled-task/scheduled-task.js',
+    '/js/scheduled-task/scheduled-task-filters.js',
+    '/js/scheduled-task/scheduled-task-form.js',
+    '/js/scheduled-task/scheduled-task-websocket.js',
+
+    '/js/get-file/common.js',
+    '/js/get-file/fb2.js',
+    '/js/get-file/img.js',
+    '/js/get-file/pdf.js',
+
+    '/js/cache/file-cache.js',
+    '/js/cache/file-download.js',
+
+    '/favicon.ico',
     '/manifest.json',
+    '/sw.js'
 ];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CORE_CACHE).then((cache) => {
-            return Promise.all(
-                CORE_ASSETS.map(url => {
-                    return cache.add(url).catch(err => {
-                        console.warn(`Could not pre-cache ${url}. It will be cached dynamically later.`, err);
-                    });
-                })
-            );
-        })
+        caches.open(CORE_CACHE)
+            .then((cache) => {
+                return Promise.allSettled(
+                    CORE_ASSETS.map(url => cache.add(url))
+                );
+            })
+            .then(() => self.skipWaiting())
     );
-    self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cache) => {
-                    if (cache !== CORE_CACHE && cache !== USER_CACHE) {
-                        return caches.delete(cache);
-                    }
-                })
-            );
-        })
-            .then(() => {
-                return self.clients.claim();
+        caches.keys()
+            .then((cacheNames) => {
+                return Promise.all(
+                    cacheNames.filter((name) => name !== CORE_CACHE && name !== USER_CACHE)
+                        .map((name) => caches.delete(name))
+                );
             })
+            .then(() => self.clients.claim())
     );
 });
-/*
-self.addEventListener('fetch', (event) => {
+
+self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
-
-    const url = new URL(event.request.url);
-
-    const isNavigation = event.request.mode === 'navigate';
-    const isStaticAsset =
-        url.pathname.startsWith('/css/') ||
-        url.pathname.startsWith('/js/') ||
-        url.pathname.endsWith('.min.mjs') ||
-        url.pathname.endsWith('.min.js') ||
-        url.pathname.startsWith('/fonts/') ||
-        url.pathname.startsWith('/images/') ||
-        url.pathname.startsWith('/icons/') ||
-        url.pathname === '/manifest.json' ||
-        url.pathname === '/favicon.ico';
-
-    if (isNavigation) {
-        const isRootUrl = url.pathname === '/' || url.pathname === '';
-        const matchOptions = isRootUrl ? {ignoreSearch: true} : {};
-
-        event.respondWith(
-            caches.match(event.request, matchOptions).then((cachedResponse) => {
-                if (cachedResponse) {
-                    if (navigator.onLine) {
-                        const fetchPromise = fetch(event.request).then((networkResponse) => {
-                            if (networkResponse && networkResponse.ok) {
-                                const cloned = networkResponse.clone();
-                                caches.open(USER_CACHE).then((cache) => {
-                                    cache.put(event.request, cloned);
-                                });
-                            }
-                        }).catch(() => {
-                        });
-                        event.waitUntil(fetchPromise);
-                    }
-
-                    return cachedResponse;
-                }
-
-                return fetch(event.request).then((networkResponse) => {
-                    if (networkResponse && networkResponse.ok) {
-                        const cloned = networkResponse.clone();
-                        caches.open(USER_CACHE).then((cache) => {
-                            cache.put(event.request, cloned);
-                        });
-                    }
-                    return networkResponse;
-                }).catch(() => {
-                    return new Response('Офлайн режим. Подключитесь к интернету для первой загрузки.', {
-                        status: 503,
-                        headers: new Headers({'Content-Type': 'text/plain; charset=utf-8'})
-                    });
-                });
-            })
-        );
-        return;
-    }
-
-    if (isStaticAsset) {
-        event.respondWith(
-            caches.match(event.request).then((cachedResponse) => {
-                if (cachedResponse) return cachedResponse;
-
-                return fetch(event.request).then((networkResponse) => {
-                    if (networkResponse && networkResponse.ok &&
-                        !url.pathname.endsWith('favicon.ico') &&
-                        !url.pathname.endsWith('icon-512.png')) {
-                        const cloned = networkResponse.clone();
-                        caches.open(CORE_CACHE).then((cache) => {
-                            cache.put(event.request, cloned);
-                        });
-                    }
-                    return networkResponse;
-                }).catch(() => {
-                    return new Response('', {status: 404, statusText: 'Not Found'});
-                });
-            })
-        );
-        return;
-    }
-
     event.respondWith(
         fetch(event.request)
-            .then((networkResponse) => {
-                if (networkResponse && networkResponse.ok) {
-                    const cloned = networkResponse.clone();
-                    caches.open(USER_CACHE).then((cache) => {
-                        cache.put(event.request, cloned);
-                    });
-                }
-                return networkResponse;
-            })
-            .catch(() => {
-                return caches.match(event.request).then((cachedResponse) => {
-                    if (cachedResponse) return cachedResponse;
+            .then(response => response)
+            .catch(_ => {
+                const url = new URL(event.request.url);
 
-                    return new Response('Офлайн режим.', {
-                        status: 503,
-                        headers: new Headers({'Content-Type': 'text/plain; charset=utf-8'})
-                    });
+                const isVersionedFile = /\.(js|css)$/i.test(url.pathname);
+
+                const matchOptions = isVersionedFile ? {ignoreSearch: true} : {};
+
+                return caches.match(event.request, matchOptions).then((cachedResponse) => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    if (event.request.mode === 'navigate') {
+                        return caches.match(OFFLINE_URL);
+                    }
                 });
             })
     );
 });
-*/
