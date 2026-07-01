@@ -238,7 +238,7 @@ app.UseHttpMethodOverride(new HttpMethodOverrideOptions
 });
 
 app.UseForwardedHeaders();
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseHsts();
 
 app.UseRouting();
