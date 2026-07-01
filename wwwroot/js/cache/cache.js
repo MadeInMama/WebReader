@@ -69,6 +69,9 @@ class FileCacheService extends CacheService {
 
 class CoreCacheService extends CacheService {
     #CORE_ASSETS = [
+        'https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs',
+        'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+
         '/Home/Offline',
 
         '/css/click-effects.css',
@@ -106,7 +109,6 @@ class CoreCacheService extends CacheService {
         '/icons/upload-svgrepo-com.svg',
         '/icons/user-add-svgrepo-com.svg',
 
-        '/js/db.js',
         '/js/custom-axios.js',
         '/js/custom-event.js',
         '/js/delete-row.js',
@@ -129,7 +131,7 @@ class CoreCacheService extends CacheService {
         '/js/get-file/img.js',
         '/js/get-file/pdf.js',
 
-        '/js/cache/file-cache.js',
+        '/js/cache/cache.js',
         '/js/cache/file-download.js',
 
         '/favicon.ico',

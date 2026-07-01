@@ -3,6 +3,9 @@ const USER_CACHE = 'pwa-user-selected-v1';
 const OFFLINE_URL = '/Home/Offline';
 
 const CORE_ASSETS = [
+    'https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs',
+    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+
     OFFLINE_URL,
 
     '/css/click-effects.css',
@@ -40,7 +43,6 @@ const CORE_ASSETS = [
     '/icons/upload-svgrepo-com.svg',
     '/icons/user-add-svgrepo-com.svg',
 
-    '/js/db.js',
     '/js/custom-axios.js',
     '/js/custom-event.js',
     '/js/delete-row.js',
@@ -63,7 +65,7 @@ const CORE_ASSETS = [
     '/js/get-file/img.js',
     '/js/get-file/pdf.js',
 
-    '/js/cache/file-cache.js',
+    '/js/cache/cache.js',
     '/js/cache/file-download.js',
 
     '/favicon.ico',
