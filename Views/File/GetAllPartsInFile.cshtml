@@ -55,7 +55,8 @@
 
                 <div class="event-output">
                     <button class="download-file click-effect"
-                            data-file-id="@item.Id" data-bucket-id="@Model.Id"></button>
+                            data-file-id="@item.Id" data-bucket-id="@Model.Id"
+                            data-file-name='@item.FileName @item.CurrentPartName'></button>
                     <button class="remove click-effect delete-row-btn"
                             onclick="Delete('@item.Id', '@item.FileName @item.CurrentPartName')"></button>
                 </div>
@@ -85,7 +86,7 @@
     <script>
         window.addEventListener("load", () => {
             Array.from(document.querySelectorAll(".download-file")).forEach(el => {
-                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId);
+                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId, el.dataset.fileName);
             });
         });
     </script>

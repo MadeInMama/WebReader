@@ -5,79 +5,79 @@
     Deleting: 'Deleting'
 });
 
-function downloadFile(bucketId, fileId, clazz) {
+function downloadFile(bucketId, fileId, updateState, fileName) {
     const pageUrl = `/File/GetFile?bucketId=${bucketId}&fileId=${fileId}`;
-    fetch(pageUrl).then(response => {
-        userCacheService.put(pageUrl, response).catch(error => {
-            console.error("Error in downloadFile chain:", error);
-            clazz.updateState(fileDownloadStateType.Download);
-            throw error;
-        });
-    }).catch(error => {
-        console.error("Error in downloadFile chain:", error);
-        clazz.updateState(fileDownloadStateType.Download);
-        throw error;
-    });
-
-    coreCacheService.putStatic().catch(error => {
-        console.error("Error in downloadFile chain:", error);
-        clazz.updateState(fileDownloadStateType.Download);
-        throw error;
-    });
-
-    requestQueue.enqueue({
-        method: 'POST',
-        url: `/api/S3/GetFile?bucketId=${bucketId}&fileId=${fileId}`,
-        data: {},
-        options: {
-            responseType: 'arraybuffer',
-            headers: {
-                'RequestVerificationToken': GetAntiForgeryToken()
-            },
-            withCredentials: true
-        },
-        beforeSend: () => {
-        },
-        setProgress: (val) => {
-            clazz.updateState(fileDownloadStateType.Loading, val);
-        }
-    })
+    fetch(pageUrl)
         .then(response => {
-            if (!response) {
-                throw new Error("Empty response received from requestQueue");
-            }
+            const newHeaders = new Headers(response.headers);
+            newHeaders.append('x-file-name', encodeURIComponent(fileName));
 
-            const responseToCache = new Response(response, {
-                headers: {'Content-Type': 'application/octet-stream'}
+            const responseToCache = new Response(response.body, {
+                status: response.status,
+                statusText: response.statusText,
+                headers: newHeaders
             });
 
-            return fileCacheService.put(fileId, responseToCache);
+            return userCacheService.put(pageUrl, responseToCache);
         })
-        .then(() => {
-            clazz.updateState(fileDownloadStateType.Saved);
+        .then(_ => {
+            return coreCacheService.putStatic().then(_ => {
+                return requestQueue.enqueue({
+                    method: 'POST',
+                    url: `/api/S3/GetFile?bucketId=${bucketId}&fileId=${fileId}`,
+                    data: {},
+                    options: {
+                        responseType: 'arraybuffer',
+                        headers: {
+                            'RequestVerificationToken': GetAntiForgeryToken()
+                        },
+                        withCredentials: true
+                    },
+                    beforeSend: () => {
+                    },
+                    setProgress: (val) => {
+                        updateState(fileDownloadStateType.Loading, val);
+                    }
+                })
+                    .then(response => {
+                        if (!response) {
+                            throw new Error("Empty response received from requestQueue");
+                        }
+
+                        const responseToCache = new Response(response, {
+                            headers: {'Content-Type': 'application/octet-stream'}
+                        });
+
+                        return fileCacheService.put(fileId, responseToCache);
+                    })
+                    .then(() => {
+                        updateState(fileDownloadStateType.Saved);
+                    });
+            });
         })
         .catch(error => {
             console.error("Error in downloadFile chain:", error);
-            clazz.updateState(fileDownloadStateType.Download);
+            updateState(fileDownloadStateType.Download);
         });
 }
 
-function deleteFile(bucketId, fileId, clazz) {
+function deleteFile(bucketId, fileId, updateState) {
     fileCacheService.delete(fileId).then((res) => {
-        clazz.updateState(fileDownloadStateType.Download);
+        updateState(fileDownloadStateType.Download);
         return res;
     })
         .catch(error => {
             console.error(error);
-            clazz.updateState(fileDownloadStateType.Saved);
+            updateState(fileDownloadStateType.Saved);
         });
 }
 
 class FileDownloadButton {
-    constructor(element, bucketId, fileId) {
+    constructor(element, bucketId, fileId, fileName) {
         this.btn = element;
         this.bucketId = bucketId;
         this.fileId = fileId;
+        this.fileName = fileName;
         this.state = fileDownloadStateType.Download;
         this.init();
     }
@@ -94,20 +94,24 @@ class FileDownloadButton {
 
     updateState(newState, progress = 0) {
         this.state = newState;
-        this.btn.disabled = false;
-
-        this.btn.classList.remove('unload-file');
-        this.btn.classList.remove('download-file');
 
         switch (newState) {
             case fileDownloadStateType.Download:
+                this.btn.disabled = false;
+                this.btn.classList.remove('unload-file');
                 this.btn.classList.add('download-file');
+                this.btn.innerHTML = '';
                 break;
             case fileDownloadStateType.Saved:
+                this.btn.disabled = false;
+                this.btn.classList.remove('download-file');
                 this.btn.classList.add('unload-file');
+                this.btn.innerHTML = '';
                 break;
             case fileDownloadStateType.Loading:
             case fileDownloadStateType.Deleting:
+                this.btn.classList.remove('unload-file');
+                this.btn.classList.remove('download-file');
                 this.btn.disabled = true;
                 this.btn.innerHTML = `${progress}%`;
                 break;
@@ -125,7 +129,7 @@ class FileDownloadButton {
     startDownload() {
         this.updateState(fileDownloadStateType.Loading, 0);
         try {
-            downloadFile(this.bucketId, this.fileId, this);
+            downloadFile(this.bucketId, this.fileId, (newState, progress = 0) => this.updateState(newState, progress), this.fileName);
         } catch (err) {
             console.error(err);
             alert('Ошибка при скачивании');
@@ -136,7 +140,7 @@ class FileDownloadButton {
     startDelete() {
         this.updateState(fileDownloadStateType.Deleting);
         try {
-            deleteFile(this.bucketId, this.fileId, this);
+            deleteFile(this.bucketId, this.fileId, (newState) => this.updateState(newState));
         } catch (err) {
             console.error(err);
             this.updateState(fileDownloadStateType.Saved);

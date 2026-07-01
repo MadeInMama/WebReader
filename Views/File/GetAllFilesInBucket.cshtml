@@ -68,7 +68,8 @@
                     @if (!item.IsParted)
                     {
                         <button class="download-file click-effect"
-                                data-file-id="@item.Id" data-bucket-id="@Model.Id"></button>
+                                data-file-id="@item.Id" data-bucket-id="@Model.Id"
+                                data-file-name='@item.FileName'></button>
                     }
 
                     @if (!item.IsParted)
@@ -102,7 +103,7 @@
     <script>
         window.addEventListener("load", () => {
             Array.from(document.querySelectorAll(".download-file")).forEach(el => {
-                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId);
+                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId, el.dataset.fileName);
             });
         });
     </script>

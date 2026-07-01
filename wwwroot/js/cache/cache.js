@@ -41,9 +41,21 @@
 
         const promises = requests.map(async (request) => {
             const response = await cache.match(request);
-            const data = response ? await response.arrayBuffer() : null;
+
+            if (!response) return {key: request.url, headers: null, data: null};
+
+            const clonedResponse = response.clone();
+
+            const data = await clonedResponse.arrayBuffer();
+
+            const headersObject = {};
+            response.headers.forEach((value, key) => {
+                headersObject[key] = value;
+            });
+            
             return {
                 key: request.url,
+                headers: headersObject,
                 data: data
             };
         });

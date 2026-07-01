@@ -21,8 +21,9 @@
 {
     <script>
         userCacheService.getAll().then(cache => {
-            document.querySelector("#offline-access-container").innerHTML +=
-                `${cache.map(f => `<a href='${f.key}'>${f.key}</a>`).reduce((f1, f2) => `${f1}<br/><br/>${f2}`, '')}`;
+            document.querySelector("#offline-access-container").innerHTML += cache
+                .map(f => `<br/><a href='${f.key}'>${decodeURIComponent(f.headers['x-file-name'])}</a><br/>`)
+                .reduce((f1, f2) => `${f1}${f2}`, '');
         });
     </script>
 }
