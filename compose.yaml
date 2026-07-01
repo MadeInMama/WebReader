@@ -13,6 +13,13 @@
     volumes:
       - ${CHAIN}:/https/fullchain.pem:ro
       - ${PRIVATE_KEY}:/https/privkey.pem:ro
+    entrypoint: >
+      sh -c "
+      echo 'Генерация PFX сертификата...' &&
+      openssl pkcs12 -export -out /https/cert.pfx -inkey /https/privkey.pem -in /https/fullchain.pem -passout pass:${CERT_PASSWORD} &&
+      echo 'Сертификат успешно создан, запуск приложения...' &&
+      exec dotnet webreader.dll
+      "
     depends_on:
       - db
       - minio
