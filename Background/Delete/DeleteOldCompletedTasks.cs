@@ -27,4 +27,11 @@ public class DeleteOldCompletedTasks(IServiceProvider services, ILogger<DeleteOl
 
         return Result.Ok($"Deleted count: {result}");
     }
+
+    public Task UpdateProgress(Guid taskId, TaskStatus status, decimal? progress, string? result,
+        CancellationToken cancellationToken)
+    {
+        logger.LogTrace("Skipped");
+        return Task.CompletedTask;
+    }
 }

@@ -1,16 +1,23 @@
 ﻿using FluentResults;
+using Microsoft.AspNetCore.SignalR;
 using Minio.DataModel;
 using WebReader.Models.Entities;
+using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
 using Bucket = WebReader.Models.Entities.Bucket;
+using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.SyncDbWithS3;
 
-public class UpdateBucketData(IServiceProvider services, ILogger<UpdateBucketData> logger) : IBackgroundTasked
+public class UpdateBucketData(
+    IServiceProvider services,
+    ScheduledTaskRepository taskRepository,
+    IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
+    ILogger<UpdateBucketData> logger)
+    : AbstractBackgroundTasked<UpdateBucketData>(taskRepository, scheduledTaskHubContext, logger)
 {
-    //TODO: progress
-    public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         using var scope = services.CreateScope();
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
@@ -20,15 +27,22 @@ public class UpdateBucketData(IServiceProvider services, ILogger<UpdateBucketDat
 
         var toSave = new List<Bucket>();
 
+        var totalCount = allBucketsInDb.Count;
+        var currentCount = 0;
+
         foreach (var bucketInDb in allBucketsInDb)
         {
             var size = (await minioService.ListObjectsAsync(bucketInDb.Name, cancellationToken)).ToList()
                 .Aggregate<Item, ulong>(0, (current, s) => current + s.Size);
 
-            if (size == bucketInDb.Size) continue;
+            if (size != bucketInDb.Size)
+            {
+                bucketInDb.Size = size;
+                toSave.Add(bucketInDb);
+            }
 
-            bucketInDb.Size = size;
-            toSave.Add(bucketInDb);
+            await UpdateProgress(task.Id, TaskStatus.InProgress, new decimal(++currentCount) / totalCount, null,
+                cancellationToken);
         }
 
         if (toSave.Count != 0) bucketRepository.AttachAll(toSave);

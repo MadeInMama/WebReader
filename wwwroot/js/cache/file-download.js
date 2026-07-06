@@ -66,6 +66,10 @@ function deleteFile(bucketId, fileId, updateState) {
         updateState(fileDownloadStateType.Download);
         return res;
     })
+        .then(_ => {
+            const pageUrl = `/File/GetFile?bucketId=${bucketId}&fileId=${fileId}`;
+            return userCacheService.delete(pageUrl);
+        })
         .catch(error => {
             console.error(error);
             updateState(fileDownloadStateType.Saved);

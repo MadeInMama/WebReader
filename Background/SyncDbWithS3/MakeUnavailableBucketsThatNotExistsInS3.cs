@@ -1,17 +1,21 @@
 ﻿using FluentResults;
+using Microsoft.AspNetCore.SignalR;
 using WebReader.Models.Entities;
+using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
+using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.SyncDbWithS3;
 
 public class MakeUnavailableBucketsThatNotExistsInS3(
     IServiceProvider services,
+    ScheduledTaskRepository taskRepository,
+    IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ILogger<MakeUnavailableBucketsThatNotExistsInS3> logger)
-    : IBackgroundTasked
+    : AbstractBackgroundTasked<MakeUnavailableBucketsThatNotExistsInS3>(taskRepository, scheduledTaskHubContext, logger)
 {
-    //TODO: progress
-    public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         using var scope = services.CreateScope();
         var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
@@ -30,6 +34,9 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
 
         var toSave = new List<Bucket>();
 
+        var totalCount = allBucketsInDb.Count;
+        var currentCount = 0;
+
         foreach (var bucketInDb in allBucketsInDb)
         {
             var isAvailable = allBucketsInS3.Exists(f => f.Name.Equals(bucketInDb.Name));
@@ -43,6 +50,9 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
             bucketInDb.IsAvailable = isAvailable;
 
             toSave.Add(bucketInDb);
+
+            await UpdateProgress(task.Id, TaskStatus.InProgress, new decimal(++currentCount) / totalCount, null,
+                cancellationToken);
         }
 
         if (toSave.Count != 0) bucketRepository.AttachAll(toSave);

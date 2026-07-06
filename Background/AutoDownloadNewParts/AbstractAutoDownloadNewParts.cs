@@ -32,7 +32,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     ILogger<T> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository)
-    : IBackgroundTasked
+    : AbstractBackgroundTasked<T>(taskRepository, scheduledTaskHubContext, logger)
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
     private const string SettingSizeName = "max_size";
@@ -43,7 +43,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     protected abstract string Url { get; }
     protected virtual ulong MaxSize { get; set; }
 
-    public virtual async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -51,6 +51,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         try
         {
+            await UpdateProgress(task.Id, TaskStatus.InProgress, new decimal(0.01), null, cancellationToken);
+
             MaxSize = GetMaxSize(task.Settings);
 
             var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
@@ -74,38 +76,13 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             await CloseBrowser(browser);
 
-            var links = (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
-                .QuerySelectorAll(".chapters > table .item-title > a")
-                .Where(f => f.GetAttribute("href") != null)
-                .ToDictionary(f => f.GetAttribute("href")!, f => f)
-                .Where(f => !f.Key.IsNullOrEmptyOrWhitespace())
-                .Where(f => int.TryParse(f.Key.Split("/").Last(), out _))
-                .OrderBy(f => int.Parse(f.Key.Split("/").Last()))
-                .ToImmutableList();
+            var links = await GetAllFilesLinks(html, ".chapters > table .item-title > a", cancellationToken);
 
             logger.LogTrace("Found {links} links", links.Count);
 
-            var defaultBucket = await context.Buckets.FirstAsync(b => b.Name == "mybucket", cancellationToken);
+            var defaultBucket = await GetDefaultBucket(context, cancellationToken);
 
-            var lastStoredFile = await context.Files.Where(f => f.CustomName == FileCustomName)
-                .Include(f => f.Bucket)
-                .AsAsyncEnumerable()
-                .OrderBy(f => f.CurrentPartNumber!)
-                .LastOrDefaultAsync(cancellationToken);
-
-            var lastFile = lastStoredFile;
-
-            try
-            {
-                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress, new decimal(0.01),
-                    null, cancellationToken);
-
-                await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning("Can't save progress: {}", e.Message);
-            }
+            var lastFile = await GetLastStoredFile(context, cancellationToken);
 
             var startIndex = 0;
 
@@ -124,18 +101,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
                 if (res.ValueOrDefault.isSkipped) startIndex = link.Index;
                 else
-                    try
-                    {
-                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress,
-                            new decimal((link.Index + 1 - startIndex) * 1f / (links.Count - startIndex)),
-                            null, cancellationToken);
-
-                        await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogWarning("Can't save progress: {}", e.Message);
-                    }
+                    await UpdateProgress(task.Id, TaskStatus.InProgress,
+                        new decimal((link.Index + 1 - startIndex) * 1f / (links.Count - startIndex)),
+                        null, cancellationToken);
 
                 lastFile = res.ValueOrDefault.file;
 
@@ -175,6 +143,35 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         }
 
         return result;
+    }
+
+    protected virtual async Task<ImmutableList<KeyValuePair<string, IElement>>> GetAllFilesLinks(string html,
+        string selector, CancellationToken cancellationToken)
+    {
+        return (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
+            .QuerySelectorAll(selector)
+            .Where(f => f.GetAttribute("href") != null)
+            .ToDictionary(f => f.GetAttribute("href")!, f => f)
+            .Where(f => !f.Key.IsNullOrEmptyOrWhitespace())
+            .Where(f => int.TryParse(f.Key.Split("/").Last(), out _))
+            .OrderBy(f => int.Parse(f.Key.Split("/").Last()))
+            .ToImmutableList();
+    }
+
+    protected virtual async Task<Bucket> GetDefaultBucket(ApplicationDbContext context,
+        CancellationToken cancellationToken)
+    {
+        return await context.Buckets.FirstAsync(b => b.Name == "mybucket", cancellationToken);
+    }
+
+    protected virtual async Task<File?> GetLastStoredFile(ApplicationDbContext context,
+        CancellationToken cancellationToken)
+    {
+        return await context.Files.Where(f => f.CustomName == FileCustomName)
+            .Include(f => f.Bucket)
+            .AsAsyncEnumerable()
+            .OrderBy(f => f.CurrentPartNumber!)
+            .LastOrDefaultAsync(cancellationToken);
     }
 
     protected virtual ulong GetMaxSize(JsonDocument settings)

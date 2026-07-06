@@ -1,16 +1,22 @@
 ﻿using FluentResults;
+using Microsoft.AspNetCore.SignalR;
 using WebReader.Helpers;
 using WebReader.Models.Entities;
+using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
+using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.SyncDbWithS3;
 
-public class RemoveFilesThatNotExistsInDb(IServiceProvider services, ILogger<RemoveFilesThatNotExistsInDb> logger)
-    : IBackgroundTasked
+public class RemoveFilesThatNotExistsInDb(
+    IServiceProvider services,
+    ScheduledTaskRepository taskRepository,
+    IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
+    ILogger<RemoveFilesThatNotExistsInDb> logger)
+    : AbstractBackgroundTasked<RemoveFilesThatNotExistsInDb>(taskRepository, scheduledTaskHubContext, logger)
 {
-    //TODO: progress
-    public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         using var scope = services.CreateScope();
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
@@ -34,10 +40,16 @@ public class RemoveFilesThatNotExistsInDb(IServiceProvider services, ILogger<Rem
         var tasks = new List<Task>();
         var namesRemoved = new List<string>();
 
+        var totalCount = objToRemove.Count;
+        var currentCount = 0;
+
         foreach (var (bucketName, objectNames) in objToRemove)
         {
             namesRemoved.Add($"{bucketName}/({string.Join(",", objectNames)})");
             tasks.Add(minioService.RemoveObjectsAsync(bucketName, objectNames, cancellationToken));
+
+            await UpdateProgress(task.Id, TaskStatus.InProgress, new decimal(++currentCount) / totalCount, null,
+                cancellationToken);
         }
 
         await Task.WhenAll(tasks);

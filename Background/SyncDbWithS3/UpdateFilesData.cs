@@ -1,17 +1,24 @@
 ﻿using FluentResults;
+using Microsoft.AspNetCore.SignalR;
 using Minio.DataModel;
 using WebReader.Models;
 using WebReader.Models.Entities;
+using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
 using File = WebReader.Models.Entities.File;
+using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.SyncDbWithS3;
 
-public class UpdateFilesData(IServiceProvider services, ILogger<UpdateFilesData> logger) : IBackgroundTasked
+public class UpdateFilesData(
+    IServiceProvider services,
+    ScheduledTaskRepository taskRepository,
+    IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
+    ILogger<UpdateFilesData> logger)
+    : AbstractBackgroundTasked<UpdateFilesData>(taskRepository, scheduledTaskHubContext, logger)
 {
-    //TODO: progress
-    public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
+    public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         using var scope = services.CreateScope();
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
@@ -26,6 +33,9 @@ public class UpdateFilesData(IServiceProvider services, ILogger<UpdateFilesData>
         await Task.WhenAll(allFilesInS3.Values);
 
         var toSave = new List<File>();
+
+        var totalCount = allFilesInDb.Count;
+        var currentCount = 0;
 
         foreach (var fileInDb in allFilesInDb)
         {
@@ -73,6 +83,9 @@ public class UpdateFilesData(IServiceProvider services, ILogger<UpdateFilesData>
             }
 
             if (isChanged) toSave.Add(fileInDb);
+
+            await UpdateProgress(task.Id, TaskStatus.InProgress, new decimal(++currentCount) / totalCount, null,
+                cancellationToken);
         }
 
         if (toSave.Count != 0) fileRepository.AttachAll(toSave);
