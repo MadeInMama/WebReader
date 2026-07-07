@@ -32,9 +32,8 @@
                         <span class="main-info-span importance-0">@item.CustomName</span>
                     </a>
                     <div class="additional-info">
-                        <span class="secondary-info-span importance-2 to-local-date"
-                              utc="@item.DateTime.ToString("O")"></span>
-                        <span class="secondary-info-span importance-1">@FormatSize(item.Size)</span>
+                        <span class="text-info to-local-date" utc="@item.DateTime.ToString("O")"></span>
+                        <span class="text-info">@FormatSize(item.Size)</span>
                     </div>
                 </div>
             }
