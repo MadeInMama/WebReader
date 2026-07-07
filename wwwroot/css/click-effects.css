@@ -6,5 +6,6 @@
 
 .click-effect:active {
     opacity: 0.5;
-    transition: transform var(--animation-time) ease;
+    transition: transform var(--animation-time) ease,
+    opacity var(--animation-time);
 }
