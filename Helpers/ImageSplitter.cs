@@ -8,7 +8,7 @@ namespace WebReader.Helpers;
 
 public static class ImageSplitter
 {
-    public static ImmutableList<byte[]> SplitImage(byte[] imageBytes, int gap = 300, int tolerance = 10)
+    public static ImmutableList<byte[]> SplitImage(byte[] imageBytes, int gap = 600, int tolerance = 5)
     {
         using var image = Image.Load<Rgb24>(ImageTrimmer.TrimImage(imageBytes));
 
@@ -24,7 +24,7 @@ public static class ImageSplitter
         }
 
         return result.Where(f => !ImageEmptyChecker.IsEmpty(f))
-            .ToImmutableList(); //TODO: merge for small(size == gap + 1)
+            .ToImmutableList();
     }
 
     private static int FindNextFilledY(Image<Rgb24> image, int startY, int tolerance)

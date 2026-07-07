@@ -11,13 +11,14 @@ namespace WebReader.Background.AutoDownloadNewParts;
 public class AutoDownloadNewPartsWorldAfterDestruction(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
+    MinioService minioService,
     ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
     ILogger<AutoDownloadNewPartsWorldAfterDestruction> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository)
     : AbstractAutoDownloadNewParts<AutoDownloadNewPartsWorldAfterDestruction>(
-        contextFactory, fileUploadService, botClient, httpClientFactory, logger, scheduledTaskHubContext,
+        contextFactory, fileUploadService, minioService, botClient, httpClientFactory, logger, scheduledTaskHubContext,
         taskRepository)
 {
     protected override string FileCustomName => "Мир после падения";

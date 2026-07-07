@@ -1,8 +1,13 @@
-﻿using WebReader.Repositories;
+﻿using WebReader.Models;
+using WebReader.Models.Entities;
+using WebReader.Repositories;
 
 namespace WebReader.Services;
 
-public class FileService(FileRepository fileRepository, ILogger<FileService> logger)
+public class FileService(
+    FileRepository fileRepository,
+    ScheduledTaskRepository scheduledTaskRepository,
+    ILogger<FileService> logger)
 {
     public async Task DeleteFileAsync(List<Guid> guids, CancellationToken cancellationToken)
     {
@@ -33,6 +38,15 @@ public class FileService(FileRepository fileRepository, ILogger<FileService> log
 
             await fileRepository.DeleteAsync(guid.Item, cancellationToken);
         }
+
+        await scheduledTaskRepository.AddAsync(new ScheduledTask
+        {
+            Type = TaskType.RemoveFilesThatNotExistsInDb,
+            Priority = sbyte.MaxValue,
+            Cron = TaskCron.Manually,
+            HaveToStartAt = DateTimeOffset.UtcNow
+        }, cancellationToken);
+        await scheduledTaskRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Deleting files done");
     }

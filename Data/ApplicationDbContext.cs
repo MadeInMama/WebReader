@@ -53,6 +53,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.SaveChanges();
             }
 
+            if (!context.Set<Bucket>().Any(f => f.Name.Equals(StaticNames.CoversBucketName)))
+            {
+                context.Set<Bucket>().Add(new Bucket
+                {
+                    Name = StaticNames.CoversBucketName,
+                    IsSystem = true,
+                    IsHidden = true
+                });
+
+                context.SaveChanges();
+            }
+
             if (!context.Set<ScheduledTaskConfig>()
                     .Any(f => f.Type == TaskType.RemoveBucketsThatNotExistsInDb))
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig

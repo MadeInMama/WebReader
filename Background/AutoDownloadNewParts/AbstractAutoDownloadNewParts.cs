@@ -27,6 +27,7 @@ namespace WebReader.Background.AutoDownloadNewParts;
 public abstract partial class AbstractAutoDownloadNewParts<T>(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
+    MinioService minioService,
     ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
     ILogger<T> logger,
@@ -51,8 +52,6 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         try
         {
-            await UpdateProgress(task.Id, TaskStatus.InProgress, new decimal(0.01), null, cancellationToken);
-
             MaxSize = GetMaxSize(task.Settings);
 
             var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
@@ -84,8 +83,6 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             var lastFile = await GetLastStoredFile(context, cancellationToken);
 
-            var startIndex = 0;
-
             foreach (var link in links.Index())
             {
                 var res = await ParseAndSaveFile(link.Item, defaultBucket, lastFile, cancellationToken);
@@ -99,11 +96,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                     break;
                 }
 
-                if (res.ValueOrDefault.isSkipped) startIndex = link.Index;
-                else
-                    await UpdateProgress(task.Id, TaskStatus.InProgress,
-                        new decimal((link.Index + 1 - startIndex) * 1f / (links.Count - startIndex)),
-                        null, cancellationToken);
+                await UpdateProgress(task.Id, TaskStatus.InProgress, new decimal(link.Index) / links.Count, null,
+                    cancellationToken);
 
                 lastFile = res.ValueOrDefault.file;
 
@@ -399,6 +393,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         using var httpClient = httpClientFactory.CreateClient("parser-http-client");
 
+        var isCoverDone = false;
+        var coverFileName = lastFile?.CoverName;
+
         using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
             foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
@@ -411,8 +408,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
                 if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
 
-                var splitImages =
-                    ImageSplitter.SplitImage(StaticFunctions.ConvertByteArrayToJpeg(imageBytes));
+                var splitImages = ImageSplitter.SplitImage(StaticFunctions.ConvertByteArrayToJpeg(imageBytes));
 
                 foreach (var el in splitImages.Index())
                 {
@@ -423,6 +419,26 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                     await entryStream.WriteAsync(el.Item, cancellationToken);
                     await entryStream.FlushAsync(cancellationToken);
                     entryStream.Close();
+                }
+
+                if (!isCoverDone)
+                {
+                    var cover = splitImages.PickRandom();
+
+                    if (cover is { Length: > 0 })
+                    {
+                        using var coverMemoryStream = new MemoryStream(cover);
+                        var expectedCoverFileName =
+                            $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+                        var isSuccessful = await minioService.UploadCoverAsync(coverMemoryStream, expectedCoverFileName,
+                            "image/jpeg", cancellationToken);
+
+                        if (isSuccessful)
+                        {
+                            coverFileName = expectedCoverFileName;
+                            isCoverDone = true;
+                        }
+                    }
                 }
 
                 SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
@@ -446,18 +462,19 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             FileType.ZipWithImg,
             currentPartName,
             uint.Parse(dataNum.ToString()),
+            coverFileName,
             cancellationToken
         );
 
         memoryStream.Close();
 
         if (fileUploadResult.IsFailed)
-            return Result.Fail(new Error($"Error downloading {fileName}"));
+            return Result.Fail(new Error($"Error saving '{fileName}' to S3"));
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        await BroadcastAllSubs(context, botClient,
-            $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
+        // await BroadcastAllSubs(context, botClient,
+        // $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
 
         var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 

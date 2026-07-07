@@ -18,6 +18,11 @@ public class MinioService(IMinioClient minioClient)
         return url ?? throw new Exception("Failed to get url");
     }
 
+    public async Task<string> GetCoverFileUrlAsync(string objectName)
+    {
+        return await GetFileUrlAsync(StaticNames.CoversBucketName, objectName);
+    }
+
     public async Task<IEnumerable<Bucket>> ListBucketsAsync(CancellationToken cancellationToken)
     {
         return (await minioClient.ListBucketsAsync(cancellationToken)).Buckets;
@@ -102,5 +107,11 @@ public class MinioService(IMinioClient minioClient)
         await stream.DisposeAsync();
 
         return res != null && res.ResponseStatusCode.IsSuccessStatusCode();
+    }
+
+    public async Task<bool> UploadCoverAsync(Stream stream, string fileName, string contentType,
+        CancellationToken cancellationToken)
+    {
+        return await UploadObjectAsync(StaticNames.CoversBucketName, stream, fileName, contentType, cancellationToken);
     }
 }

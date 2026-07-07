@@ -141,6 +141,8 @@ main {
     -webkit-overflow-scrolling: touch;
     min-height: 0;
     grid-row: 3;
+    padding-top: 1em;
+    padding-bottom: 1em;
 }
 
 footer {

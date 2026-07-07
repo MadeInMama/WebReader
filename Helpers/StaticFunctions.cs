@@ -123,4 +123,13 @@ public static class StaticFunctions
         res = null;
         return false;
     }
+
+    public static T? PickRandom<T>(this IList<T> source, T? defaultValue = default)
+    {
+        if (source.Count == 0)
+            return defaultValue;
+
+        var index = Random.Shared.Next(source.Count);
+        return source[index];
+    }
 }

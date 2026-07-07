@@ -11,13 +11,14 @@ namespace WebReader.Background.AutoDownloadNewParts;
 public class AutoDownloadNewPartsSoloLeveling(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
+    MinioService minioService,
     ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
     ILogger<AutoDownloadNewPartsSoloLeveling> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository)
     : AbstractAutoDownloadNewParts<AutoDownloadNewPartsSoloLeveling>(
-        contextFactory, fileUploadService, botClient, httpClientFactory, logger, scheduledTaskHubContext,
+        contextFactory, fileUploadService, minioService, botClient, httpClientFactory, logger, scheduledTaskHubContext,
         taskRepository)
 {
     protected override string FileCustomName => "Поднятие уровня в одиночку";

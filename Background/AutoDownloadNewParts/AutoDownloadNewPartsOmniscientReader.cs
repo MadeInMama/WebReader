@@ -11,13 +11,14 @@ namespace WebReader.Background.AutoDownloadNewParts;
 public class AutoDownloadNewPartsOmniscientReader(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
+    MinioService minioService,
     ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
     ILogger<AutoDownloadNewPartsOmniscientReader> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository)
     : AbstractAutoDownloadNewParts<AutoDownloadNewPartsOmniscientReader>(
-        contextFactory, fileUploadService, botClient, httpClientFactory, logger, scheduledTaskHubContext,
+        contextFactory, fileUploadService, minioService, botClient, httpClientFactory, logger, scheduledTaskHubContext,
         taskRepository)
 {
     protected override string FileCustomName => "Всеведущий читатель";

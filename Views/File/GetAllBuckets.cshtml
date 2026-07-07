@@ -23,19 +23,22 @@
             <span>Buckets</span>
         </summary>
 
-        @foreach (var item in Model.Items)
-        {
-            <div class="item-line">
-                <a asp-controller="File" asp-action="GetAllFilesInBucket"
-                   asp-route-bucketId="@item.Id" style="width: 100%;" class="click-effect">
-                    <span class="main-info-span importance-0">@item.CustomName</span>
-                    <span
-                        class="secondary-info-span importance-2 to-local-date"
-                        utc="@item.DateTime.ToString("O")"></span>
-                    <span class="secondary-info-span importance-1">@FormatSize(item.Size)</span>
-                </a>
-            </div>
-        }
+        <div>
+            @foreach (var item in Model.Items)
+            {
+                <div class="item-line">
+                    <a asp-controller="File" asp-action="GetAllFilesInBucket"
+                       asp-route-bucketId="@item.Id" class="click-effect">
+                        <span class="main-info-span importance-0">@item.CustomName</span>
+                    </a>
+                    <div class="additional-info">
+                        <span class="secondary-info-span importance-2 to-local-date"
+                              utc="@item.DateTime.ToString("O")"></span>
+                        <span class="secondary-info-span importance-1">@FormatSize(item.Size)</span>
+                    </div>
+                </div>
+            }
+        </div>
     </details>
 </div>
 @await Html.PartialAsync("_EmptyDisplay")

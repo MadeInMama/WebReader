@@ -16,4 +16,6 @@ public class Bucket : BaseEntity
     public CustomUser? User { get; init; }
 
     public ulong? Size { get; set; }
+
+    public bool IsSystem { get; set; } = false;
 }

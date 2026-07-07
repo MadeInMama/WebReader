@@ -14,6 +14,23 @@ public enum ImageType
     Png
 }
 
+public static class CoverHelper
+{
+    public static string GetCoverNameByFileType(FileType? type)
+    {
+        switch (type)
+        {
+            case FileType.ZipWithImg:
+                return "default_manga_cover.jpg";
+            case FileType.Pdf:
+            case FileType.Fb2:
+            case null:
+            default:
+                return "default_cover.png";
+        }
+    }
+}
+
 public static class TypeHelper
 {
     public static readonly IDictionary<FileType, string> FileTypeNameDict = new Dictionary<FileType, string>();

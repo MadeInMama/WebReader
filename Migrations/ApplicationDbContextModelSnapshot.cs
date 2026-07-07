@@ -18,7 +18,7 @@ namespace WebReader.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "9.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -44,6 +44,9 @@ namespace WebReader.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsHidden")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSystem")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
@@ -114,6 +117,10 @@ namespace WebReader.Migrations
 
                     b.Property<Guid>("BucketId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("CoverName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone");

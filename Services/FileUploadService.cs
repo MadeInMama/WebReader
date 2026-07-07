@@ -23,6 +23,7 @@ public class FileUploadService(
         FileType fileType,
         string? filePartName,
         uint? filePartNumber,
+        string? coverName,
         CancellationToken cancellationToken)
     {
         File? asPartOfFile = null, asParentOfFile = null;
@@ -66,7 +67,8 @@ public class FileUploadService(
             Size = fileStreamLength,
             NextPartId = asParentOfFile?.Id,
             CurrentPartName = filePartName,
-            CurrentPartNumber = filePartNumber
+            CurrentPartNumber = filePartNumber,
+            CoverName = coverName
         };
 
         if (asPartOfFile != null)

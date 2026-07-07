@@ -6,6 +6,7 @@
 @section Style
 {
     <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/lazy-image.css" asp-append-version="true"/>
 }
 
 @section SpecialInfo
@@ -21,65 +22,61 @@
         <summary>
             <span>@Model.BucketName</span>
         </summary>
-        @foreach (var item in Model.Items)
-        {
-            <div class="item-line" id="@("RL_" + item.Id)">
-                @if (item.IsParted)
-                {
-                    <div class="center parted secondary-info-span"></div>
-                }
-                else
-                {
-                    @if (item.IsReading)
+
+        <div>
+            @foreach (var item in Model.Items)
+            {
+                <div class="item-line" id="@("RL_" + item.Id)">
+                    <div class="lazy-image-wrapper">
+                        <img class="lazy-image"
+                             src=""
+                             data-src="@Url.Action("GetCover", "Cover", new { bucketId = Model.Id, fileId = item.Id })"
+                             alt="Book Cover for @item.FileName"
+                             loading="lazy"/>
+                        <div class="lazy-image-loader"></div>
+                    </div>
+
+                    @if (item.IsParted)
                     {
-                        <div class="center secondary-info-span @(item.IsDone ? "is-done" : "in-progress")"></div>
+                        <a asp-controller="File" asp-action="GetAllPartsInFile"
+                           asp-route-bucketId="@Model.Id"
+                           asp-route-fileId="@item.Id" class="click-effect">
+                            <span class="left main-info-span importance-0">@item.FileName</span>
+                        </a>
                     }
                     else
                     {
-                        <div class="in-progress-empty secondary-info-span"></div>
+                        <a asp-controller="File" asp-action="GetFile"
+                           asp-route-bucketId="@Model.Id"
+                           asp-route-fileId="@item.Id" class="click-effect">
+                            <span class="left main-info-span importance-0">@item.FileName</span>
+                        </a>
                     }
-                }
-
-                @if (item.IsParted)
-                {
-                    <a asp-controller="File" asp-action="GetAllPartsInFile"
-                       asp-route-bucketId="@Model.Id"
-                       asp-route-fileId="@item.Id" class="click-effect">
-                        <span class="left main-info-span importance-0">@item.FileName</span>
-                        <span class="right secondary-info-span importance-1">@item.TotalCount</span>
-                        <span class="right secondary-info-span importance-2">@FormatSize(item.TotalSize)</span>
-                    </a>
-                }
-                else
-                {
-                    <a asp-controller="File" asp-action="GetFile"
-                       asp-route-bucketId="@Model.Id"
-                       asp-route-fileId="@item.Id" class="click-effect">
-                        <span class="left main-info-span importance-0">@item.FileName</span>
-                        <span class="right secondary-info-span importance-3">@item.Type?.ToLower()</span>
-                        <span
-                            class="right secondary-info-span importance-2 to-local-date"
-                            utc="@item.DateTime.ToString("O")"></span>
-                        <span class="right secondary-info-span importance-1">@FormatSize(item.Size)</span>
-                    </a>
-                }
-
-                <div class="event-output">
                     @if (!item.IsParted)
                     {
-                        <button class="download-file click-effect"
-                                data-file-id="@item.Id" data-bucket-id="@Model.Id"
-                                data-file-name='@item.FileName'></button>
+                        <div class="event-output">
+                            @if (item.IsReading)
+                            {
+                                <div
+                                    class="center secondary-info-span @(item.IsDone ? "is-done" : "in-progress")"></div>
+                            }
+                            <button class="download-file click-effect"
+                                    data-file-id="@item.Id" data-bucket-id="@Model.Id"
+                                    data-file-name='@item.FileName'></button>
+                            <button class="remove click-effect delete-row-btn"
+                                    onclick="Delete('@item.Id', '@item.FileName')"></button>
+                        </div>
                     }
-
-                    @if (!item.IsParted)
+                    else
                     {
-                        <button class="remove click-effect delete-row-btn"
-                                onclick="Delete('@item.Id', '@item.FileName')"></button>
+                        <div class="additional-info">
+                            <div class="parted"></div>
+                            <div class="total-count">@item.TotalCount</div>
+                        </div>
                     }
                 </div>
-            </div>
-        }
+            }
+        </div>
     </details>
 </div>
 @await Html.PartialAsync("_EmptyDisplay")
@@ -114,6 +111,7 @@
     </script>
     <script src="~/js/delete-row.js" asp-append-version="true"></script>
     <script src="~/js/empty-row-control.js" asp-append-version="true"></script>
+    <script src="~/js/lazy-image-observer.js" asp-append-version="true"></script>
 
     <script>
         CheckOnEmpty();

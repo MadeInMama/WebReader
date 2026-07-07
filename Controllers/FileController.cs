@@ -177,6 +177,7 @@ public class FileController(
             fileType,
             request.CurrentPartName,
             request.CurrentPartNumber,
+            null,
             cancellationToken);
 
         if (uploadFileResult.IsFailed)
