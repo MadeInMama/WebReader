@@ -6,6 +6,7 @@
 @section Style
 {
     <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/lazy-image.css" asp-append-version="true"/>
     <style>
         summary > span {
             cursor: pointer;
@@ -29,14 +30,6 @@
             left: 0;
         }
 
-        .item-line {
-            grid-template-columns: 2em 1fr 2em;
-        }
-
-        .event-output {
-            grid-template-columns: 2em;
-        }
-
         @@media (hover: none) and (pointer: coarse) {
             summary > span:hover::after {
                 display: none;
@@ -56,26 +49,42 @@
     @foreach (var item in Model.Items)
     {
         <details open>
-            <summary><span>@item.Key.CustomName</span></summary>
-            @foreach (var obj in item.Value)
-            {
-                <div class="reading-line item-line" id="@("RL_" + obj.ReadingId)">
-                    <a asp-controller="File" asp-action="GetFile"
-                       asp-route-bucketId="@item.Key.BucketId"
-                       asp-route-fileId="@obj.FileId" class="click-effect">
-                        <span class="importance-0">@obj.CustomName</span>
-                        @if (obj.CurrentPartName != null)
-                        {
-                            <span class="importance-1">@obj.CurrentPartName</span>
-                        }
-                        <span class="importance-2">@obj.Page</span>
-                    </a>
-                    <div class="event-output">
-                        <button class="remove click-effect delete-row-btn"
-                                onclick="Delete('@obj.ReadingId', '@obj.CustomName @obj.CurrentPartName')"></button>
+            <summary>
+                <span>@item.Key.CustomName</span>
+            </summary>
+
+            <div>
+                @foreach (var obj in item.Value)
+                {
+                    <div class="reading-line item-line" id="@("RL_" + obj.ReadingId)">
+                        <div class="lazy-image-wrapper">
+                            <img class="lazy-image"
+                                 src=""
+                                 data-src="@Url.Action("GetCover", "Cover", new { bucketId = item.Key.BucketId, fileId = obj.FileId })"
+                                 alt="Book Cover for @obj.CustomName @obj.CurrentPartName"
+                                 loading="lazy"/>
+                            <div class="lazy-image-loader"></div>
+                        </div>
+
+                        <a asp-controller="File" asp-action="GetFile"
+                           asp-route-bucketId="@item.Key.BucketId"
+                           asp-route-fileId="@obj.FileId" class="click-effect">
+                            <span>@obj.CustomName</span>
+                            @if (obj.CurrentPartName != null)
+                            {
+                                <br/>
+                                <span>@obj.CurrentPartName</span>
+                            }
+                        </a>
+
+                        <div class="event-output">
+                            <div class="text-info">@obj.Page</div>
+                            <button class="remove click-effect delete-row-btn"
+                                    onclick="Delete('@obj.ReadingId', '@obj.CustomName @obj.CurrentPartName')"></button>
+                        </div>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </details>
     }
 </div>
@@ -92,5 +101,6 @@
     </script>
     <script src="~/js/delete-row.js" asp-append-version="true"></script>
     <script src="~/js/empty-row-control.js" asp-append-version="true"></script>
+    <script src="~/js/lazy-image-observer.js" asp-append-version="true"></script>
     <script>CheckOnEmpty()</script>
 }

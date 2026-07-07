@@ -1,7 +1,7 @@
 ﻿.lazy-image-wrapper {
     display: grid;
-    grid-template-columns: auto;
-    grid-template-rows: auto;
+    grid-template-columns: 100%;
+    grid-template-rows: 100%;
     align-items: center;
     justify-items: center;
     background-color: var(--drop-shadow-color);

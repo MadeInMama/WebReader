@@ -20,8 +20,8 @@ details > div {
 .item-line {
     display: grid;
     grid-template-columns: auto;
-    grid-template-rows: auto 2em;
-    gap: 0.5em;
+    grid-template-rows: auto 3em;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
     border-radius: 0.75em;
     overflow: hidden;
 }
@@ -29,10 +29,9 @@ details > div {
 .item-line > .lazy-image-wrapper {
     width: 100%;
     aspect-ratio: 9/16;
-    border-radius: 0.75em;
 
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 1 / 3;
 }
 
 .item-line:hover > .lazy-image-wrapper > .lazy-image {
@@ -45,22 +44,22 @@ details > div {
 
 .item-line > a {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 1 / 3;
 
     width: 100%;
     aspect-ratio: 9 / 16;
     padding: 1em;
     text-align: center;
     line-height: 2em;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    background: linear-gradient(to bottom, var(--background-color) 0%, rgba(0, 0, 0, 0) 50%, var(--background-color) 100%);
 
     text-decoration: none;
 
     z-index: 1;
 }
 
-.item-line > a > span {
-    font-weight: 600;
+.item-line > a > span:first-child {
+    font-weight: 900;
 }
 
 .item-line > .btn-download-file {
@@ -83,16 +82,18 @@ details > div {
     display: grid;
     grid-template-rows: 1fr;
     grid-template-columns: repeat(auto-fit, 2em);
-    justify-content: space-evenly;
+    justify-content: space-between;
+    z-index: 1;
+    padding: 0 1em 1em 1em;
+    gap: 0.5em;
 }
 
 .event-output {
     opacity: 1;
     transition: none;
-    gap: 0.5em;
 }
 
-.total-count {
+.text-info {
     line-height: 1.55em;
     font-size: 1.5em;
 }
