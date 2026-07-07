@@ -9,7 +9,7 @@ main {
 
 footer {
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: 1fr auto 1fr;
 }
 
 footer > .controls-start {
@@ -67,6 +67,10 @@ footer > .controls-end {
     padding: 0.5em;
     border-radius: 0.75em;
     z-index: 5;
+}
+
+.event-output-fullscreen-on {
+    bottom: calc(4.25em + env(safe-area-inset-bottom));
 }
 
 .big-page-nav {

@@ -28,3 +28,17 @@
     -webkit-mask: url("../icons/fullscreen-exit-svgrepo-com.svg") no-repeat center;
     -webkit-mask-size: cover;
 }
+
+.fullscreen-container-on {
+    position: fixed;
+    left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3.75em);
+    bottom: calc(0.75em + env(safe-area-inset-bottom));
+    width: 3em;
+    height: 3em;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+    background-color: var(--background-backdrop-color);
+    backdrop-filter: blur(var(--backdrop-blur));
+    padding: 0.5em;
+    border-radius: 0.75em;
+    z-index: 5;
+}

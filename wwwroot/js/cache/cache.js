@@ -52,7 +52,7 @@
             response.headers.forEach((value, key) => {
                 headersObject[key] = value;
             });
-            
+
             return {
                 key: request.url,
                 headers: headersObject,
@@ -125,7 +125,7 @@ class CoreCacheService extends CacheService {
         '/js/custom-event.js',
         '/js/delete-row.js',
         '/js/empty-row-control.js',
-        '/js/fullscreen-control.js',
+        '/js/fullscreen-control-v2.js',
         '/js/modal-info-with-custom-html.js',
         '/js/nav-btns-pass-scroll-to-main.js',
         '/js/settings.js',

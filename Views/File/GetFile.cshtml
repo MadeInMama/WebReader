@@ -112,15 +112,6 @@ else
 @section Footer
 {
     <div class="controls-start">
-        @await Html.PartialAsync("_FullscreenControl")
-        <div class="settings-container"></div>
-    </div>
-    <div class="controls-center">
-        <button disabled class="prev-page prev-page-controller click-effect"></button>
-        <select disabled class="preview-page click-effect"></select>
-        <button disabled class="next-page next-page-controller click-effect"></button>
-    </div>
-    <div class="controls-end">
         <select disabled class="set-scale click-effect">
             @switch (Model.Type)
             {
@@ -154,6 +145,15 @@ else
                     throw new ArgumentOutOfRangeException();
             }
         </select>
+    </div>
+    <div class="controls-center">
+        <button disabled class="prev-page prev-page-controller click-effect"></button>
+        <select disabled class="preview-page click-effect"></select>
+        <button disabled class="next-page next-page-controller click-effect"></button>
+    </div>
+    <div class="controls-end">
+        @await Html.PartialAsync("_FullscreenControl")
+        @* <div class="settings-container"></div> *@
     </div>
 }
 
