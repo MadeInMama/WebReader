@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
@@ -127,7 +128,7 @@ builder.Services.AddAuthentication(options =>
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         options.SlidingExpiration = true;
@@ -145,7 +146,8 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = jwtConfig.Issuer,
             ValidAudience = jwtConfig.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtConfig.Key))
+                Encoding.UTF8.GetBytes(jwtConfig.Key)),
+            ClockSkew = TimeSpan.Zero
         };
     }).AddPolicyScheme("CookiesOrJwt", "Cookies or JWT", options =>
     {
@@ -167,6 +169,14 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+    options.Preload = true;
+});
+
 builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
@@ -197,8 +207,19 @@ builder.Services.AddControllers()
 
 builder.Services.AddAntiforgery(options =>
 {
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.HttpOnly = true;
+    options.SuppressXFrameOptionsHeader = false;
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("LoginPolicy", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(2);
+        opt.QueueLimit = 0;
+    });
 });
 
 var app = builder.Build();
@@ -236,6 +257,44 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+app.Use((context, next) =>
+{
+    context.Response.Headers.Append("Content-Security-Policy",
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data: https: blob:; " +
+        "worker-src 'self' blob:; " +
+        "font-src 'self' data:; " +
+        "connect-src 'self'; " +
+        "media-src 'self'; " +
+        "object-src 'none'; " +
+        "base-uri 'self'; " +
+        "form-action 'self'; " +
+        "frame-ancestors 'self'; " +
+        "report-uri /api/Csp/Report;");
+
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+    context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+
+    context.Response.Headers.Remove("Permissions-Policy");
+    context.Response.Headers.Append("Permissions-Policy", "camera=(), " +
+                                                          "microphone=(), " +
+                                                          "geolocation=(), " +
+                                                          "fullscreen=(), " +
+                                                          "payment=(), " +
+                                                          "usb=(), " +
+                                                          "accelerometer=(), " +
+                                                          "gyroscope=()");
+
+    return next();
+});
+
 app.UseExceptionHandler("/Account/CustomNotFound");
 
 app.UseHttpMethodOverride(new HttpMethodOverrideOptions
@@ -246,6 +305,7 @@ app.UseHttpMethodOverride(new HttpMethodOverrideOptions
 app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseHsts();
+app.UseRateLimiter();
 
 app.UseRouting();
 

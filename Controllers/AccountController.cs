@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using WebReader.Helpers;
 using WebReader.Models.Dtos;
 using WebReader.Models.Entities;
@@ -33,6 +34,7 @@ public class AccountController(UserService userService) : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("LoginPolicy")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SignIn(LoginViewModel model, CancellationToken cancellationToken = default)
     {
@@ -48,6 +50,7 @@ public class AccountController(UserService userService) : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("LoginPolicy")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SignUp(RegisterViewModel model, CancellationToken cancellationToken = default)
     {
