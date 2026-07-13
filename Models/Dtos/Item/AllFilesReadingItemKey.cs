@@ -14,8 +14,7 @@ public class AllFilesReadingItemKey
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
 
-        return Equals(BucketId, other.BucketId) &&
-               string.Equals(CustomName, other.CustomName, StringComparison.Ordinal);
+        return Equals(BucketId, other.BucketId);
     }
 
     public override bool Equals(object? obj)
@@ -25,7 +24,7 @@ public class AllFilesReadingItemKey
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(BucketId, CustomName);
+        return BucketId.GetHashCode();
     }
 
     public static bool operator ==(AllFilesReadingItemKey? left, AllFilesReadingItemKey? right)

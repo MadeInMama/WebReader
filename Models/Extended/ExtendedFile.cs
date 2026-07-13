@@ -3,6 +3,7 @@
 public class ExtendedFile
 {
     public Guid Id { get; set; }
+    public Guid BucketId { get; set; }
     public DateTimeOffset UpdatedDate { get; set; }
     public string Name { get; set; }
     public string? CustomName { get; set; }

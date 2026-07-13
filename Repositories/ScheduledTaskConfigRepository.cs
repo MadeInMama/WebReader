@@ -25,10 +25,10 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
     }
 
     public async Task<IEnumerable<ScheduledTaskConfig>> AllAsync(Expression<Func<ScheduledTaskConfig, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false,
+        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
         params Expression<Func<ScheduledTaskConfig, object>>[] includes)
     {
-        IQueryable<ScheduledTaskConfig> query = context.Set<ScheduledTaskConfig>();
+        IQueryable<ScheduledTaskConfig> query = (ctx ?? context).Set<ScheduledTaskConfig>();
 
         foreach (var include in includes)
             query = query.Include(include);

@@ -25,7 +25,7 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
     }
 
     public Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false,
+        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
         params Expression<Func<CustomUser, object>>[] includes)
     {
         throw new NotImplementedException();

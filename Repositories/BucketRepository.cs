@@ -26,10 +26,10 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
     }
 
     public async Task<IEnumerable<Bucket>> AllAsync(Expression<Func<Bucket, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false,
+        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
         params Expression<Func<Bucket, object>>[] includes)
     {
-        IQueryable<Bucket> query = context.Set<Bucket>();
+        IQueryable<Bucket> query = (ctx ?? context).Set<Bucket>();
 
         foreach (var include in includes)
             query = query.Include(include);
@@ -57,12 +57,15 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
     }
 
     public async Task<IEnumerable<Bucket>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles, Guid userId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, ApplicationDbContext? ctx = null, bool asNoTracking = false)
     {
-        return await context.Buckets
+        var res = (ctx ?? context).Buckets
             .Where(f => f.IsAvailable && !f.IsHidden && f.AccessRoles.Intersect(roles).Any() &&
-                        (f.UserId == userId || f.UserId == null))
-            .ToListAsync(cancellationToken);
+                        (f.UserId == userId || f.UserId == null));
+
+        if (asNoTracking) res.AsNoTracking();
+
+        return await res.ToListAsync(cancellationToken);
     }
 
     public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)

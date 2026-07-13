@@ -50,6 +50,79 @@ public class FileControllerService(
         }
     }
 
+    public async Task<Result<AllFilesByBucketViewModel>> GetAllFilesByBucket(Guid userGuid, List<RoleType> roles,
+        string orderBy, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await cache.GetOrCreateWithLoggingAsync(
+                $"files_by_bucket_{userGuid}_{string.Join(",", roles)}_{orderBy}",
+                async _ =>
+                {
+                    var prop = typeof(AllFilesByBucketItem).GetProperty(orderBy);
+
+                    using var contextBucket = contextFactory.CreateDbContextAsync(cancellationToken);
+                    using var contextReading = contextFactory.CreateDbContextAsync(cancellationToken);
+                    using var contextFile = contextFactory.CreateDbContextAsync(cancellationToken);
+
+                    await Task.WhenAll(contextBucket, contextReading, contextFile);
+
+                    var buckets = bucketRepository.GetAllAvailableBucketsAsync(roles, userGuid, cancellationToken,
+                        contextBucket.Result);
+
+                    var readings = readingRepository.AllAsync(f => f.UserId == userGuid, cancellationToken, true,
+                        contextReading.Result);
+
+                    var files = fileRepository.GetAllAvailableObjectsTopLevelAsync(userGuid, roles, cancellationToken,
+                        contextFile.Result);
+
+                    await Task.WhenAll(buckets, readings, files);
+
+                    var res = files.Result
+                        .GroupBy(file =>
+                        {
+                            var bucket = buckets.Result.FirstOrDefault(f => f.Id == file.BucketId);
+
+                            return new AllFilesByBucketItemKey
+                            {
+                                Id = file.BucketId,
+                                CustomName = bucket?.CustomName ?? bucket?.Name!
+                            };
+                        })
+                        .ToDictionary(f => f.Key,
+                            f => f.Select(file =>
+                                {
+                                    var reading = readings.Result.FirstOrDefault(f1 => f1.FileId == file.Id);
+
+                                    return new AllFilesByBucketItem
+                                    {
+                                        Id = file.Id,
+                                        FileName = file.CustomName ?? file.Name,
+                                        IsReading = reading != null,
+                                        IsParted = file.NextPartId.HasValue,
+                                        IsDone = reading?.IsDone ?? false,
+                                        TotalCount = file.TotalCount
+                                    };
+                                })
+                                .OrderBy(f1 => prop?.GetValue(f1, null) ?? f1.FileName)
+                                .ToList());
+
+                    return new AllFilesByBucketViewModel
+                    {
+                        Items = res
+                    };
+                },
+                logger,
+                tags: [$"files_{userGuid}"],
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (CustomApiException e)
+        {
+            return Result.Fail(e.Message);
+        }
+    }
+
     public async Task<Result<AllFilesInBucketViewModel>> GetAllFilesInBucket(Guid userGuid, List<RoleType> roles,
         Guid bucketId, string orderBy, CancellationToken cancellationToken)
     {
@@ -241,6 +314,7 @@ public class FileControllerService(
                                                                           f.File.AccessRoles.Intersect(roles).Any(),
                         cancellationToken,
                         true,
+                        null,
                         f => f.File!,
                         f => f.File!.Bucket!)).ToList();
 
@@ -250,7 +324,6 @@ public class FileControllerService(
                             CustomName = reading.File?.Bucket?.CustomName ?? reading.File?.Bucket?.Name!
                         })
                         .ToDictionary(reading => reading.Key, reading => reading
-                            .OrderByDescending(f => f.UpdatedDate)
                             .Select(r => new AllFilesReadingItem
                             {
                                 ReadingId = r.Id,
@@ -260,7 +333,10 @@ public class FileControllerService(
                                 DateTime = r.UpdatedDate,
                                 Size = r.File?.Size ?? 0,
                                 Page = r.Page
-                            }));
+                            })
+                            .OrderBy(f => f.CustomName)
+                            .ThenBy(f => f.CurrentPartName)
+                            .ToList());
 
                     return new AllFilesReadingViewModel { Items = res };
                 },

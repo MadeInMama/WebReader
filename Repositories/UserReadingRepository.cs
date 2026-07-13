@@ -38,10 +38,10 @@ public class UserReadingRepository(
     }
 
     public async Task<IEnumerable<UserReading>> AllAsync(Expression<Func<UserReading, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false,
+        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
         params Expression<Func<UserReading, object>>[] includes)
     {
-        IQueryable<UserReading> query = context.Set<UserReading>();
+        IQueryable<UserReading> query = (ctx ?? context).Set<UserReading>();
 
         foreach (var include in includes)
             query = query.Include(include);

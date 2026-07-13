@@ -28,10 +28,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
     }
 
     public async Task<IEnumerable<File>> AllAsync(Expression<Func<File, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false,
+        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
         params Expression<Func<File, object>>[] includes)
     {
-        IQueryable<File> query = context.Set<File>();
+        IQueryable<File> query = (ctx ?? context).Set<File>();
 
         foreach (var include in includes)
             query = query.Include(include);
@@ -208,7 +208,82 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                             JOIN "{fileEntity.GetTableName()}" f ON f."{fileIdProperty.GetColumnName()}" = stats.root_id;
                    """;
 
-        return await context.Database.SqlQueryRaw<ExtendedFile>(sql).ToListAsync(cancellationToken);
+        return await context.Database.SqlQueryRaw<ExtendedFile>(sql).AsNoTracking().ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<ExtendedFile>> GetAllAvailableObjectsTopLevelAsync(Guid userId,
+        IEnumerable<RoleType> roles, CancellationToken cancellationToken, ApplicationDbContext? ctx = null)
+    {
+        var joinedRoles = string.Join(",", roles.Select(f => (int)f));
+
+        var bucketEntity = context.Model.FindEntityType(typeof(Bucket))!;
+        var fileEntity = context.Model.FindEntityType(typeof(File))!;
+
+        var bucketIdProperty = bucketEntity.FindProperty(nameof(Bucket.Id))!;
+        var bucketUserIdProperty = bucketEntity.FindProperty(nameof(Bucket.UserId))!;
+        var bucketAccessRolesProperty = bucketEntity.FindProperty(nameof(Bucket.AccessRoles))!;
+        var bucketIsAvailableProperty = bucketEntity.FindProperty(nameof(Bucket.IsAvailable))!;
+        var bucketIsHiddenProperty = bucketEntity.FindProperty(nameof(Bucket.IsHidden))!;
+
+        var fileIdProperty = fileEntity.FindProperty(nameof(File.Id))!;
+        var fileBucketIdProperty = fileEntity.FindProperty(nameof(File.BucketId))!;
+        var fileAccessRolesProperty = fileEntity.FindProperty(nameof(File.AccessRoles))!;
+        var fileNextPartIdProperty = fileEntity.FindProperty(nameof(File.NextPartId))!;
+        var fileSizeProperty = fileEntity.FindProperty(nameof(File.Size))!;
+        var fileIsAvailableProperty = bucketEntity.FindProperty(nameof(File.IsAvailable))!;
+        var fileIsHiddenProperty = bucketEntity.FindProperty(nameof(File.IsHidden))!;
+
+        var sql = $"""
+                   WITH RECURSIVE file_chain AS (
+                      SELECT
+                          f."{fileIdProperty.GetColumnName()}" AS root_id,
+                          f."{fileIdProperty.GetColumnName()}",
+                          f."{fileNextPartIdProperty.GetColumnName()}",
+                          f."{fileSizeProperty.GetColumnName()}"
+                      FROM "{fileEntity.GetTableName()}" f
+                          JOIN "{bucketEntity.GetTableName()}" AS b
+                          ON b."{bucketIdProperty.GetColumnName()}" = f."{fileBucketIdProperty.GetColumnName()}"
+                      WHERE (b."{bucketUserIdProperty.GetColumnName()}" IS NULL OR
+                                b."{bucketUserIdProperty.GetColumnName()}" = '{userId}') AND
+                            b."{bucketAccessRolesProperty.GetColumnName()}" && ARRAY[{joinedRoles}] AND
+                            b."{bucketIsAvailableProperty.GetColumnName()}" = true AND
+                            b."{bucketIsHiddenProperty.GetColumnName()}" = false AND
+                            f."{fileAccessRolesProperty.GetColumnName()}" && ARRAY[{joinedRoles}] AND
+                            f."{fileIsAvailableProperty.GetColumnName()}" = true AND
+                            f."{fileIsHiddenProperty.GetColumnName()}" = false AND
+                          NOT EXISTS (
+                          SELECT 1 FROM "{fileEntity.GetTableName()}" AS child
+                          WHERE child."{fileNextPartIdProperty.GetColumnName()}" = f."{fileIdProperty.GetColumnName()}"
+                      )
+
+                      UNION ALL
+
+                      SELECT
+                          current_file.root_id,
+                          next_file."{fileIdProperty.GetColumnName()}",
+                          next_file."{fileNextPartIdProperty.GetColumnName()}",
+                          next_file."{fileSizeProperty.GetColumnName()}"
+                      FROM "{fileEntity.GetTableName()}" AS next_file
+                               JOIN file_chain AS current_file
+                               ON next_file."{fileIdProperty.GetColumnName()}" = current_file."{fileNextPartIdProperty.GetColumnName()}"
+                   )
+                   SELECT
+                      f.*,
+                      stats.total_count AS "TotalCount",
+                      stats.total_size AS "TotalSize"
+                   FROM (
+                           SELECT
+                               root_id,
+                               COUNT(*) AS total_count,
+                               SUM(COALESCE("{fileSizeProperty.GetColumnName()}", 0)) AS total_size
+                           FROM file_chain
+                           GROUP BY root_id
+                       ) stats
+                           JOIN "{fileEntity.GetTableName()}" f ON f."{fileIdProperty.GetColumnName()}" = stats.root_id;
+                   """;
+
+        return await (ctx ?? context).Database.SqlQueryRaw<ExtendedFile>(sql).AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
     public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)

@@ -24,7 +24,8 @@ public class UpdateFilesData(
         var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
         var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
 
-        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, false, f => f.Bucket)).ToList();
+        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, false, null, f => f.Bucket))
+            .ToList();
         var allBucketsInS3 = (await minioService.ListBucketsAsync(cancellationToken)).ToList();
         Dictionary<string, Task<List<Item>>> allFilesInS3 =
             allBucketsInS3.ToDictionary(f => f.Name,

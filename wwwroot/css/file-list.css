@@ -1,4 +1,8 @@
-﻿details {
+﻿#full_content {
+    flex-direction: column;
+}
+
+details {
     width: 100%;
     display: flex;
     flex-direction: column;

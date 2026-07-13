@@ -4,5 +4,5 @@ namespace WebReader.Models.Dtos;
 
 public class AllFilesReadingViewModel
 {
-    public required IDictionary<AllFilesReadingItemKey, IEnumerable<AllFilesReadingItem>> Items { get; init; }
+    public required IDictionary<AllFilesReadingItemKey, List<AllFilesReadingItem>> Items { get; init; }
 }

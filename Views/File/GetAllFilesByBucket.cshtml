@@ -1,0 +1,134 @@
+﻿@model WebReader.Models.Dtos.AllFilesByBucketViewModel
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
+    ViewData["Title"] = "FILES";
+}
+
+@section Style
+{
+    <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/lazy-image.css" asp-append-version="true"/>
+    <style>
+        summary > span {
+            cursor: pointer;
+            position: relative;
+        }
+
+        summary > span::after {
+            position: absolute;
+            content: "";
+            width: 0;
+            bottom: 0;
+            left: 50%;
+            height: 0.025em;
+            display: block;
+            background: var(--foreground-color);
+            transition: 150ms;
+        }
+
+        summary > span:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        @@media (hover: none) and (pointer: coarse) {
+            summary > span:hover::after {
+                display: none;
+            }
+        }
+    </style>
+}
+
+@section SpecialInfo {
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
+    }
+}
+
+<div id="full_content">
+    @foreach (var item in Model.Items)
+    {
+        {
+            <details open>
+                <summary>
+                    <span>@item.Key.CustomName</span>
+                </summary>
+
+                <div>
+                    @foreach (var obj in item.Value)
+                    {
+                        <div class="item-line" id="@("RL_" + obj.Id)">
+                            <div class="lazy-image-wrapper">
+                                <img class="lazy-image"
+                                     src=""
+                                     data-src="@Url.Action("GetCover", "Cover", new { bucketId = item.Key.Id, fileId = obj.Id })"
+                                     alt="Book Cover for @obj.FileName"
+                                     loading="lazy"/>
+                                <div class="lazy-image-loader"></div>
+                            </div>
+
+                            @if (obj.IsParted)
+                            {
+                                <a asp-controller="File" asp-action="GetAllPartsInFile"
+                                   asp-route-bucketId="@item.Key.Id"
+                                   asp-route-fileId="@obj.Id" class="click-effect">
+                                    <span class="left main-info-span importance-0">@obj.FileName</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="File" asp-action="GetFile"
+                                   asp-route-bucketId="@item.Key.Id"
+                                   asp-route-fileId="@obj.Id" class="click-effect">
+                                    <span class="left main-info-span importance-0">@obj.FileName</span>
+                                </a>
+                            }
+
+                            @if (!obj.IsParted)
+                            {
+                                <div class="event-output">
+                                    @if (obj.IsReading)
+                                    {
+                                        <div
+                                            class="center secondary-info-span @(obj.IsDone ? "is-done" : "in-progress")"></div>
+                                    }
+                                    <button class="download-file click-effect"
+                                            data-file-id="@obj.Id" data-bucket-id="@item.Key.Id"
+                                            data-file-name="@obj.FileName"></button>
+                                    <button class="remove click-effect delete-row-btn"
+                                            data-id="@obj.Id"
+                                            data-name="@obj.FileName"></button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="additional-info">
+                                    <div class="parted"></div>
+                                    <div class="text-info">@obj.TotalCount</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </details>
+        }
+    }
+</div>
+
+@await Html.PartialAsync("_EmptyDisplay")
+
+@section Scripts
+{
+    <script nonce="@nonce" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script nonce="@nonce">
+        const url = '/api/FileApi/DeleteFile';
+        const lineSelector = '.item-line';
+    </script>
+    <script nonce="@nonce" src="~/js/delete-row.js" asp-append-version="true"></script>
+    <script nonce="@nonce" src="~/js/empty-row-control.js" asp-append-version="true"></script>
+    <script nonce="@nonce" src="~/js/lazy-image-observer.js" asp-append-version="true"></script>
+    <script nonce="@nonce">CheckOnEmpty()</script>
+}

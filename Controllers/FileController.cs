@@ -31,6 +31,20 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
+    public async Task<IActionResult> GetAllFilesByBucket(string? orderBy,
+        CancellationToken cancellationToken)
+    {
+        if (orderBy == null) orderBy = "FileName";
+
+        var res = await fileControllerService.GetAllFilesByBucket(User.GetUserGuid(), User.GetUserRoles(), orderBy,
+            cancellationToken);
+
+        if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
+
+        return View(res.Value);
+    }
+
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName",
         CancellationToken cancellationToken = default)
     {
