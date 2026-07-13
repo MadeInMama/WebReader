@@ -350,6 +350,9 @@ app.MapControllers();
 
 app.Map("/", () => Results.Redirect("/Home/Index"));
 app.Map("/Home", () => Results.Redirect("/Home/Index"));
+
+#region FOR_CVE_ONLINE_CHECK
+
 app.MapGet("/.well-known/blacksight-domain-association", async context =>
 {
     context.Response.ContentType = "text/plain; charset=utf-8";
@@ -360,6 +363,9 @@ app.MapGet("/9e528635-b058-493e-abca-925c6068c1f1.txt", async context =>
     context.Response.ContentType = "text/plain; charset=utf-8";
     await context.Response.WriteAsync("Probely");
 });
+
+#endregion
+
 app.MapHub<ScheduledTaskHub>("/ScheduledTaskHub");
 
 app.Use((context, next) =>

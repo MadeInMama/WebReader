@@ -86,7 +86,8 @@ public class FileControllerService(
                             return new AllFilesByBucketItemKey
                             {
                                 Id = file.BucketId,
-                                CustomName = bucket?.CustomName ?? bucket?.Name!
+                                CustomName = bucket?.CustomName ?? bucket?.Name!,
+                                IsBelongsToUser = bucket?.UserId == userGuid
                             };
                         })
                         .ToDictionary(f => f.Key,
@@ -106,6 +107,22 @@ public class FileControllerService(
                                 })
                                 .OrderBy(f1 => prop?.GetValue(f1, null) ?? f1.FileName)
                                 .ToList());
+
+                    if (res.Keys.Any(f => f.IsBelongsToUser))
+                        return new AllFilesByBucketViewModel
+                        {
+                            Items = res
+                        };
+
+                    var personalBucket = buckets.Result.FirstOrDefault(f => f.UserId == userGuid);
+
+                    if (personalBucket != null)
+                        res.Add(new AllFilesByBucketItemKey
+                        {
+                            Id = personalBucket.Id,
+                            CustomName = personalBucket.CustomName ?? personalBucket.Name!,
+                            IsBelongsToUser = true
+                        }, []);
 
                     return new AllFilesByBucketViewModel
                     {

@@ -4,12 +4,12 @@ using System.Text.Json.Serialization;
 namespace WebReader.Models.Dtos.Item;
 
 [JsonConverter(typeof(AllFilesReadingItemKeyConverter))]
-public class AllFilesReadingItemKey
+public class AllFilesReadingItemKey : IEquatable<AllFilesReadingItemKey>
 {
     public required Guid BucketId { get; init; }
     public required string CustomName { get; init; }
 
-    private bool Equals(AllFilesReadingItemKey? other)
+    public bool Equals(AllFilesReadingItemKey? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;

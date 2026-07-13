@@ -50,12 +50,13 @@
 <div id="full_content">
     @foreach (var item in Model.Items)
     {
-        {
-            <details open>
-                <summary>
-                    <span>@item.Key.CustomName</span>
-                </summary>
+        <details open class="@(item.Key.IsBelongsToUser ? "ignore-empty-row-check" : "")">
+            <summary>
+                <span>@item.Key.CustomName</span>
+            </summary>
 
+            @if (item.Value.Count > 0)
+            {
                 <div>
                     @foreach (var obj in item.Value)
                     {
@@ -112,8 +113,19 @@
                         </div>
                     }
                 </div>
-            </details>
-        }
+            }
+
+            @if (item.Key.IsBelongsToUser)
+            {
+                <div class="upload-btn-container">
+                    <a class="btn" asp-controller="File"
+                       asp-action="UploadFile"
+                       asp-route-bucketId="@item.Key.Id">
+                        Upload File
+                    </a>
+                </div>
+            }
+        </details>
     }
 </div>
 
@@ -127,8 +139,8 @@
         const url = '/api/FileApi/DeleteFile';
         const lineSelector = '.item-line';
     </script>
-    <script nonce="@nonce" src="~/js/delete-row.js" asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/empty-row-control.js" asp-append-version="true"></script>
+    <script nonce="@nonce" src="~/js/delete-row.js" asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/lazy-image-observer.js" asp-append-version="true"></script>
     <script nonce="@nonce">CheckOnEmpty()</script>
 }

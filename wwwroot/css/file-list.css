@@ -16,14 +16,14 @@ details > summary {
 
 details > div {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 13em);
+    grid-template-columns: repeat(auto-fill, 10em);
     justify-content: center;
     gap: 1.5em;
 }
 
 .item-line {
     display: grid;
-    grid-template-columns: auto;
+    grid-template-columns: 100%;
     grid-template-rows: auto 3em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
     border-radius: 0.75em;
@@ -77,7 +77,7 @@ details > div {
 .upload-btn-container {
     display: flex;
     justify-content: center;
-    margin-top: 2em;
+    margin-top: 1em;
 }
 
 .event-output, .additional-info {
@@ -87,7 +87,6 @@ details > div {
     justify-content: space-between;
     z-index: 1;
     padding: 0 1em 1em 1em;
-    gap: 0.5em;
 }
 
 .event-output {
@@ -107,4 +106,22 @@ details > div {
 }
 
 @media (width < 700px) {
+}
+
+@media (width < 612px) {
+    details > div {
+        font-size: 0.9em;
+    }
+}
+
+@media (width < 406px) {
+    details > div {
+        font-size: 0.8em;
+    }
+}
+
+@media (width < 330px) {
+    details > div {
+        font-size: 1em;
+    }
 }
