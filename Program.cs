@@ -248,6 +248,16 @@ using (var scope = app.Services.CreateScope())
 
 app.Use(async (context, next) =>
 {
+    var randomNumber = new byte[32];
+    using (var rng = RandomNumberGenerator.Create())
+    {
+        rng.GetBytes(randomNumber);
+    }
+
+    var nonce = Convert.ToBase64String(randomNumber).Replace("+", "").Replace("/", "").Replace("=", "");
+
+    context.Items["ScriptNonce"] = nonce;
+
     context.Response.OnStarting(() =>
     {
         context.Response.Headers.Remove("Content-Security-Policy");
@@ -262,7 +272,7 @@ app.Use(async (context, next) =>
 
         context.Response.Headers.Append("Content-Security-Policy",
             "default-src 'self'; " +
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
+            $"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
             "style-src 'self' 'unsafe-inline'; " +
             "img-src 'self' data: blob:; " +
             "worker-src 'self' blob:; " +
@@ -273,6 +283,7 @@ app.Use(async (context, next) =>
             "base-uri 'self'; " +
             "form-action 'self'; " +
             "frame-ancestors 'self'; " +
+            "report-to /api/Csp/Report; " +
             "report-uri /api/Csp/Report;");
 
         context.Response.Headers.Append("X-Content-Type-Options", "nosniff");

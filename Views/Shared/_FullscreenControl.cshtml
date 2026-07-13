@@ -1,8 +1,12 @@
-﻿<link rel="stylesheet" href="~/css/fullscreen-control.css" asp-append-version="true"/>
+﻿@{
+    var nonce = Context.Items["ScriptNonce"]?.ToString();
+}
+
+<link rel="stylesheet" href="~/css/fullscreen-control.css" asp-append-version="true"/>
 
 <div id="fullscreen-container">
     <button id="enter-fullscreen-btn" class="click-effect"></button>
     <button id="exit-fullscreen-btn" class="click-effect"></button>
 </div>
 
-<script src="~/js/fullscreen-control-v2.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/fullscreen-control-v2.js" asp-append-version="true"></script>

@@ -1,4 +1,6 @@
-﻿@{
+﻿@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
     ViewData["Title"] = "HOME";
 }
 

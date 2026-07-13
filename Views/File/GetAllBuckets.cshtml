@@ -1,6 +1,7 @@
 ﻿@model WebReader.Models.Dtos.AllBucketsViewModel
-
+@inject IHttpContextAccessor HttpContextAccessor
 @{
+    var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
     ViewData["Title"] = "BUCKETS";
 }
 
@@ -44,11 +45,11 @@
 
 @section Scripts
 {
-    <script>
+    <script nonce="@nonce">
         const lineSelector = '.item-line';
     </script>
-    <script src="~/js/empty-row-control.js" asp-append-version="true"></script>
-    <script>
+    <script nonce="@nonce" src="~/js/empty-row-control.js" asp-append-version="true"></script>
+    <script nonce="@nonce">
         CheckOnEmpty();
         convertUtcToLocal();
     </script>

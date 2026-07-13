@@ -1,4 +1,9 @@
 ﻿@using WebReader.Models
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,15 +106,15 @@
 
 <div id="safe-area-inset-bottom"></div>
 
-<script src="~/js/cache/cache.js" asp-append-version="true"></script>
-<script src="~/js/window-height-setter.js" asp-append-version="true"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-<script src="~/js/custom-event.js" asp-append-version="true"></script>
-<script src="~/js/custom-axios.js" asp-append-version="true"></script>
-<script src="~/js/to-local-date-time.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/cache/cache.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/window-height-setter.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/site.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/custom-event.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/custom-axios.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/to-local-date-time.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", false)
 
-<script>
+<script nonce="@nonce">
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')

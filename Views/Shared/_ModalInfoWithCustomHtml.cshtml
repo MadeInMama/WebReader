@@ -1,7 +1,11 @@
-﻿<link rel="stylesheet" href="~/css/modal-info-with-custom-html.css" asp-append-version="true"/>
+﻿@{
+    var nonce = Context.Items["ScriptNonce"]?.ToString();
+}
+
+<link rel="stylesheet" href="~/css/modal-info-with-custom-html.css" asp-append-version="true"/>
 
 <dialog id="custom-modal">
     <div id="custom-modal-content"></div>
 </dialog>
 
-<script src="~/js/modal-info-with-custom-html.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/modal-info-with-custom-html.js" asp-append-version="true"></script>

@@ -1,8 +1,9 @@
 ﻿@using WebReader.Models
 @using TaskStatus = WebReader.Models.TaskStatus
 @model WebReader.Models.Dtos.AllScheduledTaskConfigsViewModel
-
+@inject IHttpContextAccessor HttpContextAccessor
 @{
+    var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
     ViewBag.Title = "Scheduled Tasks";
 }
 

@@ -1,7 +1,8 @@
 ﻿@using WebReader.Models
 @model WebReader.Models.Dtos.FileViewModel
-
+@inject IHttpContextAccessor HttpContextAccessor
 @{
+    var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
     ViewData["Title"] = Model.Title;
 }
 
@@ -159,24 +160,24 @@ else
 
 @section Scripts
 {
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script nonce="@nonce" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     @switch (Model.Type)
     {
         case FileType.Pdf:
-            <script src="https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs" type="module"></script>
+            <script nonce="@nonce" src="https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs" type="module"></script>
             break;
         case FileType.ZipWithImg:
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+            <script nonce="@nonce" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
             break;
         case FileType.Fb2:
             break;
         default:
             throw new ArgumentOutOfRangeException();
     }
-    <script src="~/js/settings.js" asp-append-version="true"></script>
-    <script src="~/js/nav-btns-pass-scroll-to-main.js" asp-append-version="true"></script>
+    <script nonce="@nonce" src="~/js/settings.js" asp-append-version="true"></script>
+    <script nonce="@nonce" src="~/js/nav-btns-pass-scroll-to-main.js" asp-append-version="true"></script>
 
-    <script>
+    <script nonce="@nonce">
         const url = @Html.Raw(Json.Serialize($"/api/S3/GetFile?bucketId={Model.BucketId}&fileId={Model.FileId}"));
         const decodedString = url.replace(/\\u0026/g, '&')
         const fileId = '@Model.FileId';
@@ -205,17 +206,17 @@ else
     @switch (Model.Type)
     {
         case FileType.Pdf:
-            <script type="module" src="~/js/get-file/pdf.js" asp-append-version="true"></script>
+            <script nonce="@nonce" type="module" src="~/js/get-file/pdf.js" asp-append-version="true"></script>
             break;
         case FileType.ZipWithImg:
-            <script src="~/js/get-file/img.js" asp-append-version="true"></script>
+            <script nonce="@nonce" src="~/js/get-file/img.js" asp-append-version="true"></script>
             break;
         case FileType.Fb2:
-            <script src="~/js/get-file/fb2.js" asp-append-version="true"></script>
+            <script nonce="@nonce" src="~/js/get-file/fb2.js" asp-append-version="true"></script>
             break;
         default:
-                throw new ArgumentOutOfRangeException();
+            throw new ArgumentOutOfRangeException();
     }
 
-    <script src="~/js/get-file/common.js" asp-append-version="true"></script>
+    <script nonce="@nonce" src="~/js/get-file/common.js" asp-append-version="true"></script>
 }
