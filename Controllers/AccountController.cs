@@ -17,20 +17,26 @@ public class AccountController(UserService userService) : Controller
     [ServiceFilter(typeof(LogRequestAttribute))]
     public IActionResult SignIn(string? returnUrl = null)
     {
-        if (User.Identity is { IsAuthenticated: true })
-            return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
+        if (User.Identity is not { IsAuthenticated: true })
+            return View(new LoginViewModel { ReturnUrl = returnUrl });
 
-        return View(new LoginViewModel { ReturnUrl = returnUrl });
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return RedirectToAction("Index", "Home");
     }
 
     [HttpGet]
     [ServiceFilter(typeof(LogRequestAttribute))]
     public IActionResult SignUp(string? returnUrl = null)
     {
-        if (User.Identity is { IsAuthenticated: true })
-            return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
+        if (User.Identity is not { IsAuthenticated: true })
+            return View(new RegisterViewModel { ReturnUrl = returnUrl });
 
-        return View(new RegisterViewModel { ReturnUrl = returnUrl });
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return RedirectToAction("Index", "Home");
     }
 
     [HttpPost]
@@ -38,13 +44,19 @@ public class AccountController(UserService userService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SignIn(LoginViewModel model, CancellationToken cancellationToken = default)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            ClearPasswordFromResponse(model);
+            return View(model);
+        }
 
         var user = await userService.AuthenticateAsync(model.Username, model.Password, cancellationToken);
 
         if (user != null) return await SetUser(user, model.RememberMe, model.ReturnUrl);
 
         ModelState.AddModelError(string.Empty, "Invalid username or password.");
+
+        ClearPasswordFromResponse(model);
 
         return View(model);
     }
@@ -55,13 +67,21 @@ public class AccountController(UserService userService) : Controller
     public async Task<IActionResult> SignUp(RegisterViewModel model, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
+        {
+            ClearPasswordFromResponse(model);
             return View(model);
+        }
 
         var user = await userService.CreateUserAsync(model.Username, model.Password, cancellationToken);
 
-        if (user != null) return await SetUser(user, model.RememberMe, model.ReturnUrl);
+        if (user != null)
+        {
+            return await SetUser(user, model.RememberMe, model.ReturnUrl);
+        }
 
-        ModelState.AddModelError(string.Empty, "Invalid username or password.");
+        ModelState.AddModelError(string.Empty, "Username is already taken or password does not meet requirements.");
+
+        ClearPasswordFromResponse(model);
 
         return View(model);
     }
@@ -120,5 +140,17 @@ public class AccountController(UserService userService) : Controller
             authProperties);
 
         return LocalRedirect(returnUrl ?? Url.Action("Index", "Home")!);
+    }
+
+    private void ClearPasswordFromResponse(LoginViewModel model)
+    {
+        ModelState.Remove(nameof(model.Password));
+        model.Password = string.Empty;
+    }
+
+    private void ClearPasswordFromResponse(RegisterViewModel model)
+    {
+        ModelState.Remove(nameof(model.Password));
+        model.Password = string.Empty;
     }
 }
