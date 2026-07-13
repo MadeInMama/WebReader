@@ -224,6 +224,14 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
+app.UseExceptionHandler("/Account/CustomNotFound");
+
+app.UseHsts();
+
+app.UseHttpsRedirection();
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -237,6 +245,54 @@ using (var scope = app.Services.CreateScope())
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(telegramConfig.WebhookUrl!);
 }
+
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers.Remove("Content-Security-Policy");
+        context.Response.Headers.Remove("X-Content-Type-Options");
+        context.Response.Headers.Remove("X-Frame-Options");
+        context.Response.Headers.Remove("X-XSS-Protection");
+        context.Response.Headers.Remove("Referrer-Policy");
+        context.Response.Headers.Remove("Strict-Transport-Security");
+        context.Response.Headers.Remove("Cross-Origin-Embedder-Policy");
+        context.Response.Headers.Remove("Cross-Origin-Opener-Policy");
+        context.Response.Headers.Remove("Permissions-Policy");
+
+        context.Response.Headers.Append("Content-Security-Policy",
+            "default-src 'self'; " +
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: blob:; " +
+            "worker-src 'self' blob:; " +
+            "font-src 'self' data:; " +
+            "connect-src 'self'; " +
+            "media-src 'self'; " +
+            "object-src 'none'; " +
+            "base-uri 'self'; " +
+            "form-action 'self'; " +
+            "frame-ancestors 'self'; " +
+            "report-uri /api/Csp/Report;");
+
+        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+        context.Response.Headers.Append("X-Frame-Options", "DENY");
+        context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+        context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+
+        context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+
+        context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+        context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+
+        context.Response.Headers.Append("Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), fullscreen=(), payment=(), usb=(), accelerometer=(), gyroscope=()");
+
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
 
 app.UseResponseCompression();
 app.UseStaticFiles(new StaticFileOptions
@@ -257,54 +313,11 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-app.Use((context, next) =>
-{
-    context.Response.Headers.Append("Content-Security-Policy",
-        "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
-        "style-src 'self' 'unsafe-inline'; " +
-        "img-src 'self' data: https: blob:; " +
-        "worker-src 'self' blob:; " +
-        "font-src 'self' data:; " +
-        "connect-src 'self'; " +
-        "media-src 'self'; " +
-        "object-src 'none'; " +
-        "base-uri 'self'; " +
-        "form-action 'self'; " +
-        "frame-ancestors 'self'; " +
-        "report-uri /api/Csp/Report;");
-
-    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Append("X-Frame-Options", "DENY");
-    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
-    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-
-    context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-    context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
-
-    context.Response.Headers.Remove("Permissions-Policy");
-    context.Response.Headers.Append("Permissions-Policy", "camera=(), " +
-                                                          "microphone=(), " +
-                                                          "geolocation=(), " +
-                                                          "fullscreen=(), " +
-                                                          "payment=(), " +
-                                                          "usb=(), " +
-                                                          "accelerometer=(), " +
-                                                          "gyroscope=()");
-
-    return next();
-});
-
-app.UseExceptionHandler("/Account/CustomNotFound");
-
 app.UseHttpMethodOverride(new HttpMethodOverrideOptions
 {
     FormFieldName = "_method"
 });
 
-app.UseForwardedHeaders();
-app.UseHttpsRedirection();
-app.UseHsts();
 app.UseRateLimiter();
 
 app.UseRouting();
