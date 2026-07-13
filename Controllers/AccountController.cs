@@ -112,8 +112,7 @@ public class AccountController(UserService userService) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken = default)
     {
-        var id = User.GetUserGuid();
-        await userService.DeleteUserAsync(id, cancellationToken);
+        await userService.DeleteUserAsync(User.GetUserGuid(), cancellationToken);
         return RedirectToAction("Logout", "Account");
     }
 
