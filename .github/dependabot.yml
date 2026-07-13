@@ -1,0 +1,14 @@
+﻿version: 2
+updates:
+  # Проверка NuGet зависимостей (.NET / ASP.NET Core)
+  - package-ecosystem: "nuget"
+    directory: "/" # Ищет файлы .csproj/.sln в корне и подпапках
+    schedule:
+      interval: "daily" # Проверять новые версии каждый день
+    open-pull-requests-limit: 5
+
+  # Проверка обновлений для самих GitHub Actions компонентов
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
