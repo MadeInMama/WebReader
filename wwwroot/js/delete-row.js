@@ -1,10 +1,12 @@
 ﻿const fullContentEl = document.getElementById("full_content");
 const emptyContentEl = document.getElementById("empty_content");
 
-async function Delete(id, name) {
-    let confirmRes = confirm(`Delete ${name}?`.trim());
+window.addEventListener("load", () => {
+    Array.from(document.querySelectorAll(".delete-row-btn")).forEach(f => f.onclick = async () => await Delete(f.dataset.id, f.dataset.name));
+});
 
-    if (!confirmRes) return;
+async function Delete(id, name) {
+    if (!confirm(`Delete ${name}?`.trim())) return;
 
     document.querySelectorAll(".delete-row-btn").forEach(el => el.disabled = true);
     document.querySelector(`#RL_${id} > .event-output > .delete-row-btn`).classList.remove("remove");

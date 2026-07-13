@@ -82,7 +82,8 @@
                         <div class="event-output">
                             <div class="text-info">@obj.Page</div>
                             <button class="remove click-effect delete-row-btn"
-                                    onclick="Delete('@obj.ReadingId', '@obj.CustomName @obj.CurrentPartName')"></button>
+                                    data-id="@obj.ReadingId"
+                                    data-name="@obj.CustomName @obj.CurrentPartName"></button>
                         </div>
                     </div>
                 }

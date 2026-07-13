@@ -64,9 +64,10 @@
                             }
                             <button class="download-file click-effect"
                                     data-file-id="@item.Id" data-bucket-id="@Model.Id"
-                                    data-file-name='@item.FileName'></button>
+                                    data-file-name="@item.FileName"></button>
                             <button class="remove click-effect delete-row-btn"
-                                    onclick="Delete('@item.Id', '@item.FileName')"></button>
+                                    data-id="@item.Id"
+                                    data-name="@item.FileName"></button>
                         </div>
                     }
                     else

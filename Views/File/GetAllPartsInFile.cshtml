@@ -62,7 +62,8 @@
                                 data-file-id="@item.Id" data-bucket-id="@Model.Id"
                                 data-file-name='@item.FileName @item.CurrentPartName'></button>
                         <button class="remove click-effect delete-row-btn"
-                                onclick="Delete('@item.Id', '@item.FileName @item.CurrentPartName')"></button>
+                                data-id="@item.Id"
+                                data-name="@item.FileName @item.CurrentPartName"></button>
                     </div>
                 </div>
             }
