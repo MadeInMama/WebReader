@@ -346,6 +346,11 @@ app.MapGet("/.well-known/blacksight-domain-association", async context =>
     context.Response.ContentType = "text/plain; charset=utf-8";
     await context.Response.WriteAsync("blacksight-verification-code=094477df-9492-4fdf-aef9-da976b358344");
 });
+app.MapGet("/9e528635-b058-493e-abca-925c6068c1f1.txt", async context =>
+{
+    context.Response.ContentType = "text/plain; charset=utf-8";
+    await context.Response.WriteAsync("Probely");
+});
 app.MapHub<ScheduledTaskHub>("/ScheduledTaskHub");
 
 app.Use((context, next) =>
