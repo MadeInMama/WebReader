@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,6 +27,8 @@ using WebReader.Services;
 using MinioConfig = WebReader.Configuration.MinioConfig;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHttpContextAccessor();
 
 var dbConfig = new DbConfig();
 builder.Configuration.GetRequiredSection(nameof(DbConfig)).Bind(dbConfig);
@@ -236,11 +239,6 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.Migrate();
-
-    // await context.ScheduledTasks.ExecuteDeleteAsync();
-    // var files = await context.Files.Where(f => f.CurrentPartNumber > 303).ToListAsync();
-    // await scope.ServiceProvider.GetRequiredService<FileService>()
-    // .DeleteFileAsync(files.Select(f => f.Id).ToList(), CancellationToken.None);
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(telegramConfig.WebhookUrl!);
