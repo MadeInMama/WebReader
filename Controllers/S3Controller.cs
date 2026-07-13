@@ -19,6 +19,7 @@ public class S3Controller(
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
     public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId, CancellationToken cancellationToken = default)
     {
         var file = await fileRepository.FirstOrDefaultAsync(f =>
@@ -64,6 +65,7 @@ public class S3Controller(
     }
 
     [HttpGet]
+    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
     public async Task<IActionResult> GetFileRest(Guid bucketId, Guid fileId,
         CancellationToken cancellationToken = default)
     {

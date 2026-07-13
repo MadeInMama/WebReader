@@ -309,9 +309,6 @@ app.UseRateLimiter();
 
 app.UseRouting();
 
-//TODO: don't understand. is needed? (new UseStaticFiles)
-// app.MapStaticAssets();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
