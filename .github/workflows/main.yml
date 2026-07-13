@@ -56,7 +56,7 @@ jobs:
         run: |
           export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
           sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "/${{ secrets.SERVER_USER }}/Projects/deploy_start.sh"
+            "/${{ secrets.SERVER_USER }}/Projects/deploy_build.sh"
 
   starting:
     runs-on: ubuntu-latest
