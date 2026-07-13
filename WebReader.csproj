@@ -34,7 +34,7 @@
         <Content Include=".github\workflows\main.yml"/>
     </ItemGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
-    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include=".github\workflows\cve-scan.yml"/>
+    </ItemGroup>
 </Project>
