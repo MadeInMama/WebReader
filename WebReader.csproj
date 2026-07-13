@@ -35,6 +35,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include=".github\workflows\cve-scan.yml"/>
+        <Content Include=".github\workflows\cve-scan.yml"/>
     </ItemGroup>
 </Project>
