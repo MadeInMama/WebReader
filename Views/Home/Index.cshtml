@@ -52,7 +52,7 @@
 
 @section Scripts
 {
-    <script>
+    <script nonce="@nonce">
         fileCacheService.getAll().then(response => {
             document.querySelector("#file-cache-manager").innerHTML = respToStr(response);
         }).catch(error => {

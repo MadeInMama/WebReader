@@ -21,7 +21,7 @@
 
 @section Scripts
 {
-    <script>
+    <script nonce="@nonce">
         userCacheService.getAll().then(cache => {
             document.querySelector("#offline-access-container").innerHTML += cache
                 .map(f => `<br/><a href='${f.key}'>${decodeURIComponent(f.headers['x-file-name'])}</a><br/>`)

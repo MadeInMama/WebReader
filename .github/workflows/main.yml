@@ -45,14 +45,27 @@ jobs:
           sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "/${{ secrets.SERVER_USER }}/Projects/deploy_stop.sh"
 
-  starting:
+  build:
     runs-on: ubuntu-latest
     container: alpine:3.19
-    needs: [checkout, stopping]
+    needs: [ checkout, stopping ]
     steps:
       - name: Install SSH tools
         run: apk add --no-cache openssh-client sshpass
-      - name: Building and starting new container
+      - name: Building new image
+        run: |
+          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "/${{ secrets.SERVER_USER }}/Projects/deploy_start.sh"
+
+  starting:
+    runs-on: ubuntu-latest
+    container: alpine:3.19
+    needs: build
+    steps:
+      - name: Install SSH tools
+        run: apk add --no-cache openssh-client sshpass
+      - name: Starting new container
         run: |
           export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
           sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \

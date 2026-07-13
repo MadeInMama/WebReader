@@ -267,6 +267,9 @@ app.Use(async (context, next) =>
         context.Response.Headers.Remove("Cross-Origin-Embedder-Policy");
         context.Response.Headers.Remove("Cross-Origin-Opener-Policy");
         context.Response.Headers.Remove("Permissions-Policy");
+        context.Response.Headers.Remove("Reporting-Endpoints");
+
+        context.Response.Headers.Append("Reporting-Endpoints", "csp-endpoint=\"/api/Csp/Report\"");
 
         context.Response.Headers.Append("Content-Security-Policy",
             "default-src 'self'; " +
@@ -281,8 +284,8 @@ app.Use(async (context, next) =>
             "base-uri 'self'; " +
             "form-action 'self'; " +
             "frame-ancestors 'self'; " +
-            "report-to /api/Csp/Report; " +
-            "report-uri /api/Csp/Report;");
+            "report-uri /api/Csp/Report;" +
+            "report-to csp-endpoint;");
 
         context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
         context.Response.Headers.Append("X-Frame-Options", "DENY");
