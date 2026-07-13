@@ -1,3 +1,7 @@
+#if LINUX
+using System.Net.Security;
+using System.Security.Authentication;
+#endif
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
