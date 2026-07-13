@@ -82,6 +82,8 @@ Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
     };
 });
 
+let hideHeaderTimeout;
+
 function SetPage(page, send = true) {
     const scrollToTop = currentPage < page;
 
@@ -125,6 +127,17 @@ function SetPage(page, send = true) {
     });
 
     if (send) SendCurrPage();
+    else {
+        hideHeaderTimeout = setTimeout(() => {
+            document.querySelector("header.can-be-opened").classList.remove("opened");
+        }, 5000);
+    }
+
+    if (currentPage === maxPage) {
+        clearTimeout(hideHeaderTimeout);
+        hideHeaderTimeout = null;
+        document.querySelector("header.can-be-opened").classList.add("opened");
+    }
 }
 
 function SendCurrPage() {

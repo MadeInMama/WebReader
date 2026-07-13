@@ -15,10 +15,6 @@ function prepareFile(zip) {
             });
 
             SetPage(currentPage, false);
-
-            setTimeout(() => {
-                document.querySelector("header.can-be-opened").classList.remove("opened");
-            }, 5000);
         });
     } catch (err) {
         console.error('Failed to load ZIP:', err);

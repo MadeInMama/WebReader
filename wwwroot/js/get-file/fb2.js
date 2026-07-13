@@ -18,10 +18,6 @@ function prepareFile(data) {
 
         SetPage(currentPage, false);
         SetScale(currentScale, false);
-
-        setTimeout(() => {
-            document.querySelector("header.can-be-opened").classList.remove("opened");
-        }, 5000);
     } catch (err) {
         console.error('Failed to load FB2:', err);
     }

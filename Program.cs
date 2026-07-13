@@ -195,6 +195,12 @@ builder.Services.Configure<IISServerOptions>(options => { options.MaxRequestBody
 builder.Services.AddControllers()
     .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = null; });
 
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.HttpOnly = true;
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
