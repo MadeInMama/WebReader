@@ -259,6 +259,11 @@ app.MapControllers();
 
 app.Map("/", () => Results.Redirect("/Home/Index"));
 app.Map("/Home", () => Results.Redirect("/Home/Index"));
+app.MapGet("/.well-known/blacksight-domain-association", async context =>
+{
+    context.Response.ContentType = "text/plain; charset=utf-8";
+    await context.Response.WriteAsync("blacksight-verification-code=094477df-9492-4fdf-aef9-da976b358344");
+});
 app.MapHub<ScheduledTaskHub>("/ScheduledTaskHub");
 
 app.Use((context, next) =>
