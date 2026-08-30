@@ -31,7 +31,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Include=".github\dependabot.yml"/>
         <Content Include=".github\workflows\main.yml"/>
+        <Content Include=".github\workflows\malware-scan.yml"/>
+        <Content Include=".github\workflows\secret-scan.yaml"/>
     </ItemGroup>
 
     <ItemGroup>

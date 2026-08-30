@@ -1,6 +1,6 @@
-import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs';
+import * as pdfjsLib from '../libs/pdf.min.mjs';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@latest/build/pdf.worker.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '../libs/pdf.worker.min.mjs';
 
 function prepareFile(data) {
     pdfjsLib.getDocument({data: new Uint8Array(data)}).promise.then(doc => {

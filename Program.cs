@@ -281,8 +281,8 @@ app.Use(async (context, next) =>
         context.Response.Headers.Append("Reporting-Endpoints", "csp-endpoint=\"/api/Csp/Report\"");
 
         context.Response.Headers.Append("Content-Security-Policy",
-            "default-src 'self'; " +
-            $"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
+            // "default-src 'self'; " +
+            // $"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
             "style-src 'self' 'unsafe-inline'; " +
             "img-src 'self' data: blob:; " +
             "worker-src 'self' blob:; " +

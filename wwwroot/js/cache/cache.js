@@ -81,8 +81,10 @@ class FileCacheService extends CacheService {
 
 class CoreCacheService extends CacheService {
     #CORE_ASSETS = [
-        'https://unpkg.com/pdfjs-dist@latest/build/pdf.min.mjs',
-        'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+        '/js/libs/pdf.min.mjs',
+        '/js/libs/pdf.worker.min.mjs',
+        '/js/libs/jszip.min.js',
+        '/js/libs/axios.min.js',
 
         '/Home/Offline',
 

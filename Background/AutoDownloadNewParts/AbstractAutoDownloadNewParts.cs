@@ -473,8 +473,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        // await BroadcastAllSubs(context, botClient,
-        // $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
+        await BroadcastAllSubs(context, botClient,
+            $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
 
         var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 
