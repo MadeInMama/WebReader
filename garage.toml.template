@@ -10,7 +10,3 @@ admin_token = "${GARAGE_ADMIN_TOKEN}"
 api_bind_addr = "0.0.0.0:3900"
 root_domain = ".s3.local"
 s3_region = "us-east-1"
-
-[replication]
-nb_replication = 1
-consistency_mode = "3"
