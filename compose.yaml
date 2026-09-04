@@ -91,21 +91,13 @@
       - webreader_network
 
   garage-ui:
-    image: ghcr.io/noooste/garage-ui:latest
-    container_name: garage_web_interface
-    restart: always
+    image: khairul169/garage-webui:latest
+    restart: no
+    container_name: garage-webui
     ports:
-      - "${GARAGE_PORT_2_1}:${GARAGE_PORT_2_2}"
-    environment:
-      - GARAGE_UI_GARAGE_ADMIN_URL=http://localhost:3902
-      - GARAGE_UI_GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN}
-      - GARAGE_UI_AUTH_ADMIN_USERNAME=admin
-      - GARAGE_UI_AUTH_ADMIN_PASSWORD=${GARAGE_UI_PASSWORD}
-    depends_on:
-      garage:
-        condition: service_healthy
-    networks:
-      - webreader_network
+      - "3909:3909"
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro
 
 networks:
   webreader_network:
