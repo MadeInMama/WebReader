@@ -67,6 +67,8 @@
     image: dxflrs/garage:v1.0.0
     container_name: garage
     restart: no
+    entrypoint: [ ]
+    command: /garage server -c /etc/garage.toml
     env_file:
       - ../.env_s3
     ports:
