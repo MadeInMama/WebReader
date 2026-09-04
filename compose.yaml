@@ -64,10 +64,9 @@
       - webreader_network
 
   garage:
-    image: dxflrs/garage:99923a87182ae9252b421dda65c935b9c06b1444
+    image: dxflrs/garage:v1.0.0
     container_name: garage
     restart: no
-    command: ["/garage", "server"]
     env_file:
       - ../.env_s3
     ports:
