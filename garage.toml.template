@@ -1,16 +1,12 @@
-﻿metadata_dir = "/var/lib/garage/meta"
+metadata_dir = "/var/lib/garage/meta"
 data_dir = "/var/lib/garage/data"
 db_engine = "sqlite"
+rpc_bind_addr = "0.0.0.0:3902"
+rpc_secret = "${GARAGE_RPC_SECRET}"
+admin_bind_addr = "0.0.0.0:3903"
+admin_token = "${GARAGE_ADMIN_TOKEN}"
 
 [s3_api]
 api_bind_addr = "0.0.0.0:3900"
 root_domain = ".s3.local"
 s3_region = "us-east-1"
-
-[rpc]
-rpc_secret = "${GARAGE_RPC_SECRET}"
-rpc_bind_addr = "0.0.0.0:3902"
-
-[admin]
-api_bind_addr = "0.0.0.0:3903"
-admin_token = "${GARAGE_ADMIN_TOKEN}"
