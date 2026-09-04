@@ -66,7 +66,7 @@
   garage:
     image: dxflrs/garage:99923a87182ae9252b421dda65c935b9c06b1444
     container_name: garage
-    restart: always
+    restart: no
     env_file:
       - ../.env_s3
     ports:
