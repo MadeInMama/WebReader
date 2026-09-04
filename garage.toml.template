@@ -3,13 +3,13 @@ data_dir = "/var/lib/garage/data"
 db_engine = "sqlite"
 
 [s3_api]
-api_bind_addr = "0.0.0.0:${GARAGE_PORT_1_2}"
+api_bind_addr = "0.0.0.0:3900"
 root_domain = ".s3.local"
 
 [rpc]
 rpc_secret = "${GARAGE_RPC_SECRET}"
-rpc_bind_addr = "0.0.0.0:${GARAGE_PORT_3_1}"
+rpc_bind_addr = "0.0.0.0:3902"
 
 [admin]
-api_bind_addr = "0.0.0.0:${GARAGE_PORT_4_1}"
+api_bind_addr = "0.0.0.0:3903"
 admin_token = "${GARAGE_ADMIN_TOKEN}"
