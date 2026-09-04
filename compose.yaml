@@ -67,7 +67,7 @@
     image: dxflrs/garage:99923a87182ae9252b421dda65c935b9c06b1444
     container_name: garage
     restart: no
-    command: /garage server -c /etc/garage.toml
+    command: ["/garage", "server"]
     env_file:
       - ../.env_s3
     ports:
