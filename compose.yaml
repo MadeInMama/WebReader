@@ -82,7 +82,7 @@
       - ./garage.toml.template:/etc/garage.toml:ro
       - ./garage-data/meta:/var/lib/garage/meta
       - ./garage-data/data:/var/lib/garage/data
-    command: ["server"]
+    command: ["garage", "server"]
     networks:
       - webreader_network
 
