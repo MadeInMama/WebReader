@@ -49,55 +49,55 @@
     networks:
       - webreader_network
 
-  minio-create-bucket:
-    image: minio/mc:latest
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-        echo 'Creating default buckets...' &&
-        /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin &&
-        /usr/bin/mc mb local/mybucket &&
-        echo 'Buckets created successfully!'
-      "
-    networks:
-      - webreader_network
-
-  garage:
-    image: dxflrs/garage:v1.0.0
-    container_name: garage
-    restart: no
-    entrypoint: [ ]
-    command: /garage -c /etc/garage.toml server
-    env_file:
-      - ../.env_s3
-    ports:
-      - "${GARAGE_PORT_1_1}:${GARAGE_PORT_1_2}"
-      - "${GARAGE_PORT_3_1}:${GARAGE_PORT_3_2}"
-      - "${GARAGE_PORT_4_1}:${GARAGE_PORT_4_2}"
-    environment:
-      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET}
-      - GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN}
-      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
-      - S3_SECRET_KEY=${S3_SECRET_KEY}
-      - GARAGE_REPLICATION_MODE=
-      - GARAGE_REPLICATION_LEVEL=
-      - GARAGE_CONSISTENCY_MODE=
-    volumes:
-      - ./garage.toml:/etc/garage.toml:ro
-      - ./garage-data/meta:/var/lib/garage/meta
-      - ./garage-data/data:/var/lib/garage/data
-    networks:
-      - webreader_network
-
-  garage-ui:
-    image: khairul169/garage-webui:latest
-    restart: no
-    container_name: garage-webui
-    ports:
-      - "3909:3909"
-    volumes:
-      - ./garage.toml:/etc/garage.toml:ro
+#  minio-create-bucket:
+#    image: minio/mc:latest
+#    depends_on:
+#      - minio
+#    entrypoint: >
+#      /bin/sh -c "
+#        echo 'Creating default buckets...' &&
+#        /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin &&
+#        /usr/bin/mc mb local/mybucket &&
+#        echo 'Buckets created successfully!'
+#      "
+#    networks:
+#      - webreader_network
+#
+#  garage:
+#    image: dxflrs/garage:v1.0.0
+#    container_name: garage
+#    restart: no
+#    entrypoint: [ ]
+#    command: /garage -c /etc/garage.toml server
+#    env_file:
+#      - ../.env_s3
+#    ports:
+#      - "${GARAGE_PORT_1_1}:${GARAGE_PORT_1_2}"
+#      - "${GARAGE_PORT_3_1}:${GARAGE_PORT_3_2}"
+#      - "${GARAGE_PORT_4_1}:${GARAGE_PORT_4_2}"
+#    environment:
+#      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET}
+#      - GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN}
+#      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+#      - S3_SECRET_KEY=${S3_SECRET_KEY}
+#      - GARAGE_REPLICATION_MODE=
+#      - GARAGE_REPLICATION_LEVEL=
+#      - GARAGE_CONSISTENCY_MODE=
+#    volumes:
+#      - ./garage.toml:/etc/garage.toml:ro
+#      - ./garage-data/meta:/var/lib/garage/meta
+#      - ./garage-data/data:/var/lib/garage/data
+#    networks:
+#      - webreader_network
+#
+#  garage-ui:
+#    image: khairul169/garage-webui:latest
+#    restart: no
+#    container_name: garage-webui
+#    ports:
+#      - "3909:3909"
+#    volumes:
+#      - ./garage.toml:/etc/garage.toml:ro
 
 networks:
   webreader_network:
