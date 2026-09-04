@@ -67,6 +67,7 @@
     image: dxflrs/garage:99923a87182ae9252b421dda65c935b9c06b1444
     container_name: garage
     restart: no
+    command: server
     env_file:
       - ../.env_s3
     ports:
@@ -79,7 +80,7 @@
       - S3_ACCESS_KEY=${S3_ACCESS_KEY}
       - S3_SECRET_KEY=${S3_SECRET_KEY}
     volumes:
-      - ./garage.toml.template:/etc/garage.toml:ro
+      - ./garage.toml:/etc/garage.toml:ro
       - ./garage-data/meta:/var/lib/garage/meta
       - ./garage-data/data:/var/lib/garage/data
     networks:
