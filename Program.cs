@@ -25,6 +25,7 @@ using WebReader.Models;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
+using Yarp.ReverseProxy.Model;
 using MinioConfig = WebReader.Configuration.MinioConfig;
 
 var builder = WebApplication.CreateBuilder(args);
