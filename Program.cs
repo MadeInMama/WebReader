@@ -295,7 +295,7 @@ app.Use(async (context, next) =>
                 "script-src 'self' 'unsafe-inline'; " +
                 "style-src 'self' 'unsafe-inline'; " +
                 "img-src 'self' data: blob:; " +
-                "connect-src 'self' wss: ws:; " +
+                "connect-src 'self' wss: ws: https://raw.githubusercontent.com; " +
                 "frame-ancestors 'self';");
 
             context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
