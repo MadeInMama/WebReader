@@ -29,6 +29,9 @@ using MinioConfig = WebReader.Configuration.MinioConfig;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 builder.Services.AddHttpContextAccessor();
 
 var dbConfig = new DbConfig();
@@ -244,6 +247,8 @@ app.UseHsts();
 
 app.UseHttpsRedirection();
 
+app.UseWebSockets();
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -278,36 +283,56 @@ app.Use(async (context, next) =>
         context.Response.Headers.Remove("Permissions-Policy");
         context.Response.Headers.Remove("Reporting-Endpoints");
 
-        context.Response.Headers.Append("Reporting-Endpoints", "csp-endpoint=\"/api/Csp/Report\"");
+        if (context.Request.Path.StartsWithSegments("/vpn-admin"))
+        {
+            context.Response.Headers.Append("Content-Security-Policy",
+                "default-src 'self'; " +
+                "script-src 'self' 'unsafe-inline'; " +
+                "style-src 'self' 'unsafe-inline'; " +
+                "img-src 'self' data: blob:; " +
+                "connect-src 'self' wss: ws:; " +
+                "frame-ancestors 'self';");
 
-        context.Response.Headers.Append("Content-Security-Policy",
-            // "default-src 'self'; " +
-            // $"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
-            "style-src 'self' 'unsafe-inline'; " +
-            "img-src 'self' data: blob:; " +
-            "worker-src 'self' blob:; " +
-            "font-src 'self' data:; " +
-            "connect-src 'self'; " +
-            "media-src 'self'; " +
-            "object-src 'none'; " +
-            "base-uri 'self'; " +
-            "form-action 'self'; " +
-            "frame-ancestors 'self'; " +
-            "report-uri /api/Csp/Report;" +
-            "report-to csp-endpoint;");
+            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
+            context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+            context.Response.Headers.Append("Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains; preload");
+        }
+        else
+        {
+            context.Response.Headers.Append("Reporting-Endpoints", "csp-endpoint=\"/api/Csp/Report\"");
 
-        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-        context.Response.Headers.Append("X-Frame-Options", "DENY");
-        context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
-        context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+            context.Response.Headers.Append("Content-Security-Policy",
+                // "default-src 'self'; " +
+                // $"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; " +
+                "style-src 'self' 'unsafe-inline'; " +
+                "img-src 'self' data: blob:; " +
+                "worker-src 'self' blob:; " +
+                "font-src 'self' data:; " +
+                "connect-src 'self'; " +
+                "media-src 'self'; " +
+                "object-src 'none'; " +
+                "base-uri 'self'; " +
+                "form-action 'self'; " +
+                "frame-ancestors 'self'; " +
+                "report-uri /api/Csp/Report;" +
+                "report-to csp-endpoint;");
 
-        context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Append("X-Frame-Options", "DENY");
+            context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+            context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
 
-        context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-        context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+            context.Response.Headers.Append("Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains; preload");
 
-        context.Response.Headers.Append("Permissions-Policy",
-            "camera=(), microphone=(), geolocation=(), fullscreen=(), payment=(), usb=(), accelerometer=(), gyroscope=()");
+            context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+            context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+
+            context.Response.Headers.Append("Permissions-Policy",
+                "camera=(), microphone=(), geolocation=(), fullscreen=(), payment=(), usb=(), accelerometer=(), gyroscope=()");
+        }
 
         return Task.CompletedTask;
     });
@@ -373,5 +398,7 @@ app.Use((context, next) =>
     context.Request.EnableBuffering();
     return next();
 });
+
+app.MapReverseProxy();
 
 app.Run();
