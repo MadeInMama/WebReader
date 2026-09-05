@@ -283,7 +283,11 @@ app.Use(async (context, next) =>
         context.Response.Headers.Remove("Permissions-Policy");
         context.Response.Headers.Remove("Reporting-Endpoints");
 
-        if (context.Request.Path.StartsWithSegments("/vpn-admin"))
+        var reverseProxyFeature = context.Features.Get<IReverseProxyFeature>();
+        var isVpnRequest = context.Request.Path.StartsWithSegments("/vpn-admin") ||
+                           reverseProxyFeature?.Route.Config.RouteId == "vpn-route";
+
+        if (isVpnRequest)
         {
             context.Response.Headers.Append("Content-Security-Policy",
                 "default-src 'self'; " +
