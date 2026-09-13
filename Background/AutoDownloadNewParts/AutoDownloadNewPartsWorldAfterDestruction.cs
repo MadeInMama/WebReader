@@ -22,5 +22,5 @@ public class AutoDownloadNewPartsWorldAfterDestruction(
         taskRepository)
 {
     protected override string FileCustomName => "Мир после падения";
-    protected override string Url => "https://3.readmanga.ru/mir_posle_padeniia";
+    protected override string Url => "https://a.zazaza.me/mir_posle_padeniia";
 }

@@ -22,5 +22,5 @@ public class AutoDownloadNewPartsOmniscientReader(
         taskRepository)
 {
     protected override string FileCustomName => "Всеведущий читатель";
-    protected override string Url => "https://3.readmanga.ru/vseveduchii_chitatel__A5664";
+    protected override string Url => "https://a.zazaza.me/vseveduchii_chitatel__A5664";
 }
