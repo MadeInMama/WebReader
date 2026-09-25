@@ -1,5 +1,6 @@
 ﻿#full_content {
     flex-direction: column;
+    gap: 1em;
 }
 
 details {
@@ -89,6 +90,11 @@ details > div {
     padding: 0 1em 1em 1em;
 }
 
+.event-output > *:only-child,
+.additional-info > *:only-child {
+    margin: 0 auto;
+}
+
 .event-output {
     opacity: 1;
     transition: none;
@@ -114,6 +120,12 @@ details > div {
     }
 }
 
+@media (width < 553px) {
+    details > div {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 @media (width < 406px) {
     details > div {
         font-size: 0.8em;
@@ -123,5 +135,11 @@ details > div {
 @media (width < 330px) {
     details > div {
         font-size: 1em;
+        grid-template-columns: 1fr;
+    }
+
+    .item-line > .lazy-image-wrapper,
+    .item-line > a {
+        aspect-ratio: 3/4;
     }
 }

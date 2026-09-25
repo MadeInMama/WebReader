@@ -1,4 +1,5 @@
-﻿@model WebReader.Models.Dtos.AllFilesByBucketViewModel
+﻿@using WebReader.Models
+@model WebReader.Models.Dtos.AllFilesByBucketViewModel
 @inject IHttpContextAccessor HttpContextAccessor
 @{
     var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
@@ -98,9 +99,12 @@
                                     <button class="download-file click-effect"
                                             data-file-id="@obj.Id" data-bucket-id="@item.Key.Id"
                                             data-file-name="@obj.FileName"></button>
-                                    <button class="remove click-effect delete-row-btn"
-                                            data-id="@obj.Id"
-                                            data-name="@obj.FileName"></button>
+                                    @if (User.GetUserRoles().Contains(RoleType.Admin))
+                                    {
+                                        <button class="remove click-effect delete-row-btn"
+                                                data-id="@obj.Id"
+                                                data-name="@obj.FileName"></button>
+                                    }
                                 </div>
                             }
                             else

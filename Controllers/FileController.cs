@@ -21,6 +21,7 @@ public class FileController(
     FileControllerService fileControllerService) : Controller
 {
     [ServiceFilter(typeof(LogRequestAttribute))]
+    [Obsolete]
     public async Task<IActionResult> GetAllBuckets(CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllBuckets(User.GetUserGuid(), User.GetUserRoles(), cancellationToken);

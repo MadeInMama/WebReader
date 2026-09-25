@@ -86,7 +86,7 @@ table {
 
 thead {
     position: sticky;
-    top: -0.5em;
+    top: -1em;
     background: linear-gradient(to top, var(--foreground-color) 2px, var(--background-color) 1px) no-repeat;
     z-index: 1;
 }

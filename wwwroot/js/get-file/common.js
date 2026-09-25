@@ -137,6 +137,7 @@ function SetPage(page, send = true) {
         clearTimeout(hideHeaderTimeout);
         hideHeaderTimeout = null;
         document.querySelector("header.can-be-opened").classList.add("opened");
+        execOnFullscreenExit();
     }
 }
 
