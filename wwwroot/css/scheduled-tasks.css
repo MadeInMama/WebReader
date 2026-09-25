@@ -235,8 +235,12 @@ pre {
 }
 
 @media (width < 600px) {
-    th.table-task-status,
-    td.table-task-status {
+    th.table-task-type-name {
+        width: 6em;
+    }
+
+    th.table-task-have-to-start-at,
+    td.table-task-have-to-start-at {
         display: none;
     }
 }
