@@ -24,6 +24,7 @@ public class FileUploadService(
         string? filePartName,
         uint? filePartNumber,
         string? coverName,
+        Stream? coverStream,
         CancellationToken cancellationToken)
     {
         File? asPartOfFile = null, asParentOfFile = null;
@@ -45,6 +46,11 @@ public class FileUploadService(
 
             if (asParentOfFile == null) return Result.Fail(new Error("Parent of file not available."));
         }
+
+        var isCoverUploadSuccessfully = false;
+        if (coverName != null && coverStream != null)
+            isCoverUploadSuccessfully = await minioService.UploadCoverAsync(coverStream, coverName,
+                "image/jpeg", cancellationToken);
 
         var fileStreamLength = (ulong?)fileStream.Length;
 
@@ -68,7 +74,7 @@ public class FileUploadService(
             NextPartId = asParentOfFile?.Id,
             CurrentPartName = filePartName,
             CurrentPartNumber = filePartNumber,
-            CoverName = coverName
+            CoverName = isCoverUploadSuccessfully ? coverName : null
         };
 
         if (asPartOfFile != null)

@@ -73,7 +73,7 @@ function parseFB2(xmlString) {
             newSection.setAttribute(attr.name, attr.value);
         }
 
-        parts.forEach(part => {
+        parts.forEach((part, index, array) => {
             let wordCount = part.textContent.trim().split('').length;
             currWordCount += wordCount;
 
@@ -93,7 +93,7 @@ function parseFB2(xmlString) {
 
             newSection.appendChild(part.cloneNode(true));
 
-            if (currWordCount > wordCountToSlice) {
+            if (currWordCount > wordCountToSlice || index === array.length - 1) {
                 fragment.appendChild(newSection);
 
                 newSection = doc.createElement("section");

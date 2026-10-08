@@ -192,7 +192,8 @@ public class FileController(
             fileType,
             request.CurrentPartName,
             request.CurrentPartNumber,
-            null,
+            $"{request.File.FileName.Split(".")[0]}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}",
+            request.Cover?.OpenReadStream(),
             cancellationToken);
 
         if (uploadFileResult.IsFailed)
@@ -201,10 +202,10 @@ public class FileController(
             return View(string.Empty, errorMessage.FirstOrDefault()?.Message);
         }
 
-        return uploadFileResult.Value is { NextPartId: not null }
+        return request.AsParentOfId.HasValue || request.AsPartOfId.HasValue
             ? RedirectToAction("GetAllPartsInFile",
                 new { bucketId = bucket.Id, fileId = uploadFileResult.Value.Id })
-            : RedirectToAction("GetAllFilesInBucket", new { bucketId = request.BucketId });
+            : RedirectToAction("GetAllFilesByBucket");
     }
 
     private static IEnumerable<SelectListItem> GetSelectListParts(IEnumerable<File> files)

@@ -1,4 +1,4 @@
-﻿namespace WebReader.Models;
+namespace WebReader.Models;
 
 public enum TaskType
 {

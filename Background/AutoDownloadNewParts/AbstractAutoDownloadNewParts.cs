@@ -391,6 +391,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         using var memoryStream = new MemoryStream();
 
+        using var coverMemoryStream = new MemoryStream();
+
         using var httpClient = httpClientFactory.CreateClient("parser-http-client");
 
         var isCoverDone = false;
@@ -427,17 +429,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
                     if (cover is { Length: > 0 })
                     {
-                        using var coverMemoryStream = new MemoryStream(cover);
-                        var expectedCoverFileName =
-                            $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                        var isSuccessful = await minioService.UploadCoverAsync(coverMemoryStream, expectedCoverFileName,
-                            "image/jpeg", cancellationToken);
-
-                        if (isSuccessful)
-                        {
-                            coverFileName = expectedCoverFileName;
-                            isCoverDone = true;
-                        }
+                        await coverMemoryStream.WriteAsync(cover, cancellationToken);
+                        coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+                        isCoverDone = true;
                     }
                 }
 
@@ -447,6 +441,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         await memoryStream.FlushAsync(cancellationToken);
         memoryStream.Position = 0;
+
+        await coverMemoryStream.FlushAsync(cancellationToken);
+        coverMemoryStream.Position = 0;
 
         logger.LogTrace("Save to db {name}", fileName);
 
@@ -463,6 +460,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             currentPartName,
             uint.Parse(dataNum.ToString()),
             coverFileName,
+            coverMemoryStream,
             cancellationToken
         );
 

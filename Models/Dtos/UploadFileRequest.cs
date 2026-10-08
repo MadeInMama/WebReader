@@ -10,6 +10,7 @@ public class UploadFileRequest
     public string? CurrentPartName { get; set; }
     public uint? CurrentPartNumber { get; set; }
     public IFormFile? File { get; set; }
+    public IFormFile? Cover { get; set; }
     public Guid? AsPartOfId { get; set; }
     public Guid? AsParentOfId { get; set; }
     public IEnumerable<SelectListItem> Parts { get; set; } = [];

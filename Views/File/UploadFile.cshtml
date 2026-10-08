@@ -5,58 +5,7 @@
 
 @section Style
 {
-    <style>
-        main {
-            justify-content: center;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: var(--max-width);
-            max-width: 20em;
-        }
-
-        .name-file-container {
-            display: grid;
-            grid-template-rows: 1fr 1fr;
-            gap: 0.5em;
-            margin-bottom: 1em;
-        }
-
-        .name-file-container > input {
-            display: block;
-            width: 100%;
-            max-width: 20em;
-            font-size: 1em;
-            padding: 0.5em 1em;
-            border-width: 0.1em;
-            border-color: var(--drop-shadow-color);
-            border-style: solid;
-            border-radius: 1em;
-            background-color: var(--background-backdrop-color);
-            box-shadow: 0 0 0.5em var(--drop-shadow-color);
-        }
-
-        .validation-summary-errors {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 1em;
-        }
-
-        .upload-btn::after {
-            content: "Sign in";
-            position: absolute;
-            bottom: -1.5em;
-            font-size: 1em;
-            left: 50%;
-            transform: translateX(-50%);
-            color: var(--foreground-color);
-            white-space: nowrap;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/upload-file.css" asp-append-version="true"/>
 }
 
 @section SpecialInfo
@@ -77,13 +26,16 @@
         <input asp-for="CustomName" required placeholder="File Name"
                autocapitalize="off" autocorrect="off" spellcheck="false"/>
 
-        <input asp-for="CurrentPartName" required placeholder="Part Name"
+        <input asp-for="CurrentPartName" placeholder="Part Name"
                autocapitalize="off" autocorrect="off" spellcheck="false"/>
 
-        <input asp-for="CurrentPartNumber" type="number" min="1" required placeholder="Part Number"
+        <input asp-for="CurrentPartNumber" type="number" min="1" placeholder="Part Number"
                autocapitalize="off" autocorrect="off" spellcheck="false"/>
 
-        <input asp-for="File" type="file" required/>
+        <label for="file-input">File:</label>
+        <input asp-for="File" type="file" required id="file-input"/>
+        <label for="cover-input">Cover:</label>
+        <input asp-for="Cover" type="file" required id="cover-input"/>
     </div>
 
     @if (Model.Parts.Count() > 1)
