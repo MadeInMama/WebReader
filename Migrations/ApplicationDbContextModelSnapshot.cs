@@ -175,6 +175,25 @@ namespace WebReader.Migrations
                     b.ToTable("Files");
                 });
 
+            modelBuilder.Entity("WebReader.Models.Entities.RequestAttemptsLog", b =>
+                {
+                    b.Property<string>("Ip")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Link")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Ip", "CreatedDate");
+
+                    b.HasIndex("Ip");
+
+                    b.ToTable("RequestAttemptsLogs");
+                });
+
             modelBuilder.Entity("WebReader.Models.Entities.ScheduledTask", b =>
                 {
                     b.Property<Guid>("Id")

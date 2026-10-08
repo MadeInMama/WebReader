@@ -12,6 +12,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CustomUser> Users { get; set; }
     public DbSet<Bucket> Buckets { get; set; }
     public DbSet<File> Files { get; set; }
+    public DbSet<RequestAttemptsLog> RequestAttemptsLogs { get; set; }
     public DbSet<UserReading> UserReadings { get; set; }
     public DbSet<SubscriberTg> SubscriberTgs { get; set; }
     public DbSet<ScheduledTask> ScheduledTasks { get; set; }
@@ -181,6 +182,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     IsActive = true
                 });
 
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.DeleteOldRequestAttemptsLogs))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.DeleteOldRequestAttemptsLogs,
+                    DefaultPriority = 0,
+                    Cron = TaskCron.EveryDay,
+                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 720}"),
+                    IsActive = true
+                });
+
             context.SaveChanges();
         });
     }
@@ -211,6 +223,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(f => f.Priority);
         modelBuilder.Entity<ScheduledTask>()
             .HasOne(f => f.ScheduledTaskConfig);
+
+        modelBuilder.Entity<RequestAttemptsLog>()
+            .HasKey(f => new { f.Ip, f.CreatedDate });
+        modelBuilder.Entity<RequestAttemptsLog>()
+            .HasIndex(f => f.Ip);
 
         base.OnModelCreating(modelBuilder);
     }

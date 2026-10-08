@@ -85,6 +85,7 @@ builder.Services.AddScoped<FileRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 builder.Services.AddScoped<FileControllerService>();
 builder.Services.AddScoped<AuthRestService>();
+builder.Services.AddScoped<RequestAttemptsLogRepository>();
 builder.Services.AddScoped<ScheduledTaskConfigRepository>();
 builder.Services.AddScoped<ScheduledTaskRepository>();
 
@@ -114,6 +115,8 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldErroredTasks>(
     TaskType.DeleteOldErroredTasks);
 builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldInProgressTasks>(
     TaskType.DeleteOldInProgressTasks);
+builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldRequestAttemptsLogs>(
+    TaskType.DeleteOldRequestAttemptsLogs);
 
 builder.Services.Configure<BackgroundTaskConfig>(builder.Configuration.GetSection("BackgroundTasks"));
 builder.Services.AddHostedService<BackgroundTaskManager>();

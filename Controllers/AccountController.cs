@@ -26,7 +26,7 @@ public class AccountController(UserService userService) : Controller
         return RedirectToAction("Index", "Home");
     }
 
-    [HttpGet]
+    // [HttpGet]
     [ServiceFilter(typeof(LogRequestAttribute))]
     public IActionResult SignUp(string? returnUrl = null)
     {
@@ -61,7 +61,7 @@ public class AccountController(UserService userService) : Controller
         return View(model);
     }
 
-    [HttpPost]
+    // [HttpPost]
     [EnableRateLimiting("LoginPolicy")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SignUp(RegisterViewModel model, CancellationToken cancellationToken = default)
@@ -74,10 +74,7 @@ public class AccountController(UserService userService) : Controller
 
         var user = await userService.CreateUserAsync(model.Username, model.Password, cancellationToken);
 
-        if (user != null)
-        {
-            return await SetUser(user, model.RememberMe, model.ReturnUrl);
-        }
+        if (user != null) return await SetUser(user, model.RememberMe, model.ReturnUrl);
 
         ModelState.AddModelError(string.Empty, "Username is already taken or password does not meet requirements.");
 
@@ -108,7 +105,7 @@ public class AccountController(UserService userService) : Controller
         return View();
     }
 
-    [HttpDelete]
+    // [HttpDelete]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken = default)
     {
