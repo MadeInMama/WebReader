@@ -1,4 +1,5 @@
 .fb2-canvas-container {
+    padding: 0.5em;
 }
 
 .fb2-image-container {
@@ -7,7 +8,7 @@
 }
 
 .fb2-canvas-container > section {
-    padding-bottom: 10em;
+    padding-bottom: 40dvh; /*TODO: CHECK IS WORKING ON MOBILE */
 }
 
 .fb2-cover > img,
