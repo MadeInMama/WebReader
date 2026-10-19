@@ -22,5 +22,5 @@ public class AutoDownloadNewPartsSoloLeveling(
         taskRepository)
 {
     protected override string FileCustomName => "Поднятие уровня в одиночку";
-    protected override string Url => "https://a.zazaza.me/podniatie_urovnia_v_odinochku__A5ea4";
+    protected override string Url => "https://1.readmanga.club/podniatie_urovnia_v_odinochku__A5ea4";
 }
