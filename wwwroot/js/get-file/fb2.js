@@ -103,7 +103,7 @@ function renderPage() {
                 currentAudio = new Audio(currentAudioUrl);
 
                 //TODO: speed selector (single setting btn for scale and etc)
-                currentAudio.playbackRate = 1.5;
+                currentAudio.playbackRate = 1.25;
 
                 currentAudio.addEventListener('play', () => {
                     animationFrameId = requestAnimationFrame(trackTtsProgress);
@@ -115,7 +115,7 @@ function renderPage() {
                     currentAudioTtsId = null;
                     currentAudioUrl = null;
                     cancelAnimationFrame(animationFrameId);
-                    document.querySelector(`p[tts-id=${ttsId}]`).style.backgroundSize = 100 + '%';
+                    document.querySelector(`p[tts-id=${ttsId}]`).style.backgroundSize = 0 + '%';
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
                 });
 
