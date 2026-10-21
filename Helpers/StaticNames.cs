@@ -2,5 +2,6 @@
 
 public static class StaticNames
 {
-    public static string CoversBucketName = "covers";
+    public const string CoversBucketName = "covers";
+    public const string TtsBucketName = "tts";
 }

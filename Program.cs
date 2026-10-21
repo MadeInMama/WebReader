@@ -25,10 +25,24 @@ using WebReader.Models;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
+using WebReader.Services.Tts;
 using Yarp.ReverseProxy.Model;
 using MinioConfig = WebReader.Configuration.MinioConfig;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//FOR LOCAL TTS
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("DevCorsPolicy", policy =>
+//     {
+//         policy.SetIsOriginAllowed(origin => origin == "null" || origin.StartsWith("http://localhost"))
+//             .AllowAnyMethod()
+//             .AllowAnyHeader()
+//             .AllowCredentials()
+//             .WithExposedHeaders("Content-Disposition", "Content-Length", "Accept-Ranges");
+//     });
+// });
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
@@ -192,6 +206,13 @@ builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
 
+builder.Services.Configure<TtsConfig>(builder.Configuration.GetSection(nameof(TtsConfig)));
+var ttsConfig = new TtsConfig();
+builder.Configuration.GetRequiredSection(nameof(TtsConfig)).Bind(ttsConfig);
+builder.Services.AddHttpClient<XttsTtsClient>(client => { client.BaseAddress = new Uri(ttsConfig.XttsUrl!); });
+builder.Services.AddTransient<TtsClientFactory>();
+builder.Services.AddTransient<TtsService>();
+
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
@@ -262,6 +283,65 @@ using (var scope = app.Services.CreateScope())
     await botClient.SetWebhook(telegramConfig.WebhookUrl!);
 }
 
+    // var ttsService = scope.ServiceProvider.GetRequiredService<TtsService>();
+    // var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
+    //
+    // const string outputPath = @"E:\Projects\ProcessTts\test_output.xml";
+    // var doc = XDocument.Load(outputPath);
+    // var ns = doc.Root!.GetDefaultNamespace();
+    //
+    // foreach (var el in doc.Root.Element(ns + "body")!.Descendants())
+    // {
+    //     if (el.Name.LocalName != "p") continue;
+    //     if (!el.Attributes().Select(f => f.Name).Select(f => f.LocalName).Contains("tts-id")) continue;
+    //
+    //     var ttsId = el.Attributes().First(f => f.Name.LocalName == "tts-id").Value;
+    //
+    //     if (await minioService.ObjectExistsAsync(StaticNames.TtsBucketName, $"{ttsId}.ogg", CancellationToken.None))
+    //     {
+    //         Console.WriteLine($"Skipped {ttsId}");
+    //         continue;
+    //     }
+    //
+    //     var text = el.Value.Trim();
+    //
+    //     var res = await ttsService.GenerateSpeechAsync(text, ttsId, CancellationToken.None);
+    //
+    //     Console.WriteLine($"Done {ttsId}");
+    // }
+}
+
+app.UseResponseCompression();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        if (ctx.File.Name.Equals("sw.js", StringComparison.OrdinalIgnoreCase) ||
+            ctx.File.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase))
+        {
+            ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+            ctx.Context.Response.Headers.Append("Pragma", "no-cache");
+            ctx.Context.Response.Headers.Append("Expires", "0");
+        }
+        else
+        {
+            ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000, immutable");
+        }
+    }
+});
+
+app.UseHttpMethodOverride(new HttpMethodOverrideOptions
+{
+    FormFieldName = "_method"
+});
+
+app.UseRateLimiter();
+
+app.UseRouting();
+
+//FOR LOCAL TTS
+// app.UseCors("DevCorsPolicy");
+
 app.Use(async (context, next) =>
 {
     var randomNumber = new byte[32];
@@ -319,7 +399,7 @@ app.Use(async (context, next) =>
                 "worker-src 'self' blob:; " +
                 "font-src 'self' data:; " +
                 "connect-src 'self'; " +
-                "media-src 'self'; " +
+                "media-src 'self' blob:; " +
                 "object-src 'none'; " +
                 "base-uri 'self'; " +
                 "form-action 'self'; " +
@@ -336,6 +416,8 @@ app.Use(async (context, next) =>
                 "max-age=31536000; includeSubDomains; preload");
 
             context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+            //FOR LOCAL TTS
+            // context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "credentialless");
             context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
 
             context.Response.Headers.Append("Permissions-Policy",
@@ -347,34 +429,6 @@ app.Use(async (context, next) =>
 
     await next();
 });
-
-app.UseResponseCompression();
-app.UseStaticFiles(new StaticFileOptions
-{
-    OnPrepareResponse = ctx =>
-    {
-        if (ctx.File.Name.Equals("sw.js", StringComparison.OrdinalIgnoreCase) ||
-            ctx.File.Name.Equals("manifest.json", StringComparison.OrdinalIgnoreCase))
-        {
-            ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
-            ctx.Context.Response.Headers.Append("Pragma", "no-cache");
-            ctx.Context.Response.Headers.Append("Expires", "0");
-        }
-        else
-        {
-            ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=31536000, immutable");
-        }
-    }
-});
-
-app.UseHttpMethodOverride(new HttpMethodOverrideOptions
-{
-    FormFieldName = "_method"
-});
-
-app.UseRateLimiter();
-
-app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();

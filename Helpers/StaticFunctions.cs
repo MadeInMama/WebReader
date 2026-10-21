@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using NAudio.Wave;
 using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -131,5 +132,36 @@ public static class StaticFunctions
 
         var index = Random.Shared.Next(source.Count);
         return source[index];
+    }
+
+    public static void MergeWavStreams(List<MemoryStream> sourceStreams, MemoryStream targetStream)
+    {
+        if (sourceStreams == null || sourceStreams.Count == 0)
+            throw new ArgumentException("Empty stream source list.", nameof(sourceStreams));
+
+        if (targetStream == null)
+            throw new ArgumentNullException(nameof(targetStream), "Target stream can't be null.");
+
+        WaveFileWriter? writer = null;
+
+        foreach (var stream in sourceStreams)
+        {
+            stream.Position = 0;
+
+            using var reader = new WaveFileReader(stream);
+            if (writer == null)
+                writer = new WaveFileWriter(targetStream, reader.WaveFormat);
+            else if (!reader.WaveFormat.Equals(writer.WaveFormat))
+                throw new InvalidOperationException("Different file formats.");
+
+            var buffer = new byte[reader.WaveFormat.AverageBytesPerSecond];
+            int read;
+
+            while ((read = reader.Read(buffer, 0, buffer.Length)) > 0) writer.Write(buffer, 0, read);
+        }
+
+        writer?.Flush();
+
+        targetStream.Position = 0;
     }
 }

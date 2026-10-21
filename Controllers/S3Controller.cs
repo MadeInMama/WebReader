@@ -45,6 +45,9 @@ public class S3Controller(
             options: customOptions
         );
 
+        if (string.IsNullOrEmpty(presignedUrl))
+            return StatusCode(500, "Failed to generate or retrieve file URL.");
+
         using var response =
             await httpClient.GetAsync(presignedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
@@ -91,6 +94,9 @@ public class S3Controller(
             cancellationToken: cancellationToken,
             options: customOptions
         );
+
+        if (string.IsNullOrEmpty(presignedUrl))
+            return StatusCode(500, "Failed to generate or retrieve file URL.");
 
         using var response =
             await httpClient.GetAsync(presignedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);

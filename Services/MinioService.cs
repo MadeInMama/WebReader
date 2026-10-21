@@ -96,6 +96,8 @@ public class MinioService(IMinioClient minioClient)
     {
         if (await ObjectExistsAsync(bucketName, fileName, cancellationToken)) return false;
 
+        stream.Position = 0;
+
         var res = await minioClient.PutObjectAsync(new PutObjectArgs()
             .WithBucket(bucketName)
             .WithObject(fileName)
@@ -113,5 +115,10 @@ public class MinioService(IMinioClient minioClient)
         CancellationToken cancellationToken)
     {
         return await UploadObjectAsync(StaticNames.CoversBucketName, stream, fileName, contentType, cancellationToken);
+    }
+
+    public async Task<bool> UploadTtsAsync(Stream stream, string fileName, CancellationToken cancellationToken)
+    {
+        return await UploadObjectAsync(StaticNames.TtsBucketName, stream, fileName, "audio/ogg", cancellationToken);
     }
 }

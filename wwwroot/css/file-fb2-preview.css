@@ -63,11 +63,57 @@
 .fb2-canvas-container > section > p {
     text-align: justify;
     text-indent: 2em;
-    padding-top: 0.5em;
+    margin-top: 0.5em;
+    position: relative;
 }
 
 .fb2-canvas-container > section > p:first-child {
     padding-top: 0;
+}
+
+.fb2-canvas-container > section > p.tts[tts-id]::before {
+    content: "";
+    position: absolute;
+    top: -0.6em;
+    left: 0;
+    height: 1.8em;
+    width: 1.8em;
+    mask-size: cover !important;
+    -webkit-mask-size: cover !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    flex-shrink: 0;
+
+    cursor: pointer;
+}
+
+.fb2-canvas-container > section > p.tts-play[tts-id]::before {
+    background-color: var(--foreground-color);
+    mask: url("../icons/play-circle-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/play-circle-svgrepo-com.svg") no-repeat center;
+}
+
+.fb2-canvas-container > section > p.tts-pause[tts-id]::before {
+    background-color: var(--foreground-color);
+    mask: url("../icons/pause-circle-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/pause-circle-svgrepo-com.svg") no-repeat center;
+}
+
+.fb2-canvas-container > section > p.tts-loading[tts-id]::before {
+    background-color: var(--foreground-color);
+    opacity: 0.5;
+    cursor: wait;
+    transform: scale(0.8);
+    mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
+}
+
+.fb2-canvas-container > section > p.tts-error[tts-id]::before {
+    background-color: var(--error-foreground-color);
+    cursor: not-allowed;
+    transform: scale(0.8);
+    mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+    -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
 }
 
 .fb2-canvas-container h1,

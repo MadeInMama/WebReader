@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="AngleSharp" Version="1.5.1"/>
+        <PackageReference Include="Concentus.Oggfile" Version="1.0.7"/>
         <PackageReference Include="FluentResults" Version="4.0.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.3.11"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.14"/>
@@ -19,7 +20,9 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="10.7.0"/>
         <PackageReference Include="Minio" Version="7.0.0"/>
+        <PackageReference Include="NAudio" Version="3.3.0"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4"/>
+        <PackageReference Include="OpusSharp.Core" Version="1.6.1.4"/>
         <PackageReference Include="PuppeteerSharp" Version="25.2.1"/>
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12"/>
         <PackageReference Include="System.Linq.Async" Version="7.0.1"/>
@@ -36,6 +39,7 @@
         <Content Include=".github\workflows\main.yml"/>
         <Content Include=".github\workflows\malware-scan.yml"/>
         <Content Include=".github\workflows\secret-scan.yaml"/>
+        <Content Include="ProcessTts\ProcessTtsIds.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

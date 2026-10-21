@@ -23,8 +23,107 @@ function prepareFile(data) {
     }
 }
 
+let currentAudio = null;
+let currentAudioTtsId = null;
+let currentAudioUrl = null;
+
 function renderPage() {
+    currentAudio?.pause();
+    URL.revokeObjectURL(currentAudioUrl);
+    currentAudio = null;
+    currentAudioTtsId = null;
+    currentAudioUrl = null;
+
     document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1];
+
+    Array.from(document.querySelectorAll("p.tts")).forEach(f => {
+        f.onclick = async (event) => {
+            try {
+                if (event.target.classList.contains('tts-loading') || event.target.classList.contains('tts-error')) {
+                    return;
+                }
+
+                if (event.target.classList.contains('tts-pause') && currentAudio != null) {
+                    currentAudio.pause();
+                    setTtsControlBtnActiveClass(event.target, 'tts-play');
+                    return;
+                }
+
+                let ttsId = event.target.getAttribute('tts-id');
+
+                if (event.target.classList.contains('tts-play') && currentAudio != null && currentAudioTtsId === ttsId) {
+                    currentAudio.play();
+                    setTtsControlBtnActiveClass(event.target, 'tts-pause');
+                    return;
+                }
+
+                setTtsControlBtnActiveClass(event.target, 'tts-loading');
+
+                URL.revokeObjectURL(currentAudioUrl);
+
+                currentAudioTtsId = ttsId;
+                let ttsLang = event.target.getAttribute('tts-lang');
+                let ttsText = event.target.innerText;
+
+                const requestConfig = {
+                    method: 'POST',
+                    url: `/api/Tts/GetFile?ttsId=${ttsId}&ttsLang=${ttsLang}&ttsText=${ttsText}`,
+                    data: {},
+                    responseType: 'blob',
+                    headers: {
+                        'RequestVerificationToken': GetAntiForgeryToken()
+                    },
+                    withCredentials: true
+                };
+
+                const response = await axios(requestConfig);
+                const audioBlob = new Blob([response.data], {type: 'audio/ogg'});
+
+                currentAudioUrl = URL.createObjectURL(audioBlob);
+
+                currentAudio = new Audio(currentAudioUrl);
+
+                await currentAudio.play();
+
+                currentAudio.addEventListener('ended', () => {
+                    URL.revokeObjectURL(currentAudioUrl);
+                    currentAudio = null;
+                    currentAudioTtsId = null;
+                    currentAudioUrl = null;
+                    setTtsControlBtnActiveClass(event.target, 'tts-play');
+                });
+
+                setTtsControlBtnActiveClass(event.target, 'tts-pause');
+            } catch (e) {
+                setTtsControlBtnActiveClass(event.target, 'tts-error');
+                throw e;
+            }
+        };
+    });
+}
+
+function setTtsControlBtnActiveClass(el, className) {
+    if (className === 'tts-play') {
+        el.classList.add('tts-play');
+        el.classList.remove('tts-pause');
+        el.classList.remove('tts-loading');
+        el.classList.remove('tts-error');
+    } else if (className === 'tts-pause') {
+        el.classList.remove('tts-play');
+        el.classList.add('tts-pause');
+        el.classList.remove('tts-loading');
+        el.classList.remove('tts-error');
+    } else if (className === 'tts-loading') {
+        el.classList.remove('tts-play');
+        el.classList.remove('tts-pause');
+        el.classList.add('tts-loading');
+        el.classList.remove('tts-error');
+    } else if (className === 'tts-error') {
+        el.classList.remove('tts-play');
+        el.classList.remove('tts-pause');
+        el.classList.remove('tts-loading');
+        el.classList.add('tts-error');
+    }
 }
 
 function SetScale(scale, send = true) {
@@ -150,7 +249,11 @@ function convertNode(node, imageMap, isPage = true) {
 
     switch (tag) {
         case 'p':
-            return `<p>${children()}</p>`;
+            return `<p ${node.hasAttribute('tts-id') ?
+                "tts-id='" + node.getAttribute('tts-id') + "'" : ""}
+                        ${node.hasAttribute('tts-lang') ?
+                "tts-lang='" + node.getAttribute('tts-lang') + "'" : ""}
+                    class="${node.hasAttribute('tts-id') ? 'tts tts-play' : ''}">${children()}</p>`;
         case 'cite':
             return `<p class="cite-author">${children()}</p>`;
         case 'section':

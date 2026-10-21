@@ -53,8 +53,8 @@ public class BackgroundTaskManager(
                 .GroupBy(f => f.Cron)
                 .ToImmutableDictionary(f => f.Key, f => f.ToList());
 
-            var tasks = new List<ScheduledTask>(
-                await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryHour, [])));
+            var tasks = new List<ScheduledTask>();
+            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryHour, [])));
             tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryDay, [])));
             tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryWeek, [])));
             tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryMonth, [])));
