@@ -26,6 +26,8 @@ function prepareFile(data) {
 let currentAudio = null;
 let currentAudioTtsId = null;
 let currentAudioUrl = null;
+let animationFrameId = null;
+let isTtsLogicPlay = false;
 
 function renderPage() {
     currentAudio?.pause();
@@ -36,16 +38,23 @@ function renderPage() {
 
     document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1];
 
-    Array.from(document.querySelectorAll("p.tts")).forEach(f => {
+    Array.from(document.getElementsByClassName("tts-btn")).forEach(f => {
         f.onclick = async (event) => {
+            if (isTtsLogicPlay) return;
+            isTtsLogicPlay = true;
+
             try {
                 if (event.target.classList.contains('tts-loading') || event.target.classList.contains('tts-error')) {
+                    cancelAnimationFrame(animationFrameId);
+                    isTtsLogicPlay = false;
                     return;
                 }
 
                 if (event.target.classList.contains('tts-pause') && currentAudio != null) {
                     currentAudio.pause();
+                    cancelAnimationFrame(animationFrameId);
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
+                    isTtsLogicPlay = false;
                     return;
                 }
 
@@ -54,16 +63,26 @@ function renderPage() {
                 if (event.target.classList.contains('tts-play') && currentAudio != null && currentAudioTtsId === ttsId) {
                     currentAudio.play();
                     setTtsControlBtnActiveClass(event.target, 'tts-pause');
+                    isTtsLogicPlay = false;
                     return;
                 }
 
+                cancelAnimationFrame(animationFrameId);
                 setTtsControlBtnActiveClass(event.target, 'tts-loading');
+                if (currentAudioTtsId != null) {
+                    setTtsControlBtnActiveClass(document.querySelector(`.tts-btn[tts-id=${currentAudioTtsId}]`), 'tts-play');
+                    document.querySelector(`p[tts-id=${currentAudioTtsId}]`).style.backgroundSize = 0 + '%';
+                    currentAudio.pause();
+                    currentAudio = null;
+                    currentAudioTtsId = null;
+                    currentAudioUrl = null;
+                }
 
                 URL.revokeObjectURL(currentAudioUrl);
 
                 currentAudioTtsId = ttsId;
                 let ttsLang = event.target.getAttribute('tts-lang');
-                let ttsText = event.target.innerText;
+                let ttsText = event.target.getAttribute('tts-text');
 
                 const requestConfig = {
                     method: 'POST',
@@ -83,23 +102,46 @@ function renderPage() {
 
                 currentAudio = new Audio(currentAudioUrl);
 
-                await currentAudio.play();
+                //TODO: speed selector (single setting btn for scale and etc)
+                currentAudio.playbackRate = 1.5;
+
+                currentAudio.addEventListener('play', () => {
+                    animationFrameId = requestAnimationFrame(trackTtsProgress);
+                });
 
                 currentAudio.addEventListener('ended', () => {
                     URL.revokeObjectURL(currentAudioUrl);
                     currentAudio = null;
                     currentAudioTtsId = null;
                     currentAudioUrl = null;
+                    cancelAnimationFrame(animationFrameId);
+                    document.querySelector(`p[tts-id=${ttsId}]`).style.backgroundSize = 100 + '%';
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
                 });
+
+                await currentAudio.play();
 
                 setTtsControlBtnActiveClass(event.target, 'tts-pause');
             } catch (e) {
                 setTtsControlBtnActiveClass(event.target, 'tts-error');
+                cancelAnimationFrame(animationFrameId);
+                document.querySelector(`p[tts-id=${currentAudioTtsId}]`).style.backgroundSize = 0 + '%';
                 throw e;
             }
+
+            isTtsLogicPlay = false;
         };
     });
+}
+
+function trackTtsProgress() {
+    if (currentAudio && !currentAudio.paused) {
+        const percentage = (currentAudio.currentTime / currentAudio.duration) * 100;
+
+        document.querySelector(`p[tts-id=${currentAudioTtsId}`).style.backgroundSize = percentage + '%';
+
+        animationFrameId = requestAnimationFrame(trackTtsProgress);
+    }
 }
 
 function setTtsControlBtnActiveClass(el, className) {
@@ -234,8 +276,7 @@ function parseFB2(xmlString) {
 
     convertNode(body, imageMap);
 
-    pages = pages.filter(page => page !== '')
-    //.map(f => f.replaceAll("…", "<span style='font-family: monospace'>…</span>"));
+    pages = pages.filter(page => page !== '');
 }
 
 function convertNode(node, imageMap, isPage = true) {
@@ -249,11 +290,23 @@ function convertNode(node, imageMap, isPage = true) {
 
     switch (tag) {
         case 'p':
-            return `<p ${node.hasAttribute('tts-id') ?
-                "tts-id='" + node.getAttribute('tts-id') + "'" : ""}
-                        ${node.hasAttribute('tts-lang') ?
-                "tts-lang='" + node.getAttribute('tts-lang') + "'" : ""}
-                    class="${node.hasAttribute('tts-id') ? 'tts tts-play' : ''}">${children()}</p>`;
+            let ttsBtn = null;
+            if (node.hasAttribute('tts-id')) {
+                //TODO: some text duplicates in log
+                // console.log(node.textContent);
+                // debugger;
+                ttsBtn = `<button class="tts-btn tts-play"
+                            tts-id="${node.getAttribute('tts-id')}"
+                            tts-lang="${node.getAttribute('tts-lang')}"
+                            tts-text="${Array.from(node.childNodes)
+                    .filter(node => node.nodeType === Node.TEXT_NODE)
+                    .map(node => node.textContent)
+                    .join('')
+                    .trim()}"
+                            class="tts tts-play"></button>`;
+            }
+
+            return `<p tts-id="${node.getAttribute('tts-id')}">${ttsBtn ? ttsBtn : ''}${children()}</p>`;
         case 'cite':
             return `<p class="cite-author">${children()}</p>`;
         case 'section':
