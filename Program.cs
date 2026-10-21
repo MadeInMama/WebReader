@@ -281,7 +281,6 @@ using (var scope = app.Services.CreateScope())
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(telegramConfig.WebhookUrl!);
-}
 
     // var ttsService = scope.ServiceProvider.GetRequiredService<TtsService>();
     // var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
@@ -307,7 +306,7 @@ using (var scope = app.Services.CreateScope())
     //
     //     var res = await ttsService.GenerateSpeechAsync(text, ttsId, CancellationToken.None);
     //
-    //     Console.WriteLine($"Done {ttsId}");
+    //     Console.WriteLine($"{(res ? "Done" : "Error")} {ttsId}");
     // }
 }
 
