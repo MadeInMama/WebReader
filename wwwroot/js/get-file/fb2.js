@@ -151,8 +151,6 @@ function renderPage() {
 
                     let nextBtn;
 
-                    debugger;
-
                     if (document.querySelector(`p[tts-id=${ttsId}]`).parentElement.tagName.toLocaleLowerCase() === 'section') {
                         nextBtn = document.querySelector(`p[tts-id=${ttsId}] ~ p[tts-id] > button.tts-btn`);
                     } else {
