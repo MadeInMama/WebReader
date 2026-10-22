@@ -1,4 +1,5 @@
-﻿using Minio;
+﻿using System.Xml.Linq;
+using Minio;
 using Minio.DataModel;
 using Minio.DataModel.Args;
 using Minio.Exceptions;
@@ -16,6 +17,38 @@ public class MinioService(IMinioClient minioClient)
             .WithExpiry(3600));
 
         return url ?? throw new Exception("Failed to get url");
+    }
+
+    public async Task<(string ttsId, string ttsLang, string ttsText)> GetTtsTextByTtsIdAsync(string bucketId,
+        string objectName, string ttsId)
+    {
+        (string? ttsId, string? ttsLang, string? ttsText) res = (null, null, null);
+
+        await minioClient.GetObjectAsync(new GetObjectArgs()
+            .WithBucket(bucketId)
+            .WithObject(objectName)
+            .WithCallbackStream(f =>
+            {
+                try
+                {
+                    var targetElement = XDocument.Load(f).Descendants()
+                        .FirstOrDefault(el => el.Attribute("tts-id")?.Value == ttsId);
+
+                    if (targetElement != null)
+                        res = (targetElement.Attribute("tts-id")?.Value,
+                            targetElement.Attribute("tts-lang")?.Value,
+                            targetElement.Value);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }));
+
+        if (res is { ttsId: null } or { ttsLang: null } or { ttsText: null })
+            throw new Exception($"Failed to get {ttsId} from {bucketId}/{objectName}.");
+
+        return res!;
     }
 
     public async Task<string> GetCoverFileUrlAsync(string objectName)

@@ -108,12 +108,10 @@ function renderPage() {
                 URL.revokeObjectURL(currentAudioUrl);
 
                 currentAudioTtsId = ttsId;
-                let ttsLang = event.target.getAttribute('tts-lang');
-                let ttsText = event.target.getAttribute('tts-text');
 
                 const requestConfig = {
                     method: 'POST',
-                    url: `/api/Tts/GetFile?ttsId=${ttsId}&ttsLang=${ttsLang}&ttsText=${ttsText}`,
+                    url: `/api/Tts/GetFile?bucketId=${bucketId}&fileId=${fileId}&ttsId=${ttsId}`,
                     data: {},
                     responseType: 'blob',
                     headers: {
@@ -393,12 +391,6 @@ function convertNode(node, imageMap, isPage = true) {
                 // debugger;
                 ttsBtn = `<button class="tts-btn tts-play"
                             tts-id="${node.getAttribute('tts-id')}"
-                            tts-lang="${node.getAttribute('tts-lang')}"
-                            tts-text="${Array.from(node.childNodes)
-                    .filter(node => node.nodeType === Node.TEXT_NODE)
-                    .map(node => node.textContent)
-                    .join('')
-                    .trim()}"
                             class="tts tts-play"></button>`;
             }
 

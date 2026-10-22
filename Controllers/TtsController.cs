@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using WebReader.Configuration;
 using WebReader.Helpers;
+using WebReader.Repositories;
 using WebReader.Services;
 using WebReader.Services.Tts;
 
@@ -16,6 +17,7 @@ public class TtsController(
     MinioService minioService,
     HybridCache cache,
     TtsService ttsService,
+    FileRepository fileRepository,
     IHttpClientFactory httpClientFactory,
     IOptions<TtsConfig> ttsConfig,
     ILogger<TtsController> logger) : Controller
@@ -23,13 +25,18 @@ public class TtsController(
     [HttpPost]
     [ValidateAntiForgeryToken]
     [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
-    //TODO: remove ttsText. It have to go from s3 text data
-    public async Task<IActionResult> GetFile(string ttsId, string ttsLang, string ttsText,
+    public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId, string ttsId,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(ttsId) || string.IsNullOrWhiteSpace(ttsLang) ||
-            string.IsNullOrWhiteSpace(ttsText))
-            return BadRequest($"Param ({nameof(ttsId)} | {nameof(ttsLang)}| {nameof(ttsText)}) is null or whitespace.");
+        var file = await fileRepository.FirstOrDefaultAsync(f =>
+            f.BucketId == bucketId &&
+            f.Id == fileId &&
+            f.AccessRoles.Intersect(User.GetUserRoles()).Any(), null, cancellationToken, true, f => f.Bucket);
+
+        if (file == null) return new NotFoundResult();
+
+        if (string.IsNullOrWhiteSpace(ttsId))
+            return BadRequest($"Param {nameof(ttsId)} is null or whitespace.");
 
         var httpClient = httpClientFactory.CreateClient("TTS");
 
@@ -54,7 +61,9 @@ public class TtsController(
                         return null;
                     case false when ttsConfig.Value.Enabled:
                     {
-                        var isGenerated = await ttsService.GenerateSpeechAsync(ttsText, ttsId, cancellationToken);
+                        var info = await minioService.GetTtsTextByTtsIdAsync(file.Bucket!.Name, file.Name, ttsId);
+                        var isGenerated =
+                            await ttsService.GenerateSpeechAsync(info.ttsText, info.ttsId, cancellationToken);
                         if (!isGenerated) return null;
                         break;
                     }
