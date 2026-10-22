@@ -67,11 +67,13 @@ function renderPage() {
                 }
 
                 if (event.target.classList.contains('tts-pause') && currentAudio != null) {
-                    currentAudio.pause();
                     cancelAnimationFrame(animationFrameId);
+                    currentAudio.pause();
+                    currentAudio.currentTime = Math.max(0, currentAudio.currentTime - 2);
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
                     document.querySelector('.audio-progress-bar').disabled = false;
                     document.querySelector(".audio-controller > button").disabled = false;
+                    trackTtsProgress();
                     return;
                 }
 
@@ -198,14 +200,16 @@ function renderPage() {
 }
 
 function trackTtsProgress() {
-    if (currentAudio && !currentAudio.paused) {
+    if (currentAudio) {
         const percentage = (currentAudio.currentTime / currentAudio.duration) * 100;
 
         document.querySelector(`p[tts-id=${currentAudioTtsId}`).style.backgroundSize = percentage + '%';
 
         updateSliderFill(percentage);
 
-        animationFrameId = requestAnimationFrame(trackTtsProgress);
+        if (!currentAudio.paused) {
+            animationFrameId = requestAnimationFrame(trackTtsProgress);
+        }
     }
 }
 
