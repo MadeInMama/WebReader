@@ -14,6 +14,17 @@
     background-color: var(--background-backdrop-color);
     backdrop-filter: blur(var(--backdrop-blur));
     z-index: 5;
+
+    opacity: 1;
+    transition: opacity var(--animation-time) ease-in-out,
+    visibility var(--animation-time) ease-in-out;
+}
+
+.audio-controller[disabled] {
+    transition: opacity var(--animation-time) ease-in-out 2s,
+    visibility var(--animation-time) ease-in-out 2s;
+    opacity: 0;
+    visibility: hidden;
 }
 
 .audio-controller > button::after {
