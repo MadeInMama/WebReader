@@ -147,24 +147,26 @@ function renderPage() {
                     };
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
 
-                    let nextBtn;
+                    if (document.querySelector('.audio-auto-next').checked) {
+                        let nextBtn;
 
-                    if (document.querySelector(`p[tts-id=${ttsId}]`).parentElement.tagName.toLocaleLowerCase() === 'section') {
-                        nextBtn = document.querySelector(`p[tts-id=${ttsId}] ~ p[tts-id] > button.tts-btn`);
-                    } else {
-                        const currentP = document.querySelector(`p[tts-id=${ttsId}]`);
+                        if (document.querySelector(`p[tts-id=${ttsId}]`).parentElement.tagName.toLocaleLowerCase() === 'section') {
+                            nextBtn = document.querySelector(`p[tts-id=${ttsId}] ~ p[tts-id] > button.tts-btn`);
+                        } else {
+                            const currentP = document.querySelector(`p[tts-id=${ttsId}]`);
 
-                        if (currentP) {
-                            const currentTopElement = currentP.closest('section > *');
-                            const nextElement = currentTopElement ? currentTopElement.nextElementSibling : null;
-                            nextBtn = nextElement ? nextElement.querySelector('button.tts-btn') || nextElement.closest('button.tts-btn') : null;
+                            if (currentP) {
+                                const currentTopElement = currentP.closest('section > *');
+                                const nextElement = currentTopElement ? currentTopElement.nextElementSibling : null;
+                                nextBtn = nextElement ? nextElement.querySelector('button.tts-btn') || nextElement.closest('button.tts-btn') : null;
+                            }
                         }
-                    }
-                    if (!nextBtn) {
-                        document.querySelector(".next-page-controller")?.click();
-                        document.querySelector("button.tts-btn")?.click();
-                    } else {
-                        nextBtn?.click();
+                        if (!nextBtn) {
+                            document.querySelector(".next-page-controller")?.click();
+                            document.querySelector("button.tts-btn")?.click();
+                        } else {
+                            nextBtn?.click();
+                        }
                     }
                 });
 

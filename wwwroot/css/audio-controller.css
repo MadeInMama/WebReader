@@ -3,7 +3,7 @@
     bottom: calc(3.75em + env(safe-area-inset-bottom));
     display: grid;
     gap: 0.5em;
-    grid-template-columns: min-content min-content auto;
+    grid-template-columns: min-content min-content auto min-content;
     align-items: center;
     justify-items: center;
     padding: 0.5em;
@@ -53,18 +53,44 @@
 
 .audio-controller > button.audio-loading-btn::after {
     background-color: var(--foreground-color);
-    cursor: wait;
-    transform: scale(0.8);
     mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
     -webkit-mask: url("../icons/stopwatch-wait-svgrepo-com.svg") no-repeat center;
+    cursor: wait;
+    transform: scale(0.8);
 }
 
 .audio-controller > button.audio-error-btn::after {
     background-color: var(--error-foreground-color);
-    cursor: not-allowed;
-    transform: scale(0.8);
     mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
     -webkit-mask: url("../icons/error-cross-svgrepo-com.svg") no-repeat center;
+    cursor: not-allowed;
+    transform: scale(0.8);
+}
+
+.audio-controller > .audio-auto-next {
+    position: relative;
+    visibility: hidden;
+    width: 2.2em;
+}
+
+.audio-controller > .audio-auto-next::after {
+    content: '';
+    display: block;
+    width: 2.2em;
+    height: 2.2em;
+    visibility: visible;
+    mask-size: cover !important;
+    -webkit-mask-size: cover !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: var(--foreground-color);
+    mask: url(../icons/loop-1-svgrepo-com.svg) no-repeat center;
+    -webkit-mask: url(../icons/loop-1-svgrepo-com.svg) no-repeat center;
+}
+
+.audio-controller > .audio-auto-next:checked::after {
+    mask: url(../icons/loop-1-check-svgrepo-com.svg) no-repeat center;
+    -webkit-mask: url(../icons/loop-1-check-svgrepo-com.svg) no-repeat center;
 }
 
 #audio-progress-bar {
