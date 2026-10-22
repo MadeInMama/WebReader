@@ -32,7 +32,8 @@ public class LogRequestAttribute(
         await requestAttemptsLogRepository.AddAsync(new RequestAttemptsLog
         {
             Ip = ip,
-            Link = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString
+            Link = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString,
+            IsAuthenticated = isAuthenticated
         }, cts.Token);
 
         await requestAttemptsLogRepository.SaveChangesAsync(cts.Token);

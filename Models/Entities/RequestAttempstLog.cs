@@ -8,4 +8,8 @@ public class RequestAttemptsLog
     public required string Link { get; init; }
 
     public DateTimeOffset CreatedDate { get; } = DateTimeOffset.UtcNow;
+
+    public required bool IsAuthenticated { get; init; }
+
+    //TODO:blacklist ips
 }

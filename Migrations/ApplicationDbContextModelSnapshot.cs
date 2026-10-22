@@ -183,6 +183,9 @@ namespace WebReader.Migrations
                     b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsAuthenticated")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Link")
                         .IsRequired()
                         .HasColumnType("text");

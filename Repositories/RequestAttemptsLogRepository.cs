@@ -55,8 +55,7 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         const int maxAttemptsCountLastHour = 10;
 
         var attemptsCountLastHour = await context.RequestAttemptsLogs
-            .Where(f => f.Ip == ip && f.CreatedDate > DateTimeOffset.UtcNow.AddHours(-1))
-            .OrderByDescending(f => f.CreatedDate)
+            .Where(f => f.Ip == ip && !f.IsAuthenticated && f.CreatedDate > DateTimeOffset.UtcNow.AddHours(-1))
             .CountAsync(cancellationToken);
 
         return attemptsCountLastHour <= maxAttemptsCountLastHour;
