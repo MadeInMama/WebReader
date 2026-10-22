@@ -151,14 +151,16 @@ function renderPage() {
 
                     let nextBtn;
 
+                    debugger;
+
                     if (document.querySelector(`p[tts-id=${ttsId}]`).parentElement.tagName.toLocaleLowerCase() === 'section') {
                         nextBtn = document.querySelector(`p[tts-id=${ttsId}] ~ p[tts-id] > button.tts-btn`);
                     } else {
-                        const currentP = document.querySelector('p[tts-id="jack_london_1"]');
+                        const currentP = document.querySelector(`p[tts-id=${ttsId}]`);
 
                         if (currentP) {
                             const currentTopElement = currentP.closest('section > *');
-                            const nextElement = currentTopElement ? currentTopElement.querySelector("button.tts-btn") : null;
+                            const nextElement = currentTopElement ? currentTopElement.nextElementSibling : null;
                             nextBtn = nextElement ? nextElement.querySelector('button.tts-btn') || nextElement.closest('button.tts-btn') : null;
                         }
                     }
