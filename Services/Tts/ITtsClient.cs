@@ -2,5 +2,5 @@
 
 public interface ITtsClient
 {
-    Task<HttpResponseMessage> SynthesizeAsync(string text, CancellationToken cancellationToken);
+    Task<HttpResponseMessage> ProceedAsync(string text, CancellationToken cancellationToken);
 }

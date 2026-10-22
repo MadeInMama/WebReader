@@ -7,6 +7,7 @@ public class TtsClientFactory(IServiceProvider serviceProvider)
         return provider switch
         {
             TtsProvider.Xtts => serviceProvider.GetRequiredService<XttsTtsClient>(),
+            TtsProvider.ClearText => serviceProvider.GetRequiredService<ClearTextTtsClient>(),
             _ => throw new ArgumentException("Unknown TTS Provider", nameof(provider))
         };
     }

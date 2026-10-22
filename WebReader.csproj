@@ -39,7 +39,6 @@
         <Content Include=".github\workflows\main.yml"/>
         <Content Include=".github\workflows\malware-scan.yml"/>
         <Content Include=".github\workflows\secret-scan.yaml"/>
-        <Content Include="ProcessTts\ProcessTtsIds.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

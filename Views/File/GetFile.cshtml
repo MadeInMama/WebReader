@@ -105,6 +105,7 @@ else
         break;
     case FileType.Fb2:
         @await Html.PartialAsync("GetFile/_Fb2", Model)
+        @await Html.PartialAsync("_AudioController")
         break;
     default:
         throw new ArgumentOutOfRangeException();

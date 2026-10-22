@@ -1,14 +1,17 @@
 ﻿using WebReader.Helpers;
-using WebReader.Services.Tts;
 
-namespace WebReader.Services;
+namespace WebReader.Services.Tts;
 
-public class TtsService(TtsClientFactory ttsClientFactory, MinioService minioService, ILogger<TtsService> logger)
+public class TtsService(
+    TtsClientFactory ttsClientFactory,
+    ClearTextTtsService clearTextTtsService,
+    MinioService minioService,
+    ILogger<TtsService> logger)
 {
     public async Task<bool> GenerateSpeechAsync(string text, string fileName,
         CancellationToken cancellationToken)
     {
-        var cleanedText = TtsTextHelper.PrepareTextForTts(text);
+        var cleanedText = await clearTextTtsService.ClearTextAsync(text, cancellationToken);
 
         var texts = TtsTextHelper.SplitLongText(cleanedText);
         if (texts.Count == 0) return false;
@@ -33,21 +36,6 @@ public class TtsService(TtsClientFactory ttsClientFactory, MinioService minioSer
 
             AudioConverter.ConvertWavToOpus(wavStream, oggStream);
 
-            // var tmpFolderPath = Path.Combine(Path.GetTempPath(), $"tts_{Guid.NewGuid()}");
-            // Directory.CreateDirectory(tmpFolderPath);
-            //
-            // var fileWavPath = Path.Combine(tmpFolderPath, fileName + ".wav");
-            // await using var fileWavStream = File.OpenWrite(fileWavPath);
-            // wavStream.Position = 0;
-            // await wavStream.CopyToAsync(fileWavStream, cancellationToken);
-            //
-            // var fileOggPath = Path.Combine(tmpFolderPath, fileName + ".ogg");
-            // await using var fileOggStream = File.OpenWrite(fileOggPath);
-            // oggStream.Position = 0;
-            // await oggStream.CopyToAsync(fileOggStream, cancellationToken);
-            //
-            // return true;
-
             return await minioService.UploadTtsAsync(oggStream, fileName + ".ogg", cancellationToken);
         }
         catch (Exception ex)
@@ -55,11 +43,6 @@ public class TtsService(TtsClientFactory ttsClientFactory, MinioService minioSer
             logger.LogError(ex, "Error converting text to speech");
             return false;
         }
-        // finally
-        // {
-        //     if (Directory.Exists(tempFolder))
-        //         Directory.Delete(tempFolder, true);
-        // }
     }
 
     private async Task<bool> DownloadChunkAsync(string text, MemoryStream targetStream,
@@ -67,7 +50,7 @@ public class TtsService(TtsClientFactory ttsClientFactory, MinioService minioSer
     {
         try
         {
-            var response = await ttsClientFactory.GetClient(TtsProvider.Xtts).SynthesizeAsync(text, cancellationToken);
+            var response = await ttsClientFactory.GetClient(TtsProvider.Xtts).ProceedAsync(text, cancellationToken);
             if (!response.IsSuccessStatusCode) return false;
 
             await using var audioStream = await response.Content.ReadAsStreamAsync(cancellationToken);

@@ -209,8 +209,18 @@ builder.Services.AddHttpClient();
 builder.Services.Configure<TtsConfig>(builder.Configuration.GetSection(nameof(TtsConfig)));
 var ttsConfig = new TtsConfig();
 builder.Configuration.GetRequiredSection(nameof(TtsConfig)).Bind(ttsConfig);
-builder.Services.AddHttpClient<XttsTtsClient>(client => { client.BaseAddress = new Uri(ttsConfig.XttsUrl!); });
+builder.Services.AddHttpClient<XttsTtsClient>(client =>
+{
+    client.BaseAddress = new Uri(ttsConfig.XttsUrl!);
+    client.Timeout = TimeSpan.FromMinutes(2);
+});
+builder.Services.AddHttpClient<ClearTextTtsClient>(client =>
+{
+    client.BaseAddress = new Uri(ttsConfig.ClearTextUrl!);
+    client.Timeout = TimeSpan.FromMinutes(2);
+});
 builder.Services.AddTransient<TtsClientFactory>();
+builder.Services.AddTransient<ClearTextTtsService>();
 builder.Services.AddTransient<TtsService>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -289,24 +299,34 @@ using (var scope = app.Services.CreateScope())
     // var doc = XDocument.Load(outputPath);
     // var ns = doc.Root!.GetDefaultNamespace();
     //
+    // var counter = 0;
+    //
     // foreach (var el in doc.Root.Element(ns + "body")!.Descendants())
     // {
-    //     if (el.Name.LocalName != "p") continue;
     //     if (!el.Attributes().Select(f => f.Name).Select(f => f.LocalName).Contains("tts-id")) continue;
     //
     //     var ttsId = el.Attributes().First(f => f.Name.LocalName == "tts-id").Value;
     //
+    //     var text = string.Concat(
+    //         el.Nodes()
+    //             .OfType<XText>()
+    //             .Select(node => node.Value)
+    //     ).Trim().Replace("\n", " ");
+    //
+    //     if (++counter >= 2000) break;
+    //
     //     if (await minioService.ObjectExistsAsync(StaticNames.TtsBucketName, $"{ttsId}.ogg", CancellationToken.None))
     //     {
-    //         Console.WriteLine($"Skipped {ttsId}");
+    //         Console.WriteLine();
+    //         Console.WriteLine($"TTS {ttsId} skipped");
     //         continue;
     //     }
     //
-    //     var text = el.Value.Trim();
+    //     Console.WriteLine($"TTS attempt {ttsId}");
     //
     //     var res = await ttsService.GenerateSpeechAsync(text, ttsId, CancellationToken.None);
     //
-    //     Console.WriteLine($"{(res ? "Done" : "Error")} {ttsId}");
+    //     Console.WriteLine($"TTS {ttsId} {(res ? "done" : "error")}");
     // }
 }
 

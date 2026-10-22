@@ -6,6 +6,7 @@ using Microsoft.Net.Http.Headers;
 using WebReader.Configuration;
 using WebReader.Helpers;
 using WebReader.Services;
+using WebReader.Services.Tts;
 
 namespace WebReader.Controllers;
 

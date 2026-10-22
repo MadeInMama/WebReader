@@ -43,6 +43,11 @@ button {
 
 button:disabled {
     opacity: 0.5;
+    cursor: not-allowed !important;
+}
+
+button:disabled::after {
+    cursor: not-allowed !important;
 }
 
 .event-output > .remove,

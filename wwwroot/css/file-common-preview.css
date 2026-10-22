@@ -57,7 +57,7 @@ footer > .controls-end {
 
 .event-output {
     position: fixed;
-    left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3.75em);
+    left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3em);
     bottom: calc(3.75em + env(safe-area-inset-bottom));
     width: 3em;
     height: 3em;
@@ -66,7 +66,8 @@ footer > .controls-end {
     backdrop-filter: blur(var(--backdrop-blur));
     padding: 0.5em;
     border-radius: 0.75em;
-    z-index: 5;
+    z-index: 6;
+    pointer-events: none;
 }
 
 .event-output-fullscreen-on {
@@ -122,6 +123,10 @@ footer > .controls-end {
 
     .big-page-nav > .next-page-controller {
         justify-content: end;
+    }
+
+    .event-output {
+        left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3.5em);
     }
 }
 

@@ -27,9 +27,12 @@ public static partial class TtsTextHelper
         result = result
             .Replace("—", " — ")
             .Replace("–", " — ")
-            .Replace("...", "…")
+            .Replace("...", "— .")
+            .Replace("…", "— .")
             .Replace("«", "\"")
+            .Replace("<", "\"")
             .Replace("»", "\"")
+            .Replace(">", "\"")
             .Replace("*", "")
             .Replace("_", "");
 
@@ -37,7 +40,7 @@ public static partial class TtsTextHelper
         return MultiSpaceRegex.Replace(result, " ").Trim();
     }
 
-    public static List<string> SplitLongText(string text, int maxChunkLength = 400)
+    public static List<string> SplitLongText(string text, int maxChunkLength = int.MaxValue)
     {
         var chunks = new List<string>();
         if (string.IsNullOrWhiteSpace(text)) return chunks;

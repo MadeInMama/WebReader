@@ -2,8 +2,7 @@
     position: fixed;
     top: 50%;
     transform: translate(-50%, -50%);
-
-    padding: 0.5em 1em;
+    padding: 0.5em;
     border-radius: 1em;
     width: fit-content;
     max-width: calc(var(--max-width) - 2em);
@@ -45,7 +44,6 @@
 
 #close-custom-modal-btn {
     position: relative;
-    left: 0.5em;
     float: right;
     margin-left: 0.4em;
 }
