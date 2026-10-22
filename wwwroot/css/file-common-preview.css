@@ -68,6 +68,12 @@ footer > .controls-end {
     border-radius: 0.75em;
     z-index: 6;
     pointer-events: none;
+    transition: bottom var(--animation-time) ease-in-out 5s;
+}
+
+main:has(.audio-controller:not([disabled])) .event-output {
+    bottom: calc(7.45em + env(safe-area-inset-bottom));
+    transition: bottom var(--animation-time) ease-in-out;
 }
 
 .event-output-fullscreen-on {

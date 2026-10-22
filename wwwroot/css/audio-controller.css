@@ -21,8 +21,8 @@
 }
 
 .audio-controller[disabled] {
-    transition: opacity var(--animation-time) ease-in-out 2s,
-    visibility var(--animation-time) ease-in-out 2s;
+    transition: opacity var(--animation-time) ease-in-out 5s,
+    visibility var(--animation-time) ease-in-out 5s;
     opacity: 0;
     visibility: hidden;
 }
