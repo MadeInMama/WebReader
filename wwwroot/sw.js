@@ -3,13 +3,14 @@ const USER_CACHE = 'pwa-user-selected-v1';
 const OFFLINE_URL = '/Home/Offline';
 
 const CORE_ASSETS = [
+    '/js/libs/axios.min.js',
+    '/js/libs/jszip.min.js',
     '/js/libs/pdf.min.mjs',
     '/js/libs/pdf.worker.min.mjs',
-    '/js/libs/jszip.min.js',
-    '/js/libs/axios.min.js',
 
     OFFLINE_URL,
 
+    '/css/audio-controller.css',
     '/css/click-effects.css',
     '/css/file-common-preview.css',
     '/css/file-fb2-preview.css',
@@ -37,7 +38,11 @@ const CORE_ASSETS = [
     '/icons/fullscreen-svgrepo-com.svg',
     '/icons/info-svgrepo-com.svg',
     '/icons/log-in-3-svgrepo-com.svg',
+    '/icons/loop-1-check-svgrepo-com.svg',
+    '/icons/loop-1-svgrepo-com.svg',
     '/icons/menu-01-svgrepo-com.svg',
+    '/icons/pause-circle-svgrepo-com.svg',
+    '/icons/play-circle-svgrepo-com.svg',
     '/icons/progress-0-svgrepo-com.svg',
     '/icons/progress-33-svgrepo-com.svg',
     '/icons/round-done-button-svgrepo-com.svg',
@@ -46,6 +51,7 @@ const CORE_ASSETS = [
     '/icons/upload-svgrepo-com.svg',
     '/icons/user-add-svgrepo-com.svg',
 
+    '/js/audio-controller.js',
     '/js/custom-axios.js',
     '/js/custom-event.js',
     '/js/delete-row.js',
