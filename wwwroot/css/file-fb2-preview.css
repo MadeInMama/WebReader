@@ -60,14 +60,17 @@
     left: 0;
 }
 
+.fb2-canvas-container > section p {
+    border-radius: 0.25em;
+    background-size: 0;
+    background-image: linear-gradient(var(--sub-background-color), var(--sub-background-color));
+    background-repeat: no-repeat;
+}
+
 .fb2-canvas-container > section > p {
     text-align: justify;
     padding: 0.5em;
     border-radius: 0.5em;
-    background-size: 0;
-    background-image: linear-gradient(var(--drop-shadow-color), var(--drop-shadow-color));
-    background-repeat: no-repeat;
-    transition: background-size var(--animation-time) linear;
 }
 
 .fb2-canvas-container > section > p:not(:has(.tts-btn)) {
@@ -81,7 +84,7 @@
 .tts-btn {
     position: relative;
     margin-right: 2em;
-    z-index: 1000;
+    z-index: 3;
 }
 
 .tts-btn::after {
@@ -199,6 +202,17 @@ h2 > p > .tts-btn::after {
     display: inline-block;
     bottom: -0.6em;
     left: 0;
+}
+
+.event-output {
+    transition: margin-bottom var(--animation-time) ease-in-out 5s,
+    opacity var(--animation-time) ease-in-out;
+}
+
+main:has(.audio-controller:not([disabled])) .event-output {
+    margin-bottom: 3.5em;
+    transition: margin-bottom var(--animation-time) ease-in-out,
+    opacity var(--animation-time) ease-in-out;
 }
 
 @media (width < 1000px) and (width > 800px) {

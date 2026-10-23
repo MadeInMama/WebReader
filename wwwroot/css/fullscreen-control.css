@@ -1,19 +1,18 @@
-﻿#fullscreen-container {
+﻿.fullscreen-container {
     display: flex;
     align-items: center;
     justify-content: start;
 }
 
-#enter-fullscreen-btn,
-#exit-fullscreen-btn {
+.enter-fullscreen-btn,
+.exit-fullscreen-btn {
     height: 2em;
     width: 2em;
     background-repeat: no-repeat;
     background-size: cover;
-    display: none;
 }
 
-#enter-fullscreen-btn {
+.enter-fullscreen-btn {
     background-color: var(--foreground-color);
     mask: url("../icons/fullscreen-svgrepo-com.svg") no-repeat center;
     mask-size: cover;
@@ -21,7 +20,7 @@
     -webkit-mask-size: cover;
 }
 
-#exit-fullscreen-btn {
+.exit-fullscreen-btn {
     background-color: var(--foreground-color);
     mask: url("../icons/fullscreen-exit-svgrepo-com.svg") no-repeat center;
     mask-size: cover;
@@ -29,10 +28,11 @@
     -webkit-mask-size: cover;
 }
 
-.fullscreen-container-on {
+.fullscreen-container-off {
     position: fixed;
-    left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3.75em);
-    bottom: calc(0.75em + env(safe-area-inset-bottom));
+    display: none;
+    left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3em);
+    bottom: calc(0.5em + env(safe-area-inset-bottom));
     width: 3em;
     height: 3em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
@@ -40,5 +40,19 @@
     backdrop-filter: blur(var(--backdrop-blur));
     padding: 0.5em;
     border-radius: 0.75em;
-    z-index: 5;
+    z-index: 2;
+}
+
+.fullscreen-on.fullscreen-container-on {
+    display: none;
+}
+
+.fullscreen-on.fullscreen-container-off {
+    display: block;
+}
+
+@media (width < 1000px) {
+    .fullscreen-container-off {
+        left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3.5em);
+    }
 }

@@ -109,7 +109,7 @@ function renderPage() {
 
                 currentAudioTtsId = ttsId;
 
-                const requestConfig = {
+                const response = await axios({
                     method: 'POST',
                     url: `/api/Tts/GetFile?bucketId=${bucketId}&fileId=${fileId}&ttsId=${ttsId}`,
                     data: {},
@@ -118,9 +118,8 @@ function renderPage() {
                         'RequestVerificationToken': GetAntiForgeryToken()
                     },
                     withCredentials: true
-                };
+                });
 
-                const response = await axios(requestConfig);
                 const audioBlob = new Blob([response.data], {type: 'audio/ogg'});
 
                 currentAudioUrl = URL.createObjectURL(audioBlob);
@@ -165,6 +164,19 @@ function renderPage() {
                             document.querySelector(".next-page-controller")?.click();
                             document.querySelector("button.tts-btn")?.click();
                         } else {
+                            const target = nextBtn.parentElement;
+                            const main = document.querySelector('main');
+
+                            if (target && main) {
+                                const targetTop = target.getBoundingClientRect().top;
+                                const mainTop = main.getBoundingClientRect().top;
+
+                                main.scrollBy({
+                                    top: targetTop - mainTop,
+                                    behavior: 'smooth'
+                                });
+                            }
+
                             nextBtn?.click();
                         }
                     }
@@ -387,7 +399,8 @@ function convertNode(node, imageMap, isPage = true) {
     switch (tag) {
         case 'p':
             let ttsBtn = null;
-            if (node.hasAttribute('tts-id')) {
+            const hasTtsId = node.hasAttribute('tts-id');
+            if (hasTtsId) {
                 //TODO: some text duplicates in log
                 // console.log(node.textContent);
                 // debugger;
@@ -396,7 +409,9 @@ function convertNode(node, imageMap, isPage = true) {
                             class="tts tts-play"></button>`;
             }
 
-            return `<p tts-id="${node.getAttribute('tts-id')}">${ttsBtn ? ttsBtn : ''}${children()}</p>`;
+            return `<p ${hasTtsId ? "tts-id='" + node.getAttribute('tts-id') + "'" : ''}>
+                        ${ttsBtn ? ttsBtn : ''}${children()}
+                    </p>`;
         case 'cite':
             return `<p class="cite-author">${children()}</p>`;
         case 'section':

@@ -1,11 +1,8 @@
 ﻿{
-    let enterFullscreenBtn,
-        exitFullscreenBtn,
-        fullscreenContainer,
+    let fullscreenContainers,
+        enterFullscreenBtns,
+        exitFullscreenBtns,
         headerElement,
-        mainElement,
-        parentElement,
-        eventOutputElement,
         footerElement,
         headerDisplayValue,
         footerDisplayValue,
@@ -15,13 +12,7 @@
         headerElement.style.display = "none";
         footerElement.style.display = "none";
 
-        enterFullscreenBtn.style.display = "none";
-        exitFullscreenBtn.style.display = "block";
-
-        mainElement.appendChild(fullscreenContainer);
-
-        fullscreenContainer.classList.add("fullscreen-container-on");
-        eventOutputElement.classList.add("event-output-fullscreen-on");
+        Array.from(fullscreenContainers).forEach(el => el.classList.add("fullscreen-on"));
 
         isFullscreen = true;
     }
@@ -30,13 +21,7 @@
         headerElement.style.display = headerDisplayValue;
         footerElement.style.display = footerDisplayValue;
 
-        exitFullscreenBtn.style.display = "none";
-        enterFullscreenBtn.style.display = "block";
-
-        parentElement.appendChild(fullscreenContainer);
-
-        fullscreenContainer.classList.remove("fullscreen-container-on");
-        eventOutputElement.classList.remove("event-output-fullscreen-on");
+        Array.from(fullscreenContainers).forEach(el => el.classList.remove("fullscreen-on"));
 
         isFullscreen = false;
     }
@@ -62,18 +47,12 @@
         footerElement = document.querySelector("footer");
         footerDisplayValue = headerElement.style.display;
 
-        mainElement = document.querySelector("main");
+        fullscreenContainers = document.querySelectorAll(".fullscreen-container");
+        enterFullscreenBtns = document.querySelectorAll(".enter-fullscreen-btn");
+        exitFullscreenBtns = document.querySelectorAll(".exit-fullscreen-btn");
 
-        fullscreenContainer = document.querySelector("#fullscreen-container");
-        enterFullscreenBtn = document.querySelector("#enter-fullscreen-btn");
-        exitFullscreenBtn = document.querySelector("#exit-fullscreen-btn");
-
-        parentElement = fullscreenContainer.parentElement;
-
-        eventOutputElement = document.querySelector(".event-output")
-
-        enterFullscreenBtn.onclick = () => changeFullscreenMode();
-        exitFullscreenBtn.onclick = () => changeFullscreenMode();
+        Array.from(enterFullscreenBtns).forEach(el => el.onclick = () => changeFullscreenMode());
+        Array.from(exitFullscreenBtns).forEach(el => el.onclick = () => changeFullscreenMode());
 
         execOnFullscreenExit();
     }

@@ -2,11 +2,26 @@
     var nonce = Context.Items["ScriptNonce"]?.ToString();
 }
 
-<link rel="stylesheet" href="~/css/fullscreen-control.css" asp-append-version="true"/>
+@if ((bool?)ViewData["render-css-and-js"] ?? false)
+{
+    <link rel="stylesheet" href="~/css/fullscreen-control.css" asp-append-version="true"/>
+}
 
-<div id="fullscreen-container">
-    <button id="enter-fullscreen-btn" class="click-effect"></button>
-    <button id="exit-fullscreen-btn" class="click-effect"></button>
-</div>
+@switch ((string?)ViewData["do"])
+{
+    case "enter":
+        <div class="fullscreen-container fullscreen-container-on">
+            <button class="enter-fullscreen-btn click-effect"></button>
+        </div>
+        break;
+    case "exit":
+        <div class="fullscreen-container fullscreen-container-off">
+            <button class="exit-fullscreen-btn click-effect"></button>
+        </div>
+        break;
+}
 
-<script nonce="@nonce" src="~/js/fullscreen-control-v2.js" asp-append-version="true"></script>
+@if ((bool?)ViewData["render-css-and-js"] ?? false)
+{
+    <script nonce="@nonce" src="~/js/fullscreen-control-v2.js" asp-append-version="true"></script>
+}

@@ -1,9 +1,9 @@
 ﻿.audio-controller {
     position: fixed;
-    bottom: calc(3.75em + env(safe-area-inset-bottom));
+    bottom: calc(3.5em + env(safe-area-inset-bottom));
     display: grid;
     gap: 0.5em;
-    grid-template-columns: min-content min-content auto min-content;
+    grid-template-columns: 2em 4em auto 2em;
     align-items: center;
     justify-items: center;
     padding: 0.5em;
@@ -13,11 +13,16 @@
     box-shadow: 0 0 1em var(--drop-shadow-color);
     background-color: var(--background-backdrop-color);
     backdrop-filter: blur(var(--backdrop-blur));
-    z-index: 5;
+    z-index: 2;
 
     opacity: 1;
     transition: opacity var(--animation-time) ease-in-out,
     visibility var(--animation-time) ease-in-out;
+}
+
+.audio-controller:has(~.fullscreen-on) {
+    bottom: calc(0.5em + env(safe-area-inset-bottom));
+    max-width: calc(var(--max-width) - 4.5em);
 }
 
 .audio-controller[disabled] {
@@ -30,8 +35,8 @@
 .audio-controller > button::after {
     content: "";
     display: block;
-    height: 2.2em;
-    width: 2.2em;
+    height: 2em;
+    width: 2em;
     mask-size: cover !important;
     -webkit-mask-size: cover !important;
     background-repeat: no-repeat;
@@ -70,14 +75,14 @@
 .audio-controller > .audio-auto-next {
     position: relative;
     visibility: hidden;
-    width: 2.2em;
+    width: 2em;
 }
 
 .audio-controller > .audio-auto-next::after {
     content: '';
     display: block;
-    width: 2.2em;
-    height: 2.2em;
+    width: 2em;
+    height: 2em;
     visibility: visible;
     mask-size: cover !important;
     -webkit-mask-size: cover !important;
@@ -94,15 +99,13 @@
 }
 
 #audio-progress-bar {
-    -webkit-appearance: none;
-    appearance: none;
-    height: 1em;
-    border-radius: 0.5em;
-    width: calc(100% - 1em);
-    cursor: pointer;
+    height: 0.9em;
+    width: calc(100% - 0.5em);
     outline: none;
     display: flex;
     align-items: center;
+    border: 0.25em solid var(--error-foreground-color);
+    padding: 0;
 }
 
 #audio-progress-bar::-webkit-slider-runnable-track {
@@ -110,27 +113,25 @@
     appearance: none;
     background: transparent;
     border: none;
-    height: 100%;
-    margin: 0 -1em;
+    margin: 0 -0.5em;
 }
 
 #audio-progress-bar::-moz-range-track {
     background: transparent;
     border: none;
-    height: 100%;
-    margin: 0 -1em;
+    margin: 0 -0.5em;
 }
 
 #audio-progress-bar::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    margin-top: 0;
-    width: 1.35em;
-    height: 1.35em;
+    margin-top: -0.5em;
+    width: 1.5em;
+    height: 1.5em;
     border-radius: 50%;
-    background: var(--foreground-color);
+    background: var(--error-foreground-color);
     border: 0.25em solid var(--background-color);
-    box-shadow: 0 0 0.5em var(--drop-shadow-color);
+    box-shadow: 0 0 1em var(--drop-shadow-color);
     transition: transform var(--animation-time) ease-in-out;
 }
 
@@ -140,13 +141,13 @@
 }
 
 #audio-progress-bar::-moz-range-thumb {
-    margin-top: 0;
-    width: 1.35em;
-    height: 1.35em;
+    margin-top: -0.5em;
+    width: 1.5em;
+    height: 1.5em;
     border-radius: 50%;
-    background: var(--foreground-color);
+    background: var(--error-foreground-color);
     border: 0.25em solid var(--background-color);
-    box-shadow: 0 0 0.5em var(--drop-shadow-color);
+    box-shadow: 0 0 1em var(--drop-shadow-color);
     transition: transform var(--animation-time) ease-in-out;
 
 }

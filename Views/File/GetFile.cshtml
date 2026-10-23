@@ -64,12 +64,6 @@ else
             </a>
         </li>
     }
-    <li>
-        <a asp-controller="File" asp-action="GetAllFilesInBucket"
-           asp-route-bucketId="@Model.BucketId" class="click-effect">
-            @Model.BucketName
-        </a>
-    </li>
 }
 
 @switch (Model.Type)
@@ -110,6 +104,12 @@ else
     default:
         throw new ArgumentOutOfRangeException();
 }
+
+@await Html.PartialAsync("_FullscreenControl", null, new ViewDataDictionary(ViewData)
+{
+    { "do", "exit" },
+    { "render-css-and-js", false }
+})
 
 @section Footer
 {
@@ -154,8 +154,11 @@ else
         <button disabled class="next-page next-page-controller click-effect"></button>
     </div>
     <div class="controls-end">
-        @await Html.PartialAsync("_FullscreenControl")
-        @* <div class="settings-container"></div> *@
+        @await Html.PartialAsync("_FullscreenControl", null, new ViewDataDictionary(ViewData)
+        {
+            { "do", "enter" },
+            { "render-css-and-js", true }
+        })
     </div>
 }
 

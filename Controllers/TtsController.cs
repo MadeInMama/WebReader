@@ -38,7 +38,7 @@ public class TtsController(
         if (string.IsNullOrWhiteSpace(ttsId))
             return BadRequest($"Param {nameof(ttsId)} is null or whitespace.");
 
-        var httpClient = httpClientFactory.CreateClient("TTS");
+        var httpClient = httpClientFactory.CreateClient("S3");
 
         var customOptions = new HybridCacheEntryOptions
         {

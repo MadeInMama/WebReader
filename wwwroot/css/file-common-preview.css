@@ -58,7 +58,7 @@ footer > .controls-end {
 .event-output {
     position: fixed;
     left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3em);
-    bottom: calc(3.75em + env(safe-area-inset-bottom));
+    bottom: calc(3.5em + env(safe-area-inset-bottom));
     width: 3em;
     height: 3em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
@@ -66,22 +66,16 @@ footer > .controls-end {
     backdrop-filter: blur(var(--backdrop-blur));
     padding: 0.5em;
     border-radius: 0.75em;
-    z-index: 6;
-    pointer-events: none;
-    transition: bottom var(--animation-time) ease-in-out 5s;
+    z-index: 3;
 }
 
-main:has(.audio-controller:not([disabled])) .event-output {
-    bottom: calc(7.45em + env(safe-area-inset-bottom));
-    transition: bottom var(--animation-time) ease-in-out;
-}
-
-.event-output-fullscreen-on {
-    bottom: calc(4.25em + env(safe-area-inset-bottom));
+.event-output:has(~.fullscreen-on) {
+    bottom: calc(0.5em + env(safe-area-inset-bottom));
 }
 
 .big-page-nav {
     position: fixed;
+    z-index: 1;
 }
 
 .big-page-nav > .prev-page-controller,

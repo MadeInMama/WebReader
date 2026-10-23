@@ -322,6 +322,7 @@ using (var scope = app.Services.CreateScope())
     //         continue;
     //     }
     //
+    //     Console.WriteLine();
     //     Console.WriteLine($"TTS attempt {ttsId}");
     //
     //     var res = await ttsService.GenerateSpeechAsync(text, ttsId, CancellationToken.None);
