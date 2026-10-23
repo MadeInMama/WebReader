@@ -87,7 +87,7 @@ html, body {
 
 body {
     display: grid;
-    grid-template-rows: env(safe-area-inset-top) auto 1fr auto env(safe-area-inset-bottom);
+    grid-template-rows: env(safe-area-inset-top) auto 1fr auto 0.2em env(safe-area-inset-bottom);
     grid-template-columns: auto var(--max-width) auto;
     justify-items: stretch;
     align-items: stretch;
@@ -109,7 +109,7 @@ body {
 }
 
 #safe-area-inset-bottom {
-    grid-row: 5;
+    grid-row: 6;
 }
 
 header, main, footer {
@@ -121,7 +121,6 @@ header, main, footer {
 header, footer {
     box-shadow: 0 0 1em var(--drop-shadow-color);
     background-color: var(--background-backdrop-color);
-    /*backdrop-filter: blur(var(--backdrop-blur));*/
 
     position: relative;
     z-index: 2;
@@ -164,18 +163,49 @@ footer {
     display: none;
 }
 
-#scroll-progress-bar {
+#scroll-progress-bar,
+#scroll-progress-bar-background {
     position: relative;
     grid-column: 1 / 4;
-    grid-row: 4;
+    grid-row: 5;
+}
+
+#scroll-progress-bar-background {
+    height: 100%;
+    width: 100%;
+
+    z-index: 2;
+    background-color: var(--background-color);
+}
+
+#scroll-progress-bar {
     align-self: end;
 
-    height: 0.2em;
+    height: 100%;
     width: 0;
 
     background-color: var(--error-foreground-color);
 
     z-index: 3;
+}
+
+.disabled-with-anim {
+    opacity: 1;
+    transition: display var(--animation-time) allow-discrete, opacity var(--animation-time) ease-in-out;
+
+    @starting-style {
+        opacity: 0;
+    }
+}
+
+.disabled-with-anim[disabled] {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+
+    @starting-style {
+        opacity: 1;
+    }
 }
 
 @media (width < 1000px) {

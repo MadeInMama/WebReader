@@ -10,14 +10,10 @@
 @switch ((string?)ViewData["do"])
 {
     case "enter":
-        <div class="fullscreen-container fullscreen-container-on">
-            <button class="enter-fullscreen-btn click-effect"></button>
-        </div>
+        <button class="fullscreen-btn fullscreen-btn-on disabled-with-anim click-effect" disabled></button>
         break;
     case "exit":
-        <div class="fullscreen-container fullscreen-container-off">
-            <button class="exit-fullscreen-btn click-effect"></button>
-        </div>
+        <button class="fullscreen-btn fullscreen-btn-off disabled-with-anim click-effect" disabled></button>
         break;
 }
 

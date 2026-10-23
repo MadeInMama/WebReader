@@ -85,7 +85,7 @@ Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
 let hideHeaderTimeout;
 
 function SetPage(page, send = true) {
-    const scrollToTop = currentPage < page;
+    const scrollToTop = currentPage <= page;
 
     currentPage = clamp(page, 1, maxPage);
 

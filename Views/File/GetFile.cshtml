@@ -87,8 +87,6 @@ else
     </button>
 </div>
 
-<div class="event-output"></div>
-
 @switch (Model.Type)
 {
     case FileType.Pdf:
@@ -99,59 +97,42 @@ else
         break;
     case FileType.Fb2:
         @await Html.PartialAsync("GetFile/_Fb2", Model)
-        @await Html.PartialAsync("_AudioController")
         break;
     default:
         throw new ArgumentOutOfRangeException();
 }
 
-@await Html.PartialAsync("_FullscreenControl", null, new ViewDataDictionary(ViewData)
-{
-    { "do", "exit" },
-    { "render-css-and-js", false }
-})
+<div class="tools-container">
+    <div class="event-output disabled-with-anim" disabled></div>
+    <div class="tools-container-horizontal">
+        @await Html.PartialAsync("_SetScaleControl", Model, new ViewDataDictionary(ViewData)
+        {
+            { "with-wrapper", true }
+        })
+        @await Html.PartialAsync("_FullscreenControl", null, new ViewDataDictionary(ViewData)
+        {
+            { "do", "exit" },
+            { "render-css-and-js", false }
+        })
+    </div>
+    @if (FileType.Fb2 == Model.Type)
+    {
+        @await Html.PartialAsync("_AudioController")
+    }
+</div>
 
 @section Footer
 {
     <div class="controls-start">
-        <select disabled class="set-scale click-effect">
-            @switch (Model.Type)
-            {
-                case FileType.Pdf:
-                    <option value="-1">fixed</option>
-                    <option value="10">10%</option>
-                    <option value="25">25%</option>
-                    <option value="50">50%</option>
-                    <option value="75">75%</option>
-                    <option value="100">100%</option>
-                    break;
-                case FileType.ZipWithImg:
-                    <option value="-1">fixed</option>
-                    <option value="0">fit height</option>
-                    <option value="10">10%</option>
-                    <option value="25">25%</option>
-                    <option value="50">50%</option>
-                    <option value="75">75%</option>
-                    <option value="100">100%</option>
-                    break;
-                case FileType.Fb2:
-                    <option value="50">50%</option>
-                    <option value="75">75%</option>
-                    <option value="100">100%</option>
-                    <option value="125">125%</option>
-                    <option value="150">150%</option>
-                    <option value="200">200%</option>
-                    <option value="300">300%</option>
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        </select>
+        @await Html.PartialAsync("_SetScaleControl", Model, new ViewDataDictionary(ViewData)
+        {
+            { "with-wrapper", false }
+        })
     </div>
     <div class="controls-center">
-        <button disabled class="prev-page prev-page-controller click-effect"></button>
-        <select disabled class="preview-page click-effect"></select>
-        <button disabled class="next-page next-page-controller click-effect"></button>
+        <button disabled class="prev-page prev-page-controller disabled-with-anim click-effect"></button>
+        <select disabled class="preview-page disabled-with-anim click-effect"></select>
+        <button disabled class="next-page next-page-controller disabled-with-anim click-effect"></button>
     </div>
     <div class="controls-end">
         @await Html.PartialAsync("_FullscreenControl", null, new ViewDataDictionary(ViewData)

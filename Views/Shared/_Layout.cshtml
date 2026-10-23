@@ -98,10 +98,11 @@
     @RenderBody()
 </main>
 
-<footer>
+<footer class="disabled-with-anim">
     @await RenderSectionAsync("Footer", false)
 </footer>
 
+<div id="scroll-progress-bar-background"></div>
 <div id="scroll-progress-bar"></div>
 
 <div id="safe-area-inset-bottom"></div>

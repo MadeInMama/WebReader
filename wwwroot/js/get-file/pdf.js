@@ -19,7 +19,7 @@ function prepareFile(data) {
         });
 
         SetPage(currentPage, false);
-        SetScale(currentScale, false);
+        document.querySelector('.fullscreen-btn-on').removeAttribute("disabled");
     });
 }
 

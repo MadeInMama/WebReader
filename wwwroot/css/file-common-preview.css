@@ -10,6 +10,7 @@ main {
 footer {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
+    min-height: 3em;
 }
 
 footer > .controls-start {
@@ -18,10 +19,22 @@ footer > .controls-start {
 
 footer > .controls-center {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 2em auto 2em;
     gap: 0.5em;
     grid-column: 2;
     justify-self: center;
+}
+
+footer > .controls-center > *:nth-child(1) {
+    grid-column: 1;
+}
+
+footer > .controls-center > *:nth-child(2) {
+    grid-column: 2;
+}
+
+footer > .controls-center > *:nth-child(3) {
+    grid-column: 3;
 }
 
 footer > .controls-end {
@@ -55,10 +68,43 @@ footer > .controls-end {
     align-items: center;
 }
 
-.event-output {
+.tools-container {
     position: fixed;
-    left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3em);
-    bottom: calc(3.5em + env(safe-area-inset-bottom));
+    max-width: var(--max-width);
+    display: grid;
+    grid-template-columns: auto;
+    justify-items: end;
+    align-items: center;
+    grid-auto-rows: 3em;
+    gap: 0.5em;
+    width: 100%;
+    bottom: calc(3.2em + env(safe-area-inset-bottom));
+    transition: bottom var(--animation-time) ease-in-out;
+    padding: 0.5em;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.tools-container * {
+    pointer-events: auto;
+}
+
+.tools-container.fullscreen-on {
+    bottom: env(safe-area-inset-bottom);
+}
+
+.tools-container > .tools-container-horizontal {
+    display: flex;
+    gap: 0.5em;
+}
+
+.tools-container > .tools-container-horizontal:not(:has(>:not([disabled]))) {
+    display: none;
+    transition: display var(--animation-time) allow-discrete,
+    opacity var(--animation-time) ease-in-out;
+}
+
+.event-output {
     width: 3em;
     height: 3em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
@@ -67,10 +113,6 @@ footer > .controls-end {
     padding: 0.5em;
     border-radius: 0.75em;
     z-index: 3;
-}
-
-.event-output:has(~.fullscreen-on) {
-    bottom: calc(0.5em + env(safe-area-inset-bottom));
 }
 
 .big-page-nav {
@@ -105,6 +147,14 @@ footer > .controls-end {
     right: env(safe-area-inset-right);
 }
 
+.set-scale-wrapper {
+    padding: 0.5em;
+    border-radius: 0.75em;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+    background-color: var(--background-backdrop-color);
+    backdrop-filter: blur(var(--backdrop-blur));
+}
+
 @media (width < 1000px) {
     .big-page-nav > .prev-page-controller,
     .big-page-nav > .next-page-controller {
@@ -123,10 +173,6 @@ footer > .controls-end {
 
     .big-page-nav > .next-page-controller {
         justify-content: end;
-    }
-
-    .event-output {
-        left: calc((100% - var(--max-width)) / 2 + var(--max-width) - 3.5em);
     }
 }
 

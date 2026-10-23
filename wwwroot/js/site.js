@@ -4,9 +4,9 @@ const scrollProgressBar = document.querySelector('#scroll-progress-bar');
 
 if (footer.childNodes.length > 0 &&
     footer.innerHTML.replace(/\s+/g, '').length > 0) {
-    footer.style.display = "grid";
+    footer.removeAttribute('disabled');
 } else {
-    footer.style.display = "none";
+    footer.setAttribute('disabled', '');
 }
 
 function GetAntiForgeryToken() {

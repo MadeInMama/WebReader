@@ -16,11 +16,11 @@ let sendCurrPageEventTimeout;
 
 targetElement.addEventListener('SendCurrPageEvent', (e) => {
     Array.from(document.getElementsByClassName("event-output")).forEach(el => {
-        el.style.opacity = '1';
+        el.removeAttribute('disabled');
         el.innerHTML = e.detail.message;
         clearTimeout(sendCurrPageEventTimeout);
         if (e.detail.type === EventTypes.FROM_MILLIS) {
-            sendCurrPageEventTimeout = setTimeout(() => el.style.opacity = '0', e.detail.millis);
+            sendCurrPageEventTimeout = setTimeout(() => el.setAttribute('disabled', ''), e.detail.millis);
         }
     });
 });

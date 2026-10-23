@@ -1,27 +1,42 @@
 ﻿{
-    let fullscreenContainers,
-        enterFullscreenBtns,
-        exitFullscreenBtns,
+    let fullscreenBtns,
+        toolsContainer,
+        setScaleContainer,
         headerElement,
         footerElement,
         headerDisplayValue,
-        footerDisplayValue,
         isFullscreen = false;
 
     execOnFullscreenEnter = () => {
         headerElement.style.display = "none";
-        footerElement.style.display = "none";
 
-        Array.from(fullscreenContainers).forEach(el => el.classList.add("fullscreen-on"));
+        Array.from(fullscreenBtns).forEach(el => {
+            if (el.classList.contains("fullscreen-btn-on")) {
+                el.setAttribute('disabled', '');
+            } else if (el.classList.contains("fullscreen-btn-off")) {
+                el.removeAttribute('disabled');
+            }
+        });
+        toolsContainer.classList.add("fullscreen-on");
+        setScaleContainer.removeAttribute('disabled');
+        footerElement.setAttribute('disabled', '');
 
         isFullscreen = true;
     }
 
     execOnFullscreenExit = () => {
         headerElement.style.display = headerDisplayValue;
-        footerElement.style.display = footerDisplayValue;
 
-        Array.from(fullscreenContainers).forEach(el => el.classList.remove("fullscreen-on"));
+        Array.from(fullscreenBtns).forEach(el => {
+            if (el.classList.contains("fullscreen-btn-on")) {
+                el.removeAttribute('disabled');
+            } else if (el.classList.contains("fullscreen-btn-off")) {
+                el.setAttribute('disabled', '');
+            }
+        });
+        toolsContainer.classList.remove("fullscreen-on");
+        setScaleContainer.setAttribute('disabled', '');
+        footerElement.removeAttribute('disabled');
 
         isFullscreen = false;
     }
@@ -45,15 +60,11 @@
         headerDisplayValue = headerElement.style.display;
 
         footerElement = document.querySelector("footer");
-        footerDisplayValue = headerElement.style.display;
 
-        fullscreenContainers = document.querySelectorAll(".fullscreen-container");
-        enterFullscreenBtns = document.querySelectorAll(".enter-fullscreen-btn");
-        exitFullscreenBtns = document.querySelectorAll(".exit-fullscreen-btn");
+        fullscreenBtns = document.querySelectorAll(".fullscreen-btn");
+        toolsContainer = document.querySelector(".tools-container");
+        setScaleContainer = document.querySelector(".tools-container .set-scale-wrapper");
 
-        Array.from(enterFullscreenBtns).forEach(el => el.onclick = () => changeFullscreenMode());
-        Array.from(exitFullscreenBtns).forEach(el => el.onclick = () => changeFullscreenMode());
-
-        execOnFullscreenExit();
+        Array.from(fullscreenBtns).forEach(el => el.onclick = () => changeFullscreenMode());
     }
 }

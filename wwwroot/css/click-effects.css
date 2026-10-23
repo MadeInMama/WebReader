@@ -1,11 +1,37 @@
 .click-effect {
     cursor: pointer;
     touch-action: manipulation;
-    transition: opacity var(--animation-time) ease var(--animation-time);
+    transition: display var(--animation-time) allow-discrete,
+    opacity var(--animation-time) ease-in-out;
 }
 
-.click-effect:active {
+.click-effect:not([disabled]):active {
     opacity: 0.5;
-    transition: transform var(--animation-time) ease,
-    opacity var(--animation-time);
+    transition: display var(--animation-time) allow-discrete,
+    opacity var(--animation-time) ease-in-out;
+}
+
+.disabled-with-anim.click-effect {
+    transition: display var(--animation-time) allow-discrete,
+    opacity var(--animation-time) ease-in-out;
+
+    @starting-style {
+        opacity: 0;
+    }
+}
+
+.disabled-with-anim.click-effect[disabled] {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+
+    @starting-style {
+        opacity: 1;
+    }
+}
+
+.disabled-with-anim.click-effect:active {
+    opacity: 0.5;
+    transition: display var(--animation-time) allow-discrete,
+    opacity var(--animation-time) ease-in-out;
 }

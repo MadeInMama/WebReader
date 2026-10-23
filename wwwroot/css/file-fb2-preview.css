@@ -183,7 +183,7 @@ h2 > p > .tts-btn::after {
 .note-btn {
     position: relative;
     margin-right: 2em;
-    z-index: 1000;
+    z-index: 2;
 }
 
 .note-btn::after {
@@ -202,17 +202,6 @@ h2 > p > .tts-btn::after {
     display: inline-block;
     bottom: -0.6em;
     left: 0;
-}
-
-.event-output {
-    transition: margin-bottom var(--animation-time) ease-in-out 5s,
-    opacity var(--animation-time) ease-in-out;
-}
-
-main:has(.audio-controller:not([disabled])) .event-output {
-    margin-bottom: 3.5em;
-    transition: margin-bottom var(--animation-time) ease-in-out,
-    opacity var(--animation-time) ease-in-out;
 }
 
 @media (width < 1000px) and (width > 800px) {

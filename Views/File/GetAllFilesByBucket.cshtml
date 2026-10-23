@@ -139,6 +139,15 @@
 {
     <script nonce="@nonce" src="~/js/libs/axios.min.js"></script>
 
+    <script nonce="@nonce" src="~/js/cache/file-download.js" asp-append-version="true"></script>
+    <script nonce="@nonce">
+        window.addEventListener("load", () => {
+            Array.from(document.querySelectorAll(".download-file")).forEach(el => {
+                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId, el.dataset.fileName);
+            });
+        });
+    </script>
+
     <script nonce="@nonce">
         const url = '/api/FileApi/DeleteFile';
         const lineSelector = '.item-line';

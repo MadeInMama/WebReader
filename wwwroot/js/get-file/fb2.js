@@ -5,19 +5,41 @@ function prepareFile(data) {
         parseFB2(fb2Text);
         maxPage = pages.length;
 
-        Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
-            for (let i = 0; i < pages.length; i++) {
-                const option = document.createElement("option");
+        const headersMap = pages.map(pageHtml => {
+            const doc = new DOMParser().parseFromString(pageHtml, 'text/html');
+            return doc.querySelector('h2 > p')?.textContent.trim() || null;
+        });
 
+        Array.from(document.getElementsByClassName("preview-page")).forEach(selectElement => {
+            let currentOptgroup = null;
+            let lastHeaderName = null;
+
+            for (let i = 0; i < pages.length; i++) {
+                const optgroupHeader = headersMap[i];
+
+                if (optgroupHeader && optgroupHeader !== lastHeaderName) {
+                    lastHeaderName = optgroupHeader;
+
+                    currentOptgroup = document.createElement("optgroup");
+                    currentOptgroup.label = optgroupHeader;
+
+                    selectElement.appendChild(currentOptgroup);
+                }
+
+                const option = document.createElement("option");
                 option.text = `${i + 1}/${maxPage}`;
                 option.value = (i + 1).toString();
 
-                value.appendChild(option);
+                if (currentOptgroup) {
+                    currentOptgroup.appendChild(option);
+                } else {
+                    selectElement.appendChild(option);
+                }
             }
         });
 
         SetPage(currentPage, false);
-        SetScale(currentScale, false);
+        document.querySelector('.fullscreen-btn-on').removeAttribute("disabled");
     } catch (err) {
         console.error('Failed to load FB2:', err);
     }
@@ -303,59 +325,9 @@ function parseFB2(xmlString) {
         return;
     }
 
-    const sections = Array.from(doc.querySelectorAll("section"));
+    convertTitlesToHtmlHeaders(doc);
 
-    const maxPCount = 6;
-
-    sections.forEach(section => {
-        const parts = Array.from(section.querySelectorAll(":scope > *"));
-        if (parts.length <= maxPCount) return;
-
-        const wordCountToSlice = 500;
-        let currWordCount = 0;
-
-        const fragment = doc.createDocumentFragment();
-
-        let newSection = doc.createElement("section");
-        newSection.setAttribute("data-split", "true");
-        for (const attr of section.attributes) {
-            newSection.setAttribute(attr.name, attr.value);
-        }
-
-        parts.forEach((part, index, array) => {
-            let wordCount = part.textContent.trim().split('').length;
-            currWordCount += wordCount;
-
-            switch (part.localName) {
-                case "title":
-                    break;
-                case "image":
-                    currWordCount += 50 - wordCount;
-                    break;
-                case "cite":
-                    break;
-                case "p":
-                    break;
-                default:
-                    break;
-            }
-
-            newSection.appendChild(part.cloneNode(true));
-
-            if (currWordCount > wordCountToSlice || index === array.length - 1) {
-                fragment.appendChild(newSection);
-
-                newSection = doc.createElement("section");
-                newSection.setAttribute("data-split", "true");
-                for (const attr of section.attributes) {
-                    newSection.setAttribute(attr.name, attr.value);
-                }
-                currWordCount = 0;
-            }
-        });
-
-        section.parentNode.replaceChild(fragment, section);
-    });
+    const body = doc.querySelector('body');
 
     doc.querySelectorAll('binary').forEach(bin => {
         const id = bin.getAttribute('id');
@@ -380,11 +352,45 @@ function parseFB2(xmlString) {
         }
     }
 
-    const body = doc.querySelector('body');
-
     convertNode(body, imageMap);
 
     pages = pages.filter(page => page !== '');
+}
+
+function convertTitlesToHtmlHeaders(doc) {
+    const ns = doc.documentElement.namespaceURI;
+
+    const bodies = doc.getElementsByTagNameNS(ns, 'body');
+    if (bodies.length > 0) {
+        const body = bodies[0];
+        const bodyTitles = Array.from(body.childNodes).filter(node => node.localName === 'title');
+
+        bodyTitles.forEach(title => {
+            const h1 = doc.createElementNS(ns, 'h1');
+
+            while (title.firstChild) {
+                h1.appendChild(title.firstChild);
+            }
+
+            body.replaceChild(h1, title);
+        });
+    }
+
+    const sections = Array.from(doc.getElementsByTagNameNS(ns, 'section'));
+
+    sections.forEach(section => {
+        const sectionTitle = Array.from(section.childNodes).find(node => node.localName === 'title');
+
+        if (sectionTitle) {
+            const h2 = doc.createElementNS(ns, 'h2');
+
+            while (sectionTitle.firstChild) {
+                h2.appendChild(sectionTitle.firstChild);
+            }
+
+            section.replaceChild(h2, sectionTitle);
+        }
+    });
 }
 
 function convertNode(node, imageMap, isPage = true) {
@@ -403,7 +409,6 @@ function convertNode(node, imageMap, isPage = true) {
             if (hasTtsId) {
                 //TODO: some text duplicates in log
                 // console.log(node.textContent);
-                // debugger;
                 ttsBtn = `<button class="tts-btn tts-play"
                             tts-id="${node.getAttribute('tts-id')}"
                             class="tts tts-play"></button>`;
@@ -421,6 +426,10 @@ function convertNode(node, imageMap, isPage = true) {
             const level = node.closest('section') ? 2 : 1;
             return `<h${level}>${children()}</h${level}>`;
         }
+        case 'h1':
+            return `<h1>${children()}</h1>`;
+        case 'h2':
+            return `<h2>${children()}</h2>`;
         case 'image':
         case 'img': {
             const href = node.getAttribute('l:href') || node.getAttribute('href') || '';
