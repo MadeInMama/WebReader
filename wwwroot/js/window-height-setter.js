@@ -3,24 +3,24 @@ const heightByRunningType = Object.freeze({
     Android: '100svh',
     AndroidPWA: '100svh',
     Ios: '100dvh',
-    IosPWA: '100vh',
+    IosPWA: '100svh',
 });
 
 const ua = navigator.userAgent || navigator.vendor;
 
 const isAndroid = /android/i.test(ua);
 
-const isIOS = /iPad|iPhone|iPod/.test(ua) || 
+const isIOS = /iPad|iPhone|iPod/.test(ua) ||
     (navigator.maxTouchPoints > 2 && /Mac/.test(ua));
 
-const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-    navigator.standalone || 
+const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+    navigator.standalone ||
     document.referrer.includes('android-app://');
 
 function getHeight() {
     if (isIOS) return isPWA ? heightByRunningType.IosPWA : heightByRunningType.Ios;
     if (isAndroid) return isPWA ? heightByRunningType.AndroidPWA : heightByRunningType.Android;
-    
+
     return heightByRunningType.Other;
 }
 
