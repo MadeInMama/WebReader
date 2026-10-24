@@ -250,6 +250,7 @@ function renderPage() {
 
                 setTtsControlBtnActiveClass(event.target, 'tts-pause');
             } catch (e) {
+                console.log(e);
                 setTtsControlBtnActiveClass(event.target, 'tts-error');
                 cancelAnimationFrame(animationFrameId);
                 document.querySelector('.audio-progress-bar').oninput = () => {
