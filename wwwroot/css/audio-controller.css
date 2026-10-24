@@ -63,10 +63,14 @@
     position: relative;
     visibility: hidden;
     width: 2em;
+    height: 2em;
 }
 
 .audio-controller > .audio-auto-next::after {
     content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
     display: block;
     width: 2em;
     height: 2em;
