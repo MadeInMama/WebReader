@@ -51,6 +51,44 @@ let currentAudioUrl = null;
 let animationFrameId = null;
 let isTtsLogicPlay = false;
 
+const apiTts = axios.create({
+    timeout: 1000 * 60 * 5
+});
+
+apiTts.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const {config} = error;
+
+        if (!config) return Promise.reject(error);
+
+        config.__retryCount = config.__retryCount || 0;
+
+        if (config.__retryCount >= 3) {
+            return Promise.reject(error);
+        }
+
+        const shouldRetry = !error.response || (
+            (error.response.status >= 500 ||
+                error.response.status === 408 ||
+                error.response.status === 429) &&
+            error.response.status !== 404
+        );
+
+        if (!shouldRetry) {
+            return Promise.reject(error);
+        }
+
+        config.__retryCount += 1;
+        console.warn(`[Axios Retry] Ошибка при загрузке файла. Попытка #${config.__retryCount}...`);
+
+        const delay = Math.pow(2, config.__retryCount - 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        return apiTts(config);
+    }
+);
+
 function renderPage() {
     currentAudio?.pause();
     URL.revokeObjectURL(currentAudioUrl);
@@ -131,7 +169,7 @@ function renderPage() {
 
                 currentAudioTtsId = ttsId;
 
-                const response = await axios({
+                const response = await apiTts({
                     method: 'POST',
                     url: `/api/Tts/GetFile?bucketId=${bucketId}&fileId=${fileId}&ttsId=${ttsId}`,
                     data: {},
@@ -227,7 +265,9 @@ function renderPage() {
                 cancelAnimationFrame(animationFrameId);
                 document.querySelector('.audio-progress-bar').oninput = () => {
                 };
-                document.querySelector(`p[tts-id='${currentAudioTtsId}]'`).style.backgroundSize = 0 + '%';
+                if (currentAudioTtsId) {
+                    document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = 0 + '%';
+                }
                 document.querySelector('.audio-progress-bar').disabled = true;
                 document.querySelector(".audio-controller > button").disabled = true;
                 document.querySelector(".audio-controller").setAttribute('disabled', '');

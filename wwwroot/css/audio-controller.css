@@ -1,7 +1,7 @@
 ﻿.audio-controller {
     display: grid;
     gap: 0.5em;
-    grid-template-columns: 2em 4em auto 2em;
+    grid-template-columns: min-content min-content auto min-content;
     height: 3em;
     align-items: center;
     justify-items: center;
