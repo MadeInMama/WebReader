@@ -62,20 +62,9 @@ apiTts.interceptors.response.use(
 
         if (!config) return Promise.reject(error);
 
-        config.__retryCount = config.__retryCount || 0;
+        config.__retryCount = config.__retryCount || 1;
 
         if (config.__retryCount >= 3) {
-            return Promise.reject(error);
-        }
-
-        const shouldRetry = !error.response || (
-            (error.response.status >= 500 ||
-                error.response.status === 408 ||
-                error.response.status === 429) &&
-            error.response.status !== 404
-        );
-
-        if (!shouldRetry) {
             return Promise.reject(error);
         }
 
