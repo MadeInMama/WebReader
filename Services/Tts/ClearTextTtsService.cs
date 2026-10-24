@@ -6,7 +6,7 @@ namespace WebReader.Services.Tts;
 
 public partial class ClearTextTtsService(TtsClientFactory ttsClientFactory, ILogger<ClearTextTtsService> logger)
 {
-    public async Task<string> ClearTextAsync(string text, CancellationToken cancellationToken)
+    public async Task<string> ClearTextAsync(string text, string speaker, CancellationToken cancellationToken)
     {
         var preparedText = TtsTextHelper.PrepareTextForTts(text);
 
@@ -14,7 +14,7 @@ public partial class ClearTextTtsService(TtsClientFactory ttsClientFactory, ILog
             return preparedText;
 
         var response = await ttsClientFactory.GetClient(TtsProvider.ClearText)
-            .ProceedAsync(preparedText, cancellationToken);
+            .ProceedAsync(preparedText, speaker, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var jsonResponse = await response.Content.ReadFromJsonAsync<JsonNode>(cancellationToken);

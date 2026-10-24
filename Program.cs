@@ -306,6 +306,7 @@ using (var scope = app.Services.CreateScope())
     //     if (!el.Attributes().Select(f => f.Name).Select(f => f.LocalName).Contains("tts-id")) continue;
     //
     //     var ttsId = el.Attributes().First(f => f.Name.LocalName == "tts-id").Value;
+    //     var ttsType = el.Attributes().First(f => f.Name.LocalName == "tts-type").Value;
     //
     //     var text = string.Concat(
     //         el.Nodes()
@@ -313,7 +314,7 @@ using (var scope = app.Services.CreateScope())
     //             .Select(node => node.Value)
     //     ).Trim().Replace("\n", " ");
     //
-    //     if (++counter >= 2000) break;
+    //     if (++counter >= 255) break;
     //
     //     if (await minioService.ObjectExistsAsync(StaticNames.TtsBucketName, $"{ttsId}.ogg", CancellationToken.None))
     //     {
@@ -325,7 +326,7 @@ using (var scope = app.Services.CreateScope())
     //     Console.WriteLine();
     //     Console.WriteLine($"TTS attempt {ttsId}");
     //
-    //     var res = await ttsService.GenerateSpeechAsync(text, ttsId, CancellationToken.None);
+    //     var res = await ttsService.GenerateSpeechAsync(text, ttsType, ttsId, CancellationToken.None);
     //
     //     Console.WriteLine($"TTS {ttsId} {(res ? "done" : "error")}");
     // }

@@ -19,10 +19,11 @@ public class MinioService(IMinioClient minioClient)
         return url ?? throw new Exception("Failed to get url");
     }
 
-    public async Task<(string ttsId, string ttsLang, string ttsText)> GetTtsTextByTtsIdAsync(string bucketId,
+    public async Task<(string ttsId, string ttsLang, string ttsText, string ttsType)> GetTtsTextByTtsIdAsync(
+        string bucketId,
         string objectName, string ttsId)
     {
-        (string? ttsId, string? ttsLang, string? ttsText) res = (null, null, null);
+        (string? ttsId, string? ttsLang, string? ttsText, string? ttsType) res = (null, null, null, null);
 
         await minioClient.GetObjectAsync(new GetObjectArgs()
             .WithBucket(bucketId)
@@ -37,7 +38,8 @@ public class MinioService(IMinioClient minioClient)
                     if (targetElement != null)
                         res = (targetElement.Attribute("tts-id")?.Value,
                             targetElement.Attribute("tts-lang")?.Value,
-                            targetElement.Value);
+                            targetElement.Value,
+                            targetElement.Attribute("tts-type")?.Value);
                 }
                 catch (Exception)
                 {

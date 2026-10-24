@@ -27,7 +27,8 @@ public class ClearTextTtsClient(HttpClient httpClient) : ITtsClient
                                         """;
 
 
-    public async Task<HttpResponseMessage> ProceedAsync(string text, CancellationToken cancellationToken)
+    public async Task<HttpResponseMessage> ProceedAsync(string text, string speaker,
+        CancellationToken cancellationToken)
     {
         return await httpClient.PostAsJsonAsync("v1/chat/completions", new
         {

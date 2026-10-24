@@ -8,10 +8,10 @@ public class TtsService(
     MinioService minioService,
     ILogger<TtsService> logger)
 {
-    public async Task<bool> GenerateSpeechAsync(string text, string fileName,
+    public async Task<bool> GenerateSpeechAsync(string text, string speaker, string fileName,
         CancellationToken cancellationToken)
     {
-        var cleanedText = await clearTextTtsService.ClearTextAsync(text, cancellationToken);
+        var cleanedText = await clearTextTtsService.ClearTextAsync(text, speaker, cancellationToken);
 
         var texts = TtsTextHelper.SplitLongText(cleanedText);
         if (texts.Count == 0) return false;
@@ -23,7 +23,7 @@ public class TtsService(
             foreach (var t in texts)
             {
                 var tempStream = new MemoryStream();
-                var success = await DownloadChunkAsync(t, tempStream, cancellationToken);
+                var success = await DownloadChunkAsync(t, speaker, tempStream, cancellationToken);
                 if (!success) return false;
                 tempStreams.Add(tempStream);
             }
@@ -45,12 +45,13 @@ public class TtsService(
         }
     }
 
-    private async Task<bool> DownloadChunkAsync(string text, MemoryStream targetStream,
+    private async Task<bool> DownloadChunkAsync(string text, string speaker, MemoryStream targetStream,
         CancellationToken cancellationToken)
     {
         try
         {
-            var response = await ttsClientFactory.GetClient(TtsProvider.Xtts).ProceedAsync(text, cancellationToken);
+            var response = await ttsClientFactory.GetClient(TtsProvider.Xtts)
+                .ProceedAsync(text, speaker, cancellationToken);
             if (!response.IsSuccessStatusCode) return false;
 
             await using var audioStream = await response.Content.ReadAsStreamAsync(cancellationToken);
