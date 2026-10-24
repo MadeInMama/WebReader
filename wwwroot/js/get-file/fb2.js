@@ -119,8 +119,8 @@ function renderPage() {
                 document.querySelector(".audio-controller > button").disabled = true;
                 document.querySelector(".audio-controller").removeAttribute('disabled');
                 if (currentAudioTtsId != null) {
-                    setTtsControlBtnActiveClass(document.querySelector(`.tts-btn[tts-id=${currentAudioTtsId}]`), 'tts-play');
-                    document.querySelector(`p[tts-id=${currentAudioTtsId}]`).style.backgroundSize = 0 + '%';
+                    setTtsControlBtnActiveClass(document.querySelector(`.tts-btn[tts-id='${currentAudioTtsId}']`), 'tts-play');
+                    document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = 0 + '%';
                     currentAudio.pause();
                     currentAudio = null;
                     currentAudioTtsId = null;
@@ -163,7 +163,7 @@ function renderPage() {
                     document.querySelector(".audio-controller > button").disabled = true;
                     document.querySelector(".audio-controller").setAttribute('disabled', '');
                     cancelAnimationFrame(animationFrameId);
-                    document.querySelector(`p[tts-id=${ttsId}]`).style.backgroundSize = 0 + '%';
+                    document.querySelector(`p[tts-id='${ttsId}']`).style.backgroundSize = 0 + '%';
                     document.querySelector('.audio-progress-bar').oninput = () => {
                     };
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
@@ -171,10 +171,10 @@ function renderPage() {
                     if (document.querySelector('.audio-auto-next').checked) {
                         let nextBtn;
 
-                        if (document.querySelector(`p[tts-id=${ttsId}]`).parentElement.tagName.toLocaleLowerCase() === 'section') {
-                            nextBtn = document.querySelector(`p[tts-id=${ttsId}] ~ p[tts-id] > button.tts-btn`);
+                        if (document.querySelector(`p[tts-id='${ttsId}']`).parentElement.tagName.toLocaleLowerCase() === 'section') {
+                            nextBtn = document.querySelector(`p[tts-id='${ttsId}'] ~ p[tts-id] > button.tts-btn`);
                         } else {
-                            const currentP = document.querySelector(`p[tts-id=${ttsId}]`);
+                            const currentP = document.querySelector(`p[tts-id='${ttsId}']`);
 
                             if (currentP) {
                                 const currentTopElement = currentP.closest('section > *');
@@ -208,7 +208,7 @@ function renderPage() {
                     if (!currentAudio.duration) return;
                     currentAudio.currentTime = (e.target.value / 100) * currentAudio.duration;
                     updateSliderFill(e.target.value);
-                    document.querySelector(`p[tts-id=${currentAudioTtsId}]`).style.backgroundSize = e.target.value + '%';
+                    document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = e.target.value + '%';
                 };
 
                 await currentAudio.play();
@@ -227,7 +227,7 @@ function renderPage() {
                 cancelAnimationFrame(animationFrameId);
                 document.querySelector('.audio-progress-bar').oninput = () => {
                 };
-                document.querySelector(`p[tts-id=${currentAudioTtsId}]`).style.backgroundSize = 0 + '%';
+                document.querySelector(`p[tts-id='${currentAudioTtsId}]'`).style.backgroundSize = 0 + '%';
                 document.querySelector('.audio-progress-bar').disabled = true;
                 document.querySelector(".audio-controller > button").disabled = true;
                 document.querySelector(".audio-controller").setAttribute('disabled', '');
@@ -244,7 +244,7 @@ function trackTtsProgress() {
     if (currentAudio) {
         const percentage = (currentAudio.currentTime / currentAudio.duration) * 100;
 
-        document.querySelector(`p[tts-id=${currentAudioTtsId}`).style.backgroundSize = percentage + '%';
+        document.querySelector(`p[tts-id='${currentAudioTtsId}'`).style.backgroundSize = percentage + '%';
 
         updateSliderFill(percentage);
 

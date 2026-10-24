@@ -86,7 +86,7 @@ class CoreCacheService extends CacheService {
         '/js/libs/pdf.min.mjs',
         '/js/libs/pdf.worker.min.mjs',
 
-        OFFLINE_URL,
+        '/Home/Offline',
 
         '/css/audio-controller.css',
         '/css/click-effects.css',
