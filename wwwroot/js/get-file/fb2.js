@@ -58,7 +58,7 @@ apiTts.interceptors.response.use(
 
         config.__retryCount = config.__retryCount || 1;
 
-        if (config.__retryCount >= 3) {
+        if (config.__retryCount >= 3 || error.response.status === 404) {
             return Promise.reject(error);
         }
 
@@ -103,7 +103,10 @@ function renderPage() {
     };
 
     document.querySelector('.audio-progress-bar').oninput = (e) => {
-        if (!currentAudio.duration) return;
+        if (!currentAudio.duration) {
+            e.preventDefault();
+            return;
+        }
         currentAudio.currentTime = (e.target.value / 100) * currentAudio.duration;
         updateSliderFill(e.target.value);
         document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = e.target.value + '%';
@@ -198,8 +201,6 @@ function renderPage() {
                     document.querySelector(".audio-controller").setAttribute('disabled', '');
                     cancelAnimationFrame(animationFrameId);
                     document.querySelector(`p[tts-id='${ttsId}']`).style.backgroundSize = 0 + '%';
-                    document.querySelector('.audio-progress-bar').oninput = () => {
-                    };
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
 
                     if (document.querySelector('.audio-auto-next').checked) {
@@ -227,8 +228,14 @@ function renderPage() {
                                 const targetTop = target.getBoundingClientRect().top;
                                 const mainTop = main.getBoundingClientRect().top;
 
+                                const desiredDelta = targetTop - mainTop;
+
+                                const maxRemainingScroll = main.scrollHeight - main.scrollTop - main.clientHeight;
+
+                                const safeDelta = Math.min(desiredDelta, maxRemainingScroll);
+
                                 main.scrollBy({
-                                    top: targetTop - mainTop,
+                                    top: Math.max(safeDelta, 0),
                                     behavior: 'smooth'
                                 });
                             }
@@ -253,8 +260,6 @@ function renderPage() {
                 console.error(e);
                 setTtsControlBtnActiveClass(event.target, 'tts-error');
                 cancelAnimationFrame(animationFrameId);
-                document.querySelector('.audio-progress-bar').oninput = () => {
-                };
                 if (currentAudioTtsId) {
                     document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = 0 + '%';
                 }
@@ -430,70 +435,97 @@ function convertNode(node, imageMap, isPage = true) {
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
 
     const tag = node.localName;
-    const children = () => Array.from(node.childNodes).map(n => convertNode(n, imageMap, isPage)).join('');
+
+    const getChildrenHtml = () => Array.from(node.childNodes).map(n => convertNode(n, imageMap, isPage)).join('');
 
     switch (tag) {
-        case 'p':
-            let ttsBtn = null;
+        case 'p': {
             const hasTtsId = node.hasAttribute('tts-id');
+            let ttsBtn = '';
+            let ttsAttr = '';
+
             if (hasTtsId) {
-                //TODO: some text duplicates in log
-                // console.log(node.textContent);
-                ttsBtn = `<button class="tts-btn tts-play"
-                            tts-id="${node.getAttribute('tts-id')}"
-                            class="tts tts-play"></button>`;
+                const ttsId = node.getAttribute('tts-id');
+                ttsAttr = ` tts-id="${escapeHtml(ttsId)}"`;
+                ttsBtn = `<button class="tts-btn tts-play" tts-id="${escapeHtml(ttsId)}"></button>`;
             }
 
-            return `<p ${hasTtsId ? "tts-id='" + node.getAttribute('tts-id') + "'" : ''}>
-                        ${ttsBtn ? ttsBtn : ''}${children()}
-                    </p>`;
-        case 'cite':
-            return `<p class="cite-author">${children()}</p>`;
-        case 'section':
-            if (isPage) pages.push(`<section>${children()}</section>`);
-            return `<section>${children()}</section>`;
-        case 'title': {
-            const level = node.closest('section') ? 2 : 1;
-            return `<h${level}>${children()}</h${level}>`;
+            return `<p${ttsAttr}>${ttsBtn}${getChildrenHtml()}</p>`;
         }
+
+        case 'poem':
+            const isLast = !node.nextElementSibling || node.nextElementSibling.localName !== 'poem';
+            return `<i class="poem">${getChildrenHtml()}</i> ${isLast ? '<br />' : '<br /><br />'} `;
+
+        case 'stanza':
+            return getChildrenHtml();
+
+        case 'v': {
+            const content = getChildrenHtml();
+            const isLast = !node.nextElementSibling || node.nextElementSibling.localName !== 'v';
+            return `<span>${content}</span>${isLast ? '' : '<br />'}`;
+        }
+
+        case 'cite':
+            return ` <span class="cite">— ${getChildrenHtml()}</span>`;
+
+        case 'section': {
+            const content = getChildrenHtml();
+            if (isPage) {
+                pages.push(`<section>${content}</section>`);
+            }
+            return `<section>${content}</section>`;
+        }
+
+        case 'title': {
+            const level = node.closest && node.closest('section') ? 2 : 1;
+            return `<h${level}>${getChildrenHtml()}</h${level}>`;
+        }
+
         case 'h1':
-            return `<h1>${children()}</h1>`;
+            return `<h1>${getChildrenHtml()}</h1>`;
         case 'h2':
-            return `<h2>${children()}</h2>`;
+            return `<h2>${getChildrenHtml()}</h2>`;
+
         case 'image':
         case 'img': {
             const href = node.getAttribute('l:href') || node.getAttribute('href') || '';
             if (href.startsWith('#')) {
                 const src = imageMap.get(href.slice(1));
-                if (!isPage) return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image" /></div>`;
-                else {
-                    return `<div class="fb2-image-container">
-                                        <details>
-                                            <summary><span>Image (click to toggle)</span></summary>
-                                            <img onclick='this.parentNode.removeAttribute("open")' src="${escapeHtml(src)}" class="fb2-image" alt="Image not found"/>
-                                        </details>
-                                    </div>`;
+                if (!isPage) {
+                    return `<span class="fb2-image"><img src="${escapeHtml(src)}" class="fb2-image" /></span>`;
+                } else {
+                    return `<span class="fb2-image">
+                                <details style="display:inline-block;">
+                                    <summary><span>Image (click)</span></summary>
+                                    <img onclick='this.parentNode.removeAttribute("open")' src="${escapeHtml(src)}" class="fb2-image" alt="Image missing"/>
+                                </details>
+                            </span>`;
                 }
             }
-            return `<div>[Image missing: ${href}]</div>`;
+            return `<span>[Image missing: ${escapeHtml(href)}]</span>`;
         }
-        case 'poem':
-            return `<div class="poem">${children()}</div>`;
-        case 'v':
-            return `<div class="verse">${children()}</div>`;
+
         case 'empty-line':
-            return '';
+            return '<br />';
+
         case 'emphasis':
-            return ` <em>${children()}</em> `;
+            return ` <em>${getChildrenHtml()}</em> `;
         case 'strong':
-            return `<strong>${children()}</strong>`;
+            return `<strong>${getChildrenHtml()}</strong>`;
+
         case 'a':
             if (node.getAttribute('type') === 'note') {
-                const onClickHtml = noteMap.get(node.getAttribute('l:href').replace('#', ''));
-                return `<button type="button" class="note-btn" onclick='openModalClicked(${JSON.stringify(onClickHtml)})'></button>`;
-            } else return '';
+                const rawHref = node.getAttribute('l:href') || node.getAttribute('href') || '';
+                const noteKey = rawHref.replace('#', '');
+                const onClickHtml = noteMap.get(noteKey) || '';
+                const safeJson = escapeHtml(JSON.stringify(onClickHtml));
+                return `<button type="button" class="note-btn" onclick="openModalClicked(JSON.parse(this.getAttribute('data-note')))" data-note="${safeJson}"></button>`;
+            }
+            return '';
+
         default:
-            return children();
+            return getChildrenHtml();
     }
 }
 

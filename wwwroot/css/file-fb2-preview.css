@@ -80,7 +80,7 @@
 }
 
 .fb2-canvas-container > section > p:not(:has(.tts-btn)) {
-    text-indent: 2em;
+    text-indent: 1.8em;
 }
 
 .fb2-canvas-container > section > p:first-child {
@@ -89,7 +89,8 @@
 
 .tts-btn {
     position: relative;
-    margin-right: 2em;
+    display: inline-block;
+    width: 1.8em;
     z-index: 3;
 }
 
@@ -182,11 +183,29 @@ h2 > p > .tts-btn::after {
     padding-left: 0.1em;
 }
 
-.fb2-canvas-container .cite-author {
+.fb2-canvas-container .cite {
+    display: inline-block;
     text-align: right;
+    padding-top: 1em;
+    width: 100%;
 }
 
-.note-btn {
+.fb2-canvas-container > section > p:has(.poem) {
+    margin: 0 3em;
+    text-indent: 0;
+}
+
+.fb2-canvas-container > section > p > .poem > span:not(:last-child) {
+    display: inline-block;
+    padding-bottom: 0.5em;
+}
+
+.fb2-canvas-container > section > p:has(.tts-btn):has(.poem) > .tts-btn {
+    left: -3em;
+    width: 0;
+}
+
+.fb2-canvas-container .note-btn {
     position: relative;
     margin-right: 2em;
     z-index: 2;
