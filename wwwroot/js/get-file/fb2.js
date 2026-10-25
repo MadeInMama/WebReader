@@ -161,9 +161,7 @@ function renderPage() {
                     currentAudioUrl = null;
                 }
 
-                if (!currentAudio) {
-                    currentAudio = new Audio();
-                }
+                currentAudio = new Audio();
 
                 currentAudio.play().catch(() => {
                 });
@@ -273,7 +271,7 @@ function renderPage() {
 }
 
 function trackTtsProgress() {
-    if (currentAudio) {
+    if (currentAudioTtsId) {
         const percentage = (currentAudio.currentTime / currentAudio.duration) * 100;
 
         document.querySelector(`p[tts-id='${currentAudioTtsId}'`).style.backgroundSize = percentage + '%';
