@@ -45,12 +45,6 @@ function prepareFile(data) {
     }
 }
 
-let currentAudio = null;
-let currentAudioTtsId = null;
-let currentAudioUrl = null;
-let animationFrameId = null;
-let isTtsLogicPlay = false;
-
 const apiTts = axios.create({
     timeout: 1000 * 60 * 5
 });
@@ -78,6 +72,12 @@ apiTts.interceptors.response.use(
     }
 );
 
+let currentAudio = null;
+let currentAudioTtsId = null;
+let currentAudioUrl = null;
+let animationFrameId = null;
+let isTtsLogicPlay = false;
+
 function renderPage() {
     currentAudio?.pause();
     URL.revokeObjectURL(currentAudioUrl);
@@ -100,6 +100,13 @@ function renderPage() {
         if (currentAudio) {
             currentAudio.playbackRate = parseFloat(e.target.value);
         }
+    };
+
+    document.querySelector('.audio-progress-bar').oninput = (e) => {
+        if (!currentAudio.duration) return;
+        currentAudio.currentTime = (e.target.value / 100) * currentAudio.duration;
+        updateSliderFill(e.target.value);
+        document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = e.target.value + '%';
     };
 
     Array.from(document.getElementsByClassName("tts-btn")).forEach(f => {
@@ -149,12 +156,17 @@ function renderPage() {
                     setTtsControlBtnActiveClass(document.querySelector(`.tts-btn[tts-id='${currentAudioTtsId}']`), 'tts-play');
                     document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = 0 + '%';
                     currentAudio.pause();
-                    currentAudio = null;
                     currentAudioTtsId = null;
+                    if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
                     currentAudioUrl = null;
                 }
 
-                URL.revokeObjectURL(currentAudioUrl);
+                if (!currentAudio) {
+                    currentAudio = new Audio();
+                }
+
+                currentAudio.play().catch(() => {
+                });
 
                 currentAudioTtsId = ttsId;
 
@@ -169,22 +181,19 @@ function renderPage() {
                     withCredentials: true
                 });
 
-                const audioBlob = new Blob([response.data], {type: 'audio/ogg'});
-
-                currentAudioUrl = URL.createObjectURL(audioBlob);
-
-                currentAudio = new Audio(currentAudioUrl);
+                currentAudioUrl = URL.createObjectURL(response.data);
+                currentAudio.src = currentAudioUrl;
+                currentAudio.load();
 
                 currentAudio.playbackRate = parseFloat(document.querySelector('.audio-speed-select').value);
 
-                currentAudio.addEventListener('play', () => {
+                currentAudio.onplay = () => {
                     animationFrameId = requestAnimationFrame(trackTtsProgress);
-                });
+                };
 
-                currentAudio.addEventListener('ended', () => {
-                    URL.revokeObjectURL(currentAudioUrl);
-                    currentAudio = null;
+                currentAudio.onended = () => {
                     currentAudioTtsId = null;
+                    URL.revokeObjectURL(currentAudioUrl);
                     currentAudioUrl = null;
                     document.querySelector('.audio-progress-bar').disabled = true;
                     document.querySelector(".audio-controller > button").disabled = true;
@@ -229,13 +238,6 @@ function renderPage() {
                             nextBtn?.click();
                         }
                     }
-                });
-
-                document.querySelector('.audio-progress-bar').oninput = (e) => {
-                    if (!currentAudio.duration) return;
-                    currentAudio.currentTime = (e.target.value / 100) * currentAudio.duration;
-                    updateSliderFill(e.target.value);
-                    document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = e.target.value + '%';
                 };
 
                 await currentAudio.play();
@@ -250,7 +252,7 @@ function renderPage() {
 
                 setTtsControlBtnActiveClass(event.target, 'tts-pause');
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 setTtsControlBtnActiveClass(event.target, 'tts-error');
                 cancelAnimationFrame(animationFrameId);
                 document.querySelector('.audio-progress-bar').oninput = () => {
