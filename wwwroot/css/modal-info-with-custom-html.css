@@ -42,6 +42,10 @@
     padding: 0 0.3em;
 }
 
+#custom-modal-content > p > em:first-child {
+    padding-left: 0;
+}
+
 #close-custom-modal-btn {
     position: relative;
     float: right;
