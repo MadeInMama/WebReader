@@ -1,4 +1,3 @@
-using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -286,10 +285,7 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.Limits.MaxRequestBodySize = long.MaxValue;
-});
+builder.WebHost.ConfigureKestrel(serverOptions => { serverOptions.Limits.MaxRequestBodySize = long.MaxValue; });
 
 var app = builder.Build();
 
@@ -439,7 +435,7 @@ app.Use(async (context, next) =>
                 "img-src 'self' data: blob:; " +
                 "worker-src 'self' blob:; " +
                 "font-src 'self' data:; " +
-                "connect-src 'self'; " +
+                "connect-src 'self' wss: ws:; " +
                 "media-src 'self' blob:; " +
                 "object-src 'none'; " +
                 "base-uri 'self'; " +
