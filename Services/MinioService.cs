@@ -66,7 +66,9 @@ public class MinioService(IMinioClient minioClient)
     public async Task<IEnumerable<Item>> ListObjectsAsync(string bucketName, CancellationToken cancellationToken)
     {
         return await minioClient
-            .ListObjectsEnumAsync(new ListObjectsArgs().WithBucket(bucketName), cancellationToken)
+            .ListObjectsEnumAsync(new ListObjectsArgs()
+                .WithBucket(bucketName)
+                .WithRecursive(true), cancellationToken)
             .ToListAsync(cancellationToken);
     }
 

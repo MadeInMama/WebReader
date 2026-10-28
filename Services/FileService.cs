@@ -39,13 +39,22 @@ public class FileService(
             await fileRepository.DeleteAsync(guid.Item, cancellationToken);
         }
 
-        await scheduledTaskRepository.AddAsync(new ScheduledTask
-        {
-            Type = TaskType.RemoveFilesThatNotExistsInDb,
-            Priority = sbyte.MaxValue,
-            Cron = TaskCron.Manually,
-            HaveToStartAt = DateTimeOffset.UtcNow
-        }, cancellationToken);
+        await scheduledTaskRepository.AddRangeAsync([
+            new ScheduledTask
+            {
+                Type = TaskType.RemoveFilesThatNotExistsInDb,
+                Priority = sbyte.MaxValue,
+                Cron = TaskCron.Manually,
+                HaveToStartAt = DateTimeOffset.UtcNow
+            },
+            new ScheduledTask
+            {
+                Type = TaskType.RemoveTtsForFilesThatNotExistsInDb,
+                Priority = sbyte.MaxValue - 1,
+                Cron = TaskCron.Manually,
+                HaveToStartAt = DateTimeOffset.UtcNow
+            }
+        ], cancellationToken);
         await scheduledTaskRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Deleting files done");

@@ -5,6 +5,7 @@ public enum TaskType
     RemoveBucketsThatNotExistsInDb,
     MakeUnavailableBucketsThatNotExistsInS3,
     RemoveFilesThatNotExistsInDb,
+    RemoveTtsForFilesThatNotExistsInDb,
     UpdateBucketData,
     UpdateFilesData,
 

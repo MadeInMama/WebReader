@@ -66,12 +66,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.SaveChanges();
             }
 
+            if (!context.Set<Bucket>().Any(f => f.Name.Equals(StaticNames.TtsBucketName)))
+            {
+                context.Set<Bucket>().Add(new Bucket
+                {
+                    Name = StaticNames.TtsBucketName,
+                    IsSystem = true,
+                    IsHidden = true
+                });
+
+                context.SaveChanges();
+            }
+
             if (!context.Set<ScheduledTaskConfig>()
                     .Any(f => f.Type == TaskType.RemoveBucketsThatNotExistsInDb))
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.RemoveBucketsThatNotExistsInDb,
-                    DefaultPriority = sbyte.MaxValue,
+                    DefaultPriority = sbyte.MinValue + 24,
                     Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
@@ -81,7 +93,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.MakeUnavailableBucketsThatNotExistsInS3,
-                    DefaultPriority = sbyte.MaxValue - 1,
+                    DefaultPriority = sbyte.MinValue + 22,
                     Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
@@ -91,7 +103,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.RemoveFilesThatNotExistsInDb,
-                    DefaultPriority = sbyte.MaxValue - 2,
+                    DefaultPriority = sbyte.MinValue + 20,
+                    Cron = TaskCron.EveryHour,
+                    IsActive = true
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.RemoveTtsForFilesThatNotExistsInDb))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.RemoveTtsForFilesThatNotExistsInDb,
+                    DefaultPriority = sbyte.MinValue + 18,
                     Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
@@ -101,7 +123,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.UpdateBucketData,
-                    DefaultPriority = sbyte.MaxValue - 3,
+                    DefaultPriority = sbyte.MinValue + 16,
                     Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
@@ -111,7 +133,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.UpdateFilesData,
-                    DefaultPriority = sbyte.MaxValue - 4,
+                    DefaultPriority = sbyte.MinValue + 14,
                     Cron = TaskCron.EveryHour,
                     IsActive = true
                 });
@@ -121,9 +143,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.AutoDownloadNewPartsOmniscientReader,
-                    DefaultPriority = 100,
+                    DefaultPriority = sbyte.MinValue + 12,
                     Cron = TaskCron.EveryDay,
-                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 1000}"),
+                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
 
@@ -132,9 +154,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.AutoDownloadNewPartsSoloLeveling,
-                    DefaultPriority = 90,
+                    DefaultPriority = sbyte.MinValue + 10,
                     Cron = TaskCron.EveryWeek,
-                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 1000}"),
+                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
 
@@ -143,9 +165,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
-                    DefaultPriority = 90,
+                    DefaultPriority = sbyte.MinValue + 8,
                     Cron = TaskCron.EveryWeek,
-                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 1000}"),
+                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
 
@@ -154,9 +176,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.DeleteOldCompletedTasks,
-                    DefaultPriority = 0,
+                    DefaultPriority = sbyte.MinValue + 6,
                     Cron = TaskCron.EveryDay,
-                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 24}"),
+                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 72}"),
                     IsActive = true
                 });
 
@@ -165,9 +187,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.DeleteOldErroredTasks,
-                    DefaultPriority = 0,
+                    DefaultPriority = sbyte.MinValue + 4,
                     Cron = TaskCron.EveryDay,
-                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 48}"),
+                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 720}"),
                     IsActive = true
                 });
 
@@ -176,9 +198,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.DeleteOldInProgressTasks,
-                    DefaultPriority = 0,
+                    DefaultPriority = sbyte.MinValue + 2,
                     Cron = TaskCron.EveryHour,
-                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 12}"),
+                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 24}"),
                     IsActive = true
                 });
 
@@ -187,9 +209,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.DeleteOldRequestAttemptsLogs,
-                    DefaultPriority = 0,
+                    DefaultPriority = sbyte.MinValue,
                     Cron = TaskCron.EveryDay,
-                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 720}"),
+                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 4320}"),
                     IsActive = true
                 });
 

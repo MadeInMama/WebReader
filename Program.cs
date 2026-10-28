@@ -111,6 +111,8 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, MakeUnavailableBucketsThat
     TaskType.MakeUnavailableBucketsThatNotExistsInS3);
 builder.Services.AddKeyedTransient<IBackgroundTasked, RemoveFilesThatNotExistsInDb>(
     TaskType.RemoveFilesThatNotExistsInDb);
+builder.Services.AddKeyedTransient<IBackgroundTasked, RemoveTtsForFilesThatNotExistsInDb>(
+    TaskType.RemoveTtsForFilesThatNotExistsInDb);
 builder.Services.AddKeyedTransient<IBackgroundTasked, UpdateBucketData>(
     TaskType.UpdateBucketData);
 builder.Services.AddKeyedTransient<IBackgroundTasked, UpdateFilesData>(

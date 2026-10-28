@@ -32,6 +32,7 @@ public static class GlobalFunctions
             TaskType.RemoveBucketsThatNotExistsInDb,
             TaskType.MakeUnavailableBucketsThatNotExistsInS3,
             TaskType.RemoveFilesThatNotExistsInDb,
+            TaskType.RemoveTtsForFilesThatNotExistsInDb,
             TaskType.UpdateBucketData,
             TaskType.UpdateFilesData
         ];
