@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Tokens;
 using Minio;
+using StackExchange.Redis;
 using Telegram.Bot;
 using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
@@ -139,7 +141,6 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, CalcAllBooksSizes>(
     TaskType.CalcAllBooksSizes);
 
 builder.Services.Configure<BackgroundTaskConfig>(builder.Configuration.GetSection("BackgroundTasks"));
-builder.Services.AddHostedService<BackgroundTaskManager>();
 
 builder.Services.Configure<TelegramBotClientConfig>(builder.Configuration.GetSection("Telegram"));
 var telegramConfig = new TelegramBotClientConfig();
@@ -159,7 +160,7 @@ builder.Services.AddAuthentication(options =>
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         options.SlidingExpiration = true;
@@ -208,7 +209,22 @@ builder.Services.AddHsts(options =>
     options.Preload = true;
 });
 
-builder.Services.AddSignalR();
+var redisConfig = new RedisConfig();
+builder.Configuration.GetRequiredSection(nameof(RedisConfig)).Bind(redisConfig);
+
+builder.Services.AddDataProtection()
+    .PersistKeysToStackExchangeRedis(
+        ConnectionMultiplexer.Connect(redisConfig.ConnectionString),
+        "DataProtection-Keys");
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(redisConfig.ConnectionString));
+
+builder.Services.AddSignalR().AddStackExchangeRedis(redisConfig.ConnectionString);
+
+builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = redisConfig.ConnectionString; });
+
+builder.Services.AddHostedService<BackgroundTaskManager>();
 
 builder.Services.AddHttpClient();
 
@@ -255,7 +271,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddAntiforgery(options =>
 {
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.Cookie.HttpOnly = true;
     options.SuppressXFrameOptionsHeader = false;
 });
@@ -286,7 +302,8 @@ app.UseExceptionHandler("/Account/CustomNotFound");
 
 app.UseHsts();
 
-app.UseHttpsRedirection();
+// HTTPS redirection handled by reverse proxy (nginx)
+// app.UseHttpsRedirection();
 
 app.UseWebSockets();
 

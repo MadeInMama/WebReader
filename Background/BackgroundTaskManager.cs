@@ -2,6 +2,7 @@
 using AngleSharp.Common;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 using WebReader.Configuration;
 using WebReader.Models;
 using WebReader.Models.Entities;
@@ -14,14 +15,24 @@ namespace WebReader.Background;
 public class BackgroundTaskManager(
     ILogger<BackgroundTaskManager> logger,
     IServiceScopeFactory serviceScopeFactory,
-    IOptions<BackgroundTaskConfig> backgroundTaskConfig)
+    IOptions<BackgroundTaskConfig> backgroundTaskConfig,
+    IConnectionMultiplexer redis)
     : BackgroundService
 {
+    private const string LockKeyRunSpreadTasks = "BackgroundTaskManager_LockKeyRunSpreadTasks";
+    private const string LockKeyRunAsSoonAsPossible = "BackgroundTaskManager_LockKeyRunAsSoonAsPossible";
+
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         if (!backgroundTaskConfig.Value.Enabled)
         {
             logger.LogInformation("Background tasks are disabled by configuration");
+            return;
+        }
+
+        if (!redis.IsConnected)
+        {
+            logger.LogError("Redis is not connected. Background tasks will not run");
             return;
         }
 
@@ -49,23 +60,34 @@ public class BackgroundTaskManager(
 
         async Task DoWork()
         {
-            var taskConfigs = (await taskConfigRepository.AllAsync(f => f.IsActive, cancellationToken, true))
-                .GroupBy(f => f.Cron)
-                .ToImmutableDictionary(f => f.Key, f => f.ToList());
+            var lockData = await AcquireLock(LockKeyRunSpreadTasks);
 
-            var tasks = new List<ScheduledTask>();
-            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryHour, [])));
-            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryDay, [])));
-            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryWeek, [])));
-            tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryMonth, [])));
+            if (!lockData.LockAcquired) return;
 
-            if (tasks.Count > 0)
+            try
             {
-                await taskRepository.AddRangeAsync(tasks, cancellationToken);
+                var taskConfigs = (await taskConfigRepository.AllAsync(f => f.IsActive, cancellationToken, true))
+                    .GroupBy(f => f.Cron)
+                    .ToImmutableDictionary(f => f.Key, f => f.ToList());
 
-                await taskRepository.SaveChangesAsync(cancellationToken);
+                var tasks = new List<ScheduledTask>();
+                tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryHour, [])));
+                tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryDay, [])));
+                tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryWeek, [])));
+                tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryMonth, [])));
 
-                await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+                if (tasks.Count > 0)
+                {
+                    await taskRepository.AddRangeAsync(tasks, cancellationToken);
+
+                    await taskRepository.SaveChangesAsync(cancellationToken);
+
+                    await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+                }
+            }
+            finally
+            {
+                await ReleaseLock(lockData.Database, lockData.LockKey, lockData.LockId);
             }
         }
 
@@ -121,62 +143,103 @@ public class BackgroundTaskManager(
         var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
         var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
 
-        while (await timer.WaitForNextTickAsync(cancellationToken))
+        while (await timer.WaitForNextTickAsync(cancellationToken)) await DoWork(scope);
+
+        return;
+
+        async Task DoWork(IServiceScope serviceScope)
         {
-            var task = await taskRepository.GetNextTaskAsync(cancellationToken);
+            (IDatabase? Database, string? LockKey, string? LockId, bool? LockAcquired) lockData =
+                (null, null, null, null);
 
-            if (task == null)
+            try
             {
-                await Task.Delay(5000, cancellationToken);
-                continue;
+                var task = await taskRepository.GetNextTaskAsync(cancellationToken);
+
+                if (task == null)
+                {
+                    await Task.Delay(5000, cancellationToken);
+                    return;
+                }
+
+                lockData = await AcquireLock($"{LockKeyRunAsSoonAsPossible}_{task.Type}");
+
+                if (!lockData.LockAcquired!.Value) return;
+
+                var taskExecutor = serviceScope.ServiceProvider.GetKeyedService<IBackgroundTasked>(task.Type);
+
+                if (taskExecutor == null)
+                {
+                    logger.LogError("No TaskExecutorClass for type: {type}({typeCode})", task.Type, (int)task.Type);
+
+                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, 0.0m,
+                        $"No TaskExecutorClass for type: {task.Type}({(int)task.Type})", cancellationToken);
+                }
+                else
+                {
+                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress, 0.0m,
+                        null, cancellationToken);
+
+                    //TODO: set execution time limit from settings
+                    try
+                    {
+                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        linkedCts.CancelAfter(TimeSpan.FromMinutes(60));
+                        var combinedToken = linkedCts.Token;
+
+                        logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
+                            task.Settings.RootElement.ToString());
+                        var result = await taskExecutor.ExecuteAsync(task, combinedToken);
+                        logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
+
+                        if (result.IsSuccess)
+                            await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed, 1.0m,
+                                result.ValueOrDefault, cancellationToken);
+                        else if (result.Reasons.Count != 0)
+                            await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null,
+                                string.Join(", ", result.Reasons.Select(f => f.Message)), cancellationToken);
+                    }
+                    catch (OperationCanceledException e)
+                    {
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Canceled, null, e.Message,
+                            cancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null, e.Message,
+                            cancellationToken);
+                    }
+                }
+
+                await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
             }
-
-            var taskExecutor = scope.ServiceProvider.GetKeyedService<IBackgroundTasked>(task.Type);
-
-            if (taskExecutor == null)
+            finally
             {
-                logger.LogError("No TaskExecutorClass for type: {type}({typeCode})", task.Type, (int)task.Type);
-
-                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, 0.0m,
-                    $"No TaskExecutorClass for type: {task.Type}({(int)task.Type})", cancellationToken);
+                if (lockData is not (Database: null, LockKey: null, LockId: null, LockAcquired: null))
+                    await ReleaseLock(lockData.Database!, lockData.LockKey!, lockData.LockId!);
             }
-            else
-            {
-                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress, 0.0m,
-                    null, cancellationToken);
-
-                //TODO: set execution time limit from settings
-                try
-                {
-                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    linkedCts.CancelAfter(TimeSpan.FromMinutes(60));
-                    var combinedToken = linkedCts.Token;
-
-                    logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
-                        task.Settings.RootElement.ToString());
-                    var result = await taskExecutor.ExecuteAsync(task, combinedToken);
-                    logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
-
-                    if (result.IsSuccess)
-                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed, 1.0m,
-                            result.ValueOrDefault, cancellationToken);
-                    else if (result.Reasons.Count != 0)
-                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null,
-                            string.Join(", ", result.Reasons.Select(f => f.Message)), cancellationToken);
-                }
-                catch (OperationCanceledException e)
-                {
-                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Canceled, null, e.Message,
-                        cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null, e.Message,
-                        cancellationToken);
-                }
-            }
-
-            await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
         }
+    }
+
+    private async Task<(IDatabase Database, string LockKey, string LockId, bool LockAcquired)> AcquireLock(
+        string lockKey)
+    {
+        var database = redis.GetDatabase();
+        var lockTimeout = TimeSpan.FromMinutes(61);
+        var lockId = Guid.NewGuid().ToString("N");
+        var lockAcquired = await database.LockTakeAsync(lockKey, lockId, lockTimeout);
+
+        if (!lockAcquired)
+            logger.LogInformation("Background tasks lock {} already held by another instance, skipping", lockKey);
+        else
+            logger.LogInformation("Background tasks lock acquired by instance: {}", lockId);
+
+        return (database, lockKey, lockId, lockAcquired);
+    }
+
+    private async Task ReleaseLock(IDatabase db, string lockKey, string lockId)
+    {
+        await db.LockReleaseAsync(lockKey, lockId);
+        logger.LogInformation("Background tasks lock {lockKey} released by instance: {lockId}", lockKey, lockId);
     }
 }
