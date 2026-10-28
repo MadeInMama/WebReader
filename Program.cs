@@ -288,10 +288,7 @@ builder.Services.AddRateLimiter(options =>
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ConfigureHttpsDefaults(listenOptions =>
-    {
-        listenOptions.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
-    });
+    serverOptions.Limits.MaxRequestBodySize = long.MaxValue;
 });
 
 var app = builder.Build();
