@@ -14,7 +14,7 @@ public class MinioService(IMinioClient minioClient)
         var url = await minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
             .WithBucket(bucketId)
             .WithObject(objectName)
-            .WithExpiry(3600));
+            .WithExpiry(600));
 
         return url ?? throw new Exception("Failed to get url");
     }

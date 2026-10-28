@@ -3,9 +3,8 @@
         prepareFile(await fileCacheService.get(fileId));
     } else {
         requestQueue.enqueue({
-            method: 'POST',
+            method: 'GET',
             url: decodedString,
-            data: {},
             options: {
                 responseType: 'arraybuffer',
                 headers: {

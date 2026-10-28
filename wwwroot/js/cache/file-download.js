@@ -23,9 +23,8 @@ function downloadFile(bucketId, fileId, updateState, fileName) {
         .then(_ => {
             return coreCacheService.putStatic().then(_ => {
                 return requestQueue.enqueue({
-                    method: 'POST',
-                    url: `/api/S3/GetFile?bucketId=${bucketId}&fileId=${fileId}`,
-                    data: {},
+                    method: 'GET',
+                    url: `/api/S3/GetFileRest?bucketId=${bucketId}&fileId=${fileId}`,
                     options: {
                         responseType: 'arraybuffer',
                         headers: {

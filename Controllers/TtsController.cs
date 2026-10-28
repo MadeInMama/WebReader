@@ -22,10 +22,10 @@ public class TtsController(
     IOptions<TtsConfig> ttsConfig,
     ILogger<TtsController> logger) : Controller
 {
-    [HttpPost]
+    [HttpGet]
     [ValidateAntiForgeryToken]
-    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
-    public async Task<IActionResult> GetFile(Guid bucketId, Guid fileId, string ttsId,
+    [ResponseCache(Duration = 500, Location = ResponseCacheLocation.Client)]
+    public async Task<IActionResult> GetFileRest(Guid bucketId, Guid fileId, string ttsId,
         CancellationToken cancellationToken = default)
     {
         var file = await fileRepository.FirstOrDefaultAsync(f =>
@@ -42,8 +42,8 @@ public class TtsController(
 
         var customOptions = new HybridCacheEntryOptions
         {
-            LocalCacheExpiration = TimeSpan.FromSeconds(3000),
-            Expiration = TimeSpan.FromSeconds(3000)
+            LocalCacheExpiration = TimeSpan.FromSeconds(500),
+            Expiration = TimeSpan.FromSeconds(500)
         };
 
         var presignedUrl = await cache.GetOrCreateWithLoggingAsync(

@@ -24,11 +24,10 @@
                 switch (config.method) {
                     case 'GET':
                         if (config.options.responseType !== 'arraybuffer') {
-                            await resolve(await axios.get(config.url, config.data, config.options));
+                            await resolve(await axios.get(config.url, config.options));
                         } else {
                             let respP = await fetch(config.url, {
                                 method: 'GET',
-                                body: config.data,
                                 headers: config.options.headers
                             });
                             resolve(await updateProgress(respP, config.setProgress));

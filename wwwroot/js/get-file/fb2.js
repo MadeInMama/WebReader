@@ -135,7 +135,7 @@ function renderPage() {
                 if (event.target.classList.contains('tts-pause') && currentAudio != null) {
                     cancelAnimationFrame(animationFrameId);
                     currentAudio.pause();
-                    currentAudio.currentTime = Math.max(0, currentAudio.currentTime - 2);
+                    // currentAudio.currentTime = Math.max(0, currentAudio.currentTime - 2);
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
                     document.querySelector('.audio-progress-bar').disabled = false;
                     document.querySelector(".audio-controller > button").disabled = false;
@@ -177,9 +177,8 @@ function renderPage() {
                 currentAudioTtsId = ttsId;
 
                 const response = await apiTts({
-                    method: 'POST',
-                    url: `/api/Tts/GetFile?bucketId=${bucketId}&fileId=${fileId}&ttsId=${ttsId}`,
-                    data: {},
+                    method: 'GET',
+                    url: `/api/Tts/GetFileRest?bucketId=${bucketId}&fileId=${fileId}&ttsId=${ttsId}`,
                     responseType: 'blob',
                     headers: {
                         'RequestVerificationToken': GetAntiForgeryToken()
