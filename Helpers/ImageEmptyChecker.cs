@@ -14,8 +14,7 @@ public static class ImageEmptyChecker
         {
             var pixel = image[x, y];
 
-            if (!StaticFunctions.IsColorMatch(Color.FromRgb(pixel.R, pixel.G, pixel.B),
-                    image[image.Width / 2, image.Height / 2], tolerance))
+            if (!StaticFunctions.IsColorMatch(pixel, image[image.Width / 2, image.Height / 2], tolerance))
                 return false;
         }
 

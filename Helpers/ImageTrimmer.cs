@@ -83,7 +83,7 @@ public static class ImageTrimmer
         {
             var pixel = image[x, y];
 
-            if (!StaticFunctions.IsColorMatch(Color.FromRgb(pixel.R, pixel.G, pixel.B), fillColor, tolerance))
+            if (!StaticFunctions.IsColorMatch(pixel, fillColor, tolerance))
                 return false;
         }
 
@@ -96,7 +96,7 @@ public static class ImageTrimmer
         {
             var pixel = image[x, y];
 
-            if (!StaticFunctions.IsColorMatch(Color.FromRgb(pixel.R, pixel.G, pixel.B), fillColor, tolerance))
+            if (!StaticFunctions.IsColorMatch(pixel, fillColor, tolerance))
                 return false;
         }
 
