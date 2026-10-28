@@ -13,6 +13,8 @@ function openModalClicked(html) {
     modal.showModal();
 
     document.getElementById('close-custom-modal-btn').onclick = () => closeModal();
+
+    convertUtcToLocal();
 }
 
 modal.onclick = (e) => {

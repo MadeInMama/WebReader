@@ -215,6 +215,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     IsActive = true
                 });
 
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.CalcAllBooksSizes))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.CalcAllBooksSizes,
+                    DefaultPriority = sbyte.MinValue,
+                    Cron = TaskCron.Manually,
+                    IsActive = true
+                });
+
             context.SaveChanges();
         });
     }

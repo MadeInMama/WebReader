@@ -79,6 +79,8 @@ public class RemoveFilesThatNotExistsInDb(
 
         await Task.WhenAll(tasks);
 
-        return Result.Ok($"Removed files: {string.Join(", ", namesRemoved)}");
+        var res = string.Join(", ", namesRemoved);
+
+        return Result.Ok(string.IsNullOrWhiteSpace(res) ? "No removed files" : $"Removed files: {res}");
     }
 }

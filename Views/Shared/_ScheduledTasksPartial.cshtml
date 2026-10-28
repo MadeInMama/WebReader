@@ -1,4 +1,5 @@
-﻿@model WebReader.Models.Dtos.AllScheduledTasksViewModel
+﻿@using WebReader.Models
+@model WebReader.Models.Dtos.AllScheduledTasksViewModel
 
 <table>
     <thead>
@@ -14,7 +15,56 @@
     <tbody>
     @foreach (var item in Model.Items)
     {
-        <tr onclick="openModalClicked(`<pre>${JSON.stringify(@(JsonSerializer.Serialize(item)), null, 2)}</pre>`)">
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        var settings = JsonSerializer.Serialize(item.Settings, options);
+
+        var result = "Empty result";
+
+        if (item.Result != null)
+            result = item.Type switch
+            {
+                TaskType.CalcAllBooksSizes => JsonSerializer.Serialize(JsonDocument.Parse(item.Result), options),
+                _ => item.Result
+            };
+
+        var modalContent = $@"
+        <div class='task-details'>
+            <span class='task-details-header'>Details:</span>
+            <span class='task-details-prop-name'>Id:</span>
+            <span class='task-details-prop-value'> {item.Id}</span>
+
+            <span class='task-details-prop-name'>Created:</span>
+            <span class='task-details-prop-value to-local-date-time' utc='{item.CreatedDate:O}'></span>
+
+            <span class='task-details-prop-name'>HaveToStartAt:</span>
+            <span class='task-details-prop-value to-local-date-time' utc='{item.HaveToStartAt:O}'></span>
+
+            <span class='task-details-prop-name'>Updated:</span>
+            <span class='task-details-prop-value to-local-date-time' utc='{item.UpdatedDate:O}'></span>
+
+            <span class='task-details-prop-name'>Type:</span>
+            <span class='task-details-prop-value'> {item.Type}</span>
+
+            <span class='task-details-prop-name'>Cron:</span>
+            <span class='task-details-prop-value'> {item.Cron}</span>
+
+            <span class='task-details-prop-name'>Status:</span>
+            <span class='task-details-prop-value'> {item.Status}</span>
+
+            <span class='task-details-prop-name'>Priority:</span>
+            <span class='task-details-prop-value'> {item.Priority}</span>
+
+            <span class='task-details-prop-name'>Progress:</span>
+            <span class='task-details-prop-value'> {(int)(item.Progress * 100)}%</span>
+
+            <span class='task-details-prop-name'>Settings:</span>
+            <span class='task-details-prop-value'> <pre>{settings}</pre></span>
+
+            <span class='task-details-prop-name'>Result:</span>
+            <span class='task-details-prop-value'> <pre>{result}</pre></span>
+        </div>";
+
+        <tr onclick="openModalClicked(`@modalContent`)">
             <td class="table-task-type-number">@($"{(int)item.Type}")</td>
             <td class="table-task-type-name">
                 <div>@item.Type</div>
@@ -29,7 +79,7 @@
                 </div>
             </td>
             <td class="table-task-result">
-                <div>@item.Result</div>
+                <div>@(item.Result ?? "Empty result")</div>
             </td>
             <td utc="@item.HaveToStartAt.ToString("O")"
                 class="table-task-have-to-start-at to-local-date-time"></td>

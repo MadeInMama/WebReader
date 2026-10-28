@@ -45,5 +45,6 @@
         else el.innerHTML = utcAttr;
 
         el.classList.remove(activeClass);
+        el.removeAttribute('utc');
     });
 }

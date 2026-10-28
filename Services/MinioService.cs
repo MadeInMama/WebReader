@@ -19,7 +19,7 @@ public class MinioService(IMinioClient minioClient)
         return url ?? throw new Exception("Failed to get url");
     }
 
-    public async Task<(string ttsId, string ttsLang, string ttsText, string ttsType)> GetTtsTextByTtsIdAsync(
+    public async Task<(string TtsId, string TtsLang, string TtsText, string TtsType)> GetTtsTextByTtsIdAsync(
         string bucketId,
         string objectName, string ttsId)
     {
@@ -110,11 +110,10 @@ public class MinioService(IMinioClient minioClient)
     {
         try
         {
-            var args = new StatObjectArgs()
-                .WithBucket(bucketName)
-                .WithObject(objectName);
-
-            await minioClient.StatObjectAsync(args, cancellationToken);
+            await minioClient.StatObjectAsync(new StatObjectArgs()
+                    .WithBucket(bucketName)
+                    .WithObject(objectName),
+                cancellationToken);
 
             return true;
         }
@@ -126,6 +125,41 @@ public class MinioService(IMinioClient minioClient)
         {
             return false;
         }
+    }
+
+    public async Task<ObjectStat> StatObjectAsync(string bucketName, string objectName,
+        CancellationToken cancellationToken)
+    {
+        return await minioClient.StatObjectAsync(new StatObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName),
+            cancellationToken);
+    }
+
+    public async Task<(string FolderName, ulong Size, DateTime LastModified, int TotalFilesCount)> GetFolderStatsAsync(
+        string bucketName, string folderPath, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(folderPath) && !folderPath.EndsWith('/')) folderPath += "/";
+
+        (string FolderName, ulong Size, DateTime LastModified, int TotalFilesCount) res =
+            (folderPath, 0ul, DateTime.MinValue, 0);
+
+        var objectsObservable = await minioClient.ListObjectsEnumAsync(new ListObjectsArgs()
+                .WithBucket(bucketName)
+                .WithPrefix(folderPath)
+                .WithRecursive(true), cancellationToken)
+            .ToListAsync(cancellationToken);
+
+        foreach (var item in objectsObservable.Where(item => !item.IsDir))
+        {
+            res.TotalFilesCount++;
+            res.Size += item.Size;
+
+            if (item.LastModifiedDateTime.HasValue && item.LastModifiedDateTime.Value > res.LastModified)
+                res.LastModified = item.LastModifiedDateTime.Value;
+        }
+
+        return res;
     }
 
     public async Task<bool> UploadObjectAsync(string bucketName, Stream stream, string fileName, string contentType,

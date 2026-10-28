@@ -47,6 +47,12 @@
                         <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
                 </optgroup>
+                <optgroup label="Stats">
+                    @foreach (var item in Model.Items.Where(f => GetStatsTypes().Contains(f.Type)))
+                    {
+                        <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
+                    }
+                </optgroup>
             </select>
         </div>
 
@@ -96,6 +102,12 @@
         </optgroup>
         <optgroup label="Delete">
             @foreach (var item in GetDeleteTypes())
+            {
+                <option value="@((int)item)">@($"{item}({(int)item})")</option>
+            }
+        </optgroup>
+        <optgroup label="Stats">
+            @foreach (var item in GetStatsTypes())
             {
                 <option value="@((int)item)">@($"{item}({(int)item})")</option>
             }

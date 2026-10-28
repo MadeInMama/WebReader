@@ -63,7 +63,7 @@ public class TtsController(
                     {
                         var info = await minioService.GetTtsTextByTtsIdAsync(file.Bucket!.Name, file.Name, ttsId);
                         var isGenerated =
-                            await ttsService.GenerateSpeechAsync(info.ttsText, info.ttsType, info.ttsId,
+                            await ttsService.GenerateSpeechAsync(info.TtsText, info.TtsType, info.TtsId,
                                 cancellationToken);
                         if (!isGenerated) return null;
                         break;

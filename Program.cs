@@ -134,6 +134,9 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldInProgressTasks>(
 builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldRequestAttemptsLogs>(
     TaskType.DeleteOldRequestAttemptsLogs);
 
+builder.Services.AddKeyedTransient<IBackgroundTasked, CalcAllBooksSizes>(
+    TaskType.CalcAllBooksSizes);
+
 builder.Services.Configure<BackgroundTaskConfig>(builder.Configuration.GetSection("BackgroundTasks"));
 builder.Services.AddHostedService<BackgroundTaskManager>();
 

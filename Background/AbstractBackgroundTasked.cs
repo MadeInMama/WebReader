@@ -13,19 +13,24 @@ public abstract class AbstractBackgroundTasked<T>(
     ILogger<T> logger)
     : IBackgroundTasked
 {
+    private decimal _prevProgress;
+
     public abstract Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
 
     public virtual async Task UpdateProgress(Guid taskId, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken)
     {
+        if (_prevProgress >= progress) return;
+
         try
         {
             await taskRepository.SetStatusProgressResultAsync(taskId, status, progress, result, cancellationToken);
             await scheduledTaskHubContext.Clients.All.SendAsync("ScheduledTaskHub", cancellationToken);
+            _prevProgress = progress ?? 0;
         }
         catch (Exception e)
         {
-            logger.LogWarning("Can't save progress: {}", e.Message);
+            logger.LogWarning(e, "Can't save progress");
         }
     }
 }

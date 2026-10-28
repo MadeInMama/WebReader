@@ -58,4 +58,12 @@ public static class GlobalFunctions
             TaskType.DeleteOldRequestAttemptsLogs
         ];
     }
+
+    public static IEnumerable<TaskType> GetStatsTypes()
+    {
+        return
+        [
+            TaskType.CalcAllBooksSizes
+        ];
+    }
 }

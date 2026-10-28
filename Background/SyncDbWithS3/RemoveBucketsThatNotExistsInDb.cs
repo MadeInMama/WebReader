@@ -51,6 +51,8 @@ public class RemoveBucketsThatNotExistsInDb(
 
         await Task.WhenAll(tasks);
 
-        return Result.Ok($"Removed buckets: {string.Join(", ", namesRemoved)}");
+        var res = string.Join(", ", namesRemoved);
+
+        return Result.Ok(string.IsNullOrWhiteSpace(res) ? "No removed buckets" : $"Removed buckets: {res}");
     }
 }

@@ -69,6 +69,8 @@ public class RemoveTtsForFilesThatNotExistsInDb(
 
         await Task.WhenAll(tasks);
 
-        return Result.Ok($"Removed folders: {string.Join(", ", namesRemoved)}");
+        var res = string.Join(", ", namesRemoved);
+
+        return Result.Ok(string.IsNullOrWhiteSpace(res) ? "No removed folders" : $"Removed folders: {res}");
     }
 }

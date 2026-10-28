@@ -137,12 +137,12 @@ public class BackgroundTaskManager(
             {
                 logger.LogError("No TaskExecutorClass for type: {type}({typeCode})", task.Type, (int)task.Type);
 
-                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, new decimal(0.0),
+                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, 0.0m,
                     $"No TaskExecutorClass for type: {task.Type}({(int)task.Type})", cancellationToken);
             }
             else
             {
-                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress, new decimal(0.0),
+                await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.InProgress, 0.0m,
                     null, cancellationToken);
 
                 //TODO: set execution time limit from settings
@@ -158,8 +158,8 @@ public class BackgroundTaskManager(
                     logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
 
                     if (result.IsSuccess)
-                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed,
-                            new decimal(1.0), result.ValueOrDefault, cancellationToken);
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed, 1.0m,
+                            result.ValueOrDefault, cancellationToken);
                     else if (result.Reasons.Count != 0)
                         await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null,
                             string.Join(", ", result.Reasons.Select(f => f.Message)), cancellationToken);

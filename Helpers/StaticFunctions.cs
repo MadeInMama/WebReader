@@ -38,6 +38,18 @@ public static class StaticFunctions
         list.Add(value);
     }
 
+    public static void AddOrAppend<T1, T2>(this Dictionary<T1, List<T2>> dict, T1 key, List<T2> value)
+        where T1 : notnull
+    {
+        if (!dict.TryGetValue(key, out var list))
+        {
+            list = [];
+            dict[key] = list;
+        }
+
+        list.AddRange(value);
+    }
+
     public static bool IsSuccessStatusCode(this HttpStatusCode statusCode)
     {
         var code = (int)statusCode;

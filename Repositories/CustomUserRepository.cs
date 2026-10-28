@@ -24,11 +24,19 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate,
+    public async Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate,
         CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
         params Expression<Func<CustomUser, object>>[] includes)
     {
-        throw new NotImplementedException();
+        IQueryable<CustomUser> query = (ctx ?? context).Set<CustomUser>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate).ToListAsync(cancellationToken);
     }
 
     public async Task<CustomUser> AddAsync(CustomUser entity, CancellationToken cancellationToken)
