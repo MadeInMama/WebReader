@@ -7,7 +7,12 @@ function prepareFile(zip) {
                 for (let i = 0; i < maxPage; i++) {
                     const option = document.createElement("option");
 
-                    option.text = `${i + 1}/${maxPage}`;
+                    if (value.classList.contains("small-preview-page")) {
+                        option.text = `${i + 1}`;
+                    } else {
+                        option.text = `${i + 1}/${maxPage}`;
+                    }
+                    option.value = (i + 1).toString();
                     option.value = (i + 1).toString();
 
                     value.appendChild(option);

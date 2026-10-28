@@ -79,10 +79,12 @@ footer > .controls-end {
     gap: 0.5em;
     width: 100%;
     bottom: calc(3.2em + env(safe-area-inset-bottom));
-    transition: bottom var(--animation-time) ease-in-out;
+    transition: bottom var(--animation-time) ease-in-out,
+    opacity var(--animation-time) ease-in-out;
     padding: 0.5em;
     z-index: 3;
     pointer-events: none;
+    opacity: 1;
 }
 
 .tools-container * {
@@ -91,11 +93,14 @@ footer > .controls-end {
 
 .tools-container.fullscreen-on {
     bottom: env(safe-area-inset-bottom);
+    opacity: 0.5;
 }
 
 .tools-container > .tools-container-horizontal {
     display: flex;
     gap: 0.5em;
+    width: 100%;
+    justify-content: flex-end;
 }
 
 .tools-container > .tools-container-horizontal:not(:has(>:not([disabled]))) {
@@ -147,12 +152,16 @@ footer > .controls-end {
     right: env(safe-area-inset-right);
 }
 
-.set-scale-wrapper {
+.set-scale-wrapper, .preview-page-wrapper {
     padding: 0.5em;
     border-radius: 0.75em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
     background-color: var(--background-backdrop-color);
     backdrop-filter: blur(var(--backdrop-blur));
+}
+
+.preview-page-wrapper {
+    margin-right: auto;
 }
 
 @media (width < 1000px) {

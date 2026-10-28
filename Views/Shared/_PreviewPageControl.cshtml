@@ -1,0 +1,29 @@
+﻿@if ((bool?)ViewData["with-wrapper"] ?? false)
+{
+    @:<div disabled class="preview-page-wrapper disabled-with-anim">
+
+    }
+
+    @if ((bool?)ViewData["with-buttons"] ?? false)
+    {
+        <button disabled class="prev-page prev-page-controller disabled-with-anim click-effect"></button>
+    }
+
+    @if ((bool?)ViewData["small-preview-page"] ?? false)
+    {
+        <select disabled class="preview-page small-preview-page disabled-with-anim click-effect"></select>
+    }
+    else
+    {
+        <select disabled class="preview-page disabled-with-anim click-effect"></select>
+    }
+
+    @if ((bool?)ViewData["with-buttons"] ?? false)
+    {
+        <button disabled class="next-page next-page-controller disabled-with-anim click-effect"></button>
+    }
+
+    @if ((bool?)ViewData["with-wrapper"] ?? false)
+    {
+        @:</div>
+}

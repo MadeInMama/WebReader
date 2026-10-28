@@ -105,6 +105,12 @@ else
 <div class="tools-container">
     <div class="event-output disabled-with-anim" disabled></div>
     <div class="tools-container-horizontal">
+        @await Html.PartialAsync("_PreviewPageControl", Model, new ViewDataDictionary(ViewData)
+        {
+            { "with-wrapper", true },
+            { "with-buttons", false },
+            { "small-preview-page", true }
+        })
         @await Html.PartialAsync("_SetScaleControl", Model, new ViewDataDictionary(ViewData)
         {
             { "with-wrapper", true }
@@ -130,9 +136,12 @@ else
         })
     </div>
     <div class="controls-center">
-        <button disabled class="prev-page prev-page-controller disabled-with-anim click-effect"></button>
-        <select disabled class="preview-page disabled-with-anim click-effect"></select>
-        <button disabled class="next-page next-page-controller disabled-with-anim click-effect"></button>
+        @await Html.PartialAsync("_PreviewPageControl", Model, new ViewDataDictionary(ViewData)
+        {
+            { "with-wrapper", false },
+            { "with-buttons", true },
+            { "small-preview-page", false }
+        })
     </div>
     <div class="controls-end">
         @await Html.PartialAsync("_FullscreenControl", null, new ViewDataDictionary(ViewData)

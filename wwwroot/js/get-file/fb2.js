@@ -10,7 +10,7 @@ function prepareFile(data) {
             return doc.querySelector('h2 > p')?.textContent.trim() || null;
         });
 
-        Array.from(document.getElementsByClassName("preview-page")).forEach(selectElement => {
+        Array.from(document.getElementsByClassName("preview-page")).forEach(value => {
             let currentOptgroup = null;
             let lastHeaderName = null;
 
@@ -23,17 +23,22 @@ function prepareFile(data) {
                     currentOptgroup = document.createElement("optgroup");
                     currentOptgroup.label = optgroupHeader;
 
-                    selectElement.appendChild(currentOptgroup);
+                    value.appendChild(currentOptgroup);
                 }
 
                 const option = document.createElement("option");
-                option.text = `${i + 1}/${maxPage}`;
+
+                if (value.classList.contains("small-preview-page")) {
+                    option.text = `${i + 1}`;
+                } else {
+                    option.text = `${i + 1}/${maxPage}`;
+                }
                 option.value = (i + 1).toString();
 
                 if (currentOptgroup) {
                     currentOptgroup.appendChild(option);
                 } else {
-                    selectElement.appendChild(option);
+                    value.appendChild(option);
                 }
             }
         });
@@ -493,7 +498,7 @@ function convertNode(node, imageMap, isPage = true) {
             if (href.startsWith('#')) {
                 const src = imageMap.get(href.slice(1));
                 if (!isPage) {
-                    return `<span class="fb2-image"><img src="${escapeHtml(src)}" class="fb2-image" /></span>`;
+                    return `<span class="fb2-image"><img src="${escapeHtml(src)}" class="fb2-image"  alt="Image missing"/></span>`;
                 } else {
                     return `<span class="fb2-image">
                                 <details style="display:inline-block;">

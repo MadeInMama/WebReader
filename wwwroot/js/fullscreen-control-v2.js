@@ -2,6 +2,7 @@
     let fullscreenBtns,
         toolsContainer,
         setScaleContainer,
+        previewPageContainer,
         headerElement,
         footerElement,
         headerDisplayValue,
@@ -19,6 +20,7 @@
         });
         toolsContainer.classList.add("fullscreen-on");
         setScaleContainer.removeAttribute('disabled');
+        previewPageContainer.removeAttribute('disabled');
         footerElement.setAttribute('disabled', '');
 
         isFullscreen = true;
@@ -36,6 +38,7 @@
         });
         toolsContainer.classList.remove("fullscreen-on");
         setScaleContainer.setAttribute('disabled', '');
+        previewPageContainer.setAttribute('disabled', '');
         footerElement.removeAttribute('disabled');
 
         isFullscreen = false;
@@ -64,6 +67,7 @@
         fullscreenBtns = document.querySelectorAll(".fullscreen-btn");
         toolsContainer = document.querySelector(".tools-container");
         setScaleContainer = document.querySelector(".tools-container .set-scale-wrapper");
+        previewPageContainer = document.querySelector(".tools-container .preview-page-wrapper");
 
         Array.from(fullscreenBtns).forEach(el => el.onclick = () => changeFullscreenMode());
     }
