@@ -1,19 +1,4 @@
 services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "${PORT_1_1:-80}:${PORT_1_2:-80}"
-      - "${PORT_2_1-443}:${PORT_2_2:-443}"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ${CHAIN}:/etc/nginx/ssl/fullchain.pem:ro
-      - ${PRIVATE_KEY}:/etc/nginx/ssl/privkey.pem:ro
-    depends_on:
-      - webreader
-    restart: always
-    networks:
-      - webreader_network
-
   webreader:
     image: webreader
     scale: 2
@@ -29,9 +14,23 @@ services:
       - redis
       - db
       - minio
+      - nginx
     networks:
       - webreader_network
     user: root
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${PORT_1_1:-80}:${PORT_1_2:-80}"
+      - "${PORT_2_1-443}:${PORT_2_2:-443}"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${CHAIN}:/etc/nginx/ssl/fullchain.pem:ro
+      - ${PRIVATE_KEY}:/etc/nginx/ssl/privkey.pem:ro
+    restart: always
+    networks:
+      - webreader_network
 
   redis:
     image: redis:7-alpine
