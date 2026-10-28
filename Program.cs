@@ -17,6 +17,7 @@ using Telegram.Bot;
 using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Background.Delete;
+using WebReader.Background.Stats;
 using WebReader.Background.SyncDbWithS3;
 using WebReader.Configuration;
 using WebReader.Data;
