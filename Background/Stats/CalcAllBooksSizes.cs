@@ -61,7 +61,7 @@ public class CalcAllBooksSizes(
 
         await UpdateProgress(task.Id, TaskStatus.InProgress, 0.1m, null, cancellationToken);
 
-        var res = new List<(string Name, int Count, string Size)>();
+        var resBooks = new List<(string Name, int Count, ulong Size)>();
 
         var totalCount = allFilesByTitleInDb.Values.Sum(list => list.Count);
         var currentCount = 0;
@@ -95,12 +95,17 @@ public class CalcAllBooksSizes(
                     cancellationToken);
             }
 
-            res.Add((el.Item.Key, count, GlobalFunctions.FormatSize(size)));
+            resBooks.Add((el.Item.Key, count, size));
         }
 
         await UpdateProgress(task.Id, TaskStatus.InProgress, 0.99m, null, cancellationToken);
 
-        return Result.Ok(JsonSerializer.Serialize(res.Select(x => new { x.Name, x.Count, x.Size }),
-            JsonSerializerOptions));
+        return Result.Ok(JsonSerializer.Serialize(new
+        {
+            Books = resBooks.Select(f => new { f.Name, f.Count, Size = GlobalFunctions.FormatSize(f.Size) }),
+            TotalCount = resBooks.Sum(f => f.Count),
+            TotalSize = GlobalFunctions.FormatSize(resBooks
+                .Aggregate<(string Name, int Count, ulong Size), ulong>(0, (current, s) => current + s.Size))
+        }, JsonSerializerOptions));
     }
 }
