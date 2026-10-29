@@ -10,7 +10,15 @@ const filterValues = {
     "Cron": null,
 };
 
-function reload() {
+let currentRequestInQueue = 0;
+
+window.reload = function reload() {
+    if (currentRequestInQueue >= 1) {
+        return;
+    }
+
+    currentRequestInQueue++;
+
     const filteredValues = Object.fromEntries(
         Object.entries(filterValues)
             .filter(([_, val]) => val !== null && val !== undefined && val !== 'All')
@@ -43,7 +51,9 @@ function reload() {
         })
         .catch(error => {
             console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
-        });
+        }).finally(_ => {
+        setTimeout(() => currentRequestInQueue--, 1000);
+    });
 }
 
 function setDefaultDateTime() {
