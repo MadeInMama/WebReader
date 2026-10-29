@@ -306,7 +306,7 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
-    await botClient.SetWebhook(telegramConfig.WebhookUrl!);
+    await botClient.SetWebhook(telegramConfig.WebhookUrl!, secretToken: telegramConfig.BotToken!);
 
     // var ttsService = scope.ServiceProvider.GetRequiredService<TtsService>();
     // var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();

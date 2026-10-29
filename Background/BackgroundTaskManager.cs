@@ -230,9 +230,9 @@ public class BackgroundTaskManager(
         var lockAcquired = await database.LockTakeAsync(lockKey, lockId, lockTimeout);
 
         if (!lockAcquired)
-            logger.LogInformation("Background tasks lock {} already held by another instance, skipping", lockKey);
+            logger.LogTrace("Background tasks lock {} already held by another instance, skipping", lockKey);
         else
-            logger.LogInformation("Background tasks lock acquired by instance: {}", lockId);
+            logger.LogTrace("Background tasks lock acquired by instance: {}", lockId);
 
         return (database, lockKey, lockId, lockAcquired);
     }
@@ -240,6 +240,6 @@ public class BackgroundTaskManager(
     private async Task ReleaseLock(IDatabase db, string lockKey, string lockId)
     {
         await db.LockReleaseAsync(lockKey, lockId);
-        logger.LogInformation("Background tasks lock {lockKey} released by instance: {lockId}", lockKey, lockId);
+        logger.LogTrace("Background tasks lock {lockKey} released by instance: {lockId}", lockKey, lockId);
     }
 }
