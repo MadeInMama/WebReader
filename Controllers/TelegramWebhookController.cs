@@ -23,6 +23,10 @@ public class TelegramWebhookController(
     {
         try
         {
+        foreach (var header in Request.Headers)
+{
+    Console.WriteLine($"Header: {header.Key} = {header.Value}");
+}
             // Validate Telegram secret token header
             var secretToken = Request.Headers["X-Telegram-Bot-Api-Secret-Token"].FirstOrDefault();
             var expectedToken = telegramBotClientConfig.Value.BotToken!;
