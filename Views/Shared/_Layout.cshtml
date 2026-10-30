@@ -41,18 +41,6 @@
             @if (User.Identity is { IsAuthenticated: true })
             {
                 <li>
-                    <a asp-controller="Home" asp-action="Index" class="click-effect">Home</a>
-                </li>
-
-                @if (User.GetUserRoles().Contains(RoleType.Admin))
-                {
-                    <li>
-                        <a asp-controller="ScheduledTask" asp-action="ScheduledTasks" class="click-effect">Scheduled
-                            Tasks</a>
-                    </li>
-                }
-
-                <li>
                     <a asp-controller="File" asp-action="GetAllFilesByBucket" class="click-effect">Files</a>
                 </li>
             }
@@ -64,18 +52,31 @@
                 <li>
                     <a asp-controller="File" asp-action="GetReading" class="click-effect">Reading</a>
                 </li>
-                <li style="display: none;">
-                    <form asp-controller="Account"
-                          asp-action="DeleteMe"
-                          method="post"
-                          style="display:inline;">
-                        <input type="hidden" name="_method" value="DELETE"/>
-                        <button type="submit" class="click-effect"
-                                onclick="return confirm('⚠️ This will permanently delete your profile. Continue?');">
-                            Delete Profile
-                        </button>
-                    </form>
+                @* <li> *@
+                @*     <form asp-controller="Account" *@
+                @*           asp-action="DeleteMe" *@
+                @*           method="post" *@
+                @*           style="display:inline;"> *@
+                @*         <input type="hidden" name="_method" value="DELETE"/> *@
+                @*         <button type="submit" class="click-effect" *@
+                @*                 onclick="return confirm('⚠️ This will permanently delete your profile. Continue?');"> *@
+                @*             Delete Profile *@
+                @*         </button> *@
+                @*     </form> *@
+                @* </li> *@
+
+                <li>
+                    <a asp-controller="Home" asp-action="Index" class="click-effect">Home</a>
                 </li>
+
+                @if (User.GetUserRoles().Contains(RoleType.Admin))
+                {
+                    <li>
+                        <a asp-controller="ScheduledTask" asp-action="ScheduledTasks" class="click-effect">Scheduled
+                            Tasks</a>
+                    </li>
+                }
+
                 <li>
                     <a asp-controller="Account" asp-action="Logout" class="click-effect">Logout</a>
                 </li>

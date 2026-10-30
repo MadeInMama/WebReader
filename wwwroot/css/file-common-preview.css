@@ -160,7 +160,7 @@ footer > .controls-end {
     backdrop-filter: blur(var(--backdrop-blur));
 }
 
-.preview-page-wrapper {
+.set-scale-wrapper {
     margin-right: auto;
 }
 

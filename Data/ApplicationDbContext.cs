@@ -155,7 +155,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsSoloLeveling,
                     DefaultPriority = sbyte.MinValue + 10,
-                    Cron = TaskCron.EveryWeek,
+                    Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
@@ -166,7 +166,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
                     DefaultPriority = sbyte.MinValue + 8,
-                    Cron = TaskCron.EveryWeek,
+                    Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
@@ -199,7 +199,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldInProgressTasks,
                     DefaultPriority = sbyte.MinValue + 2,
-                    Cron = TaskCron.EveryHour,
+                    Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 24}"),
                     IsActive = true
                 });
@@ -210,7 +210,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldRequestAttemptsLogs,
                     DefaultPriority = sbyte.MinValue,
-                    Cron = TaskCron.EveryDay,
+                    Cron = TaskCron.EveryMonth,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 4320}"),
                     IsActive = true
                 });

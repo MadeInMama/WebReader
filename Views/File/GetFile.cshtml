@@ -105,15 +105,15 @@ else
 <div class="tools-container">
     <div class="event-output disabled-with-anim" disabled></div>
     <div class="tools-container-horizontal">
+        @await Html.PartialAsync("_SetScaleControl", Model, new ViewDataDictionary(ViewData)
+        {
+            { "with-wrapper", true }
+        })
         @await Html.PartialAsync("_PreviewPageControl", Model, new ViewDataDictionary(ViewData)
         {
             { "with-wrapper", true },
             { "with-buttons", false },
             { "small-preview-page", true }
-        })
-        @await Html.PartialAsync("_SetScaleControl", Model, new ViewDataDictionary(ViewData)
-        {
-            { "with-wrapper", true }
         })
         @await Html.PartialAsync("_FullscreenControl", null, new ViewDataDictionary(ViewData)
         {
