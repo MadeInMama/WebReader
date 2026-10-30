@@ -18,7 +18,9 @@ public enum TaskType
     DeleteOldInProgressTasks,
     DeleteOldRequestAttemptsLogs,
 
-    CalcAllBooksSizes
+    CalcAllBooksSizes,
+
+    ClearUserTgLinks
 
     //TODO: delete in s3 tasks
 }

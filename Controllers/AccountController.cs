@@ -131,7 +131,7 @@ public class AccountController(
 
         return View(new AccountDetailsModel
         {
-            IsTgLinked = user != null
+            IsTgLinked = user?.SubscriberTg != null
         });
     }
 
@@ -150,9 +150,6 @@ public class AccountController(
             null, cancellationToken);
 
         if (existingSubscriber != null) return RedirectToAction("AccessDenied", "Account");
-
-        //TODO: task
-        await subscriberTgRepository.DeleteAllByUserIdAsync(User.GetUserGuid(), cancellationToken);
 
         var userTelegramLink = new UserTgLink
         {
@@ -179,9 +176,6 @@ public class AccountController(
             await subscriberTgRepository.DeleteAllByUserIdAsync(User.GetUserGuid(), cancellationToken);
 
         if (deleteCount == 0) return RedirectToAction("AccessDenied", "Account");
-
-        //TODO: task
-        await userTgLinkRepository.DeleteAllUsedOrExpiredAsync(cancellationToken);
 
         return View("Index", new AccountDetailsModel());
     }

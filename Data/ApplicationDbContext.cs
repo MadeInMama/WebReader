@@ -226,6 +226,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     IsActive = true
                 });
 
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.ClearUserTgLinks))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.ClearUserTgLinks,
+                    DefaultPriority = sbyte.MinValue + 26,
+                    Cron = TaskCron.EveryHour,
+                    IsActive = true
+                });
+
             context.SaveChanges();
         });
     }

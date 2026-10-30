@@ -130,6 +130,8 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsSoloLe
 builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsWorldAfterDestruction>(
     TaskType.AutoDownloadNewPartsWorldAfterDestruction);
 
+builder.Services.AddKeyedTransient<IBackgroundTasked, ClearUserTgLinks>(
+    TaskType.ClearUserTgLinks);
 builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldCompletedTasks>(
     TaskType.DeleteOldCompletedTasks);
 builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldErroredTasks>(
