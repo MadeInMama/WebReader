@@ -54,6 +54,7 @@ const CORE_ASSETS = [
     '/js/audio-controller.js',
     '/js/custom-axios.js',
     '/js/custom-event.js',
+    '/js/custom-fixed-axios.js',
     '/js/delete-row.js',
     '/js/empty-row-control.js',
     '/js/fullscreen-control-v2.js',

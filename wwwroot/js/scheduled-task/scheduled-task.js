@@ -10,49 +10,43 @@ const filterValues = {
     "Cron": null,
 };
 
-let currentRequestInQueue = 0;
+const scheduledTasksFixedRequestQueue = new FixedRequestQueue(3, 1000);
 
 window.reload = function reload() {
-    if (currentRequestInQueue >= 1) {
-        return;
-    }
-
-    currentRequestInQueue++;
-
     const filteredValues = Object.fromEntries(
         Object.entries(filterValues)
             .filter(([_, val]) => val !== null && val !== undefined && val !== 'All')
             .map(([key, value]) => [key, String(value)])
     );
 
-    requestQueue.enqueue({
-        method: 'POST',
-        url: '/ScheduledTask/ScheduledTasksPartial',
-        data: {Values: filteredValues},
-        options: {
-            headers: {
-                'RequestVerificationToken': GetAntiForgeryToken()
+    scheduledTasksFixedRequestQueue.push(() => {
+        return requestQueue.enqueue({
+            method: 'POST',
+            url: '/ScheduledTask/ScheduledTasksPartial',
+            data: {Values: filteredValues},
+            options: {
+                headers: {
+                    'RequestVerificationToken': GetAntiForgeryToken()
+                },
+                withCredentials: true
             },
-            withCredentials: true
-        },
-        beforeSend: () => {
-        },
-        setProgress: (val) => {
-        }
-    })
-        .then(async response => {
-            const data = await response.data;
-            document.getElementById('scheduled_tasks_partial').innerHTML = data
-                .trim()
-                .replaceAll('\n', '')
-                .replaceAll('\r', '');
-
-            convertUtcToLocal();
+            beforeSend: () => {
+            },
+            setProgress: (val) => {
+            }
         })
-        .catch(error => {
-            console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
-        }).finally(_ => {
-        setTimeout(() => currentRequestInQueue--, 1000);
+            .then(async response => {
+                const data = await response.data;
+                document.getElementById('scheduled_tasks_partial').innerHTML = data
+                    .trim()
+                    .replaceAll('\n', '')
+                    .replaceAll('\r', '');
+
+                convertUtcToLocal();
+            })
+            .catch(error => {
+                console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
+            });
     });
 }
 

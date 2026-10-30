@@ -184,7 +184,7 @@ public class BackgroundTaskManager(
                     try
                     {
                         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                        linkedCts.CancelAfter(TimeSpan.FromMinutes(60));
+                        linkedCts.CancelAfter(TimeSpan.FromMinutes(10));
                         var combinedToken = linkedCts.Token;
 
                         logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
@@ -225,7 +225,7 @@ public class BackgroundTaskManager(
         string lockKey)
     {
         var database = redis.GetDatabase();
-        var lockTimeout = TimeSpan.FromMinutes(61);
+        var lockTimeout = TimeSpan.FromMinutes(11);
         var lockId = Guid.NewGuid().ToString("N");
         var lockAcquired = await database.LockTakeAsync(lockKey, lockId, lockTimeout);
 
