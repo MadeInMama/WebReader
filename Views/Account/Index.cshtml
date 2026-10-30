@@ -39,7 +39,10 @@ else
     <script nonce="@nonce" src="~/js/libs/signalr.min.js" referrerpolicy="no-referrer"></script>
     <script>
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/UserTgLinkHub")
+            .withUrl("/UserTgLinkHub", {
+                skipNegotiation: true,                          // Пропускаем этап создания ID сессии
+                transport: signalR.HttpTransportType.WebSockets // Работаем ТОЛЬКО через чистые WebSockets
+            })
             .build();
 
         connection.on("UserTgLinkHub", () => {
