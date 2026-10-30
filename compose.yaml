@@ -28,6 +28,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ${CHAIN}:/etc/nginx/ssl/fullchain.pem:ro
       - ${PRIVATE_KEY}:/etc/nginx/ssl/privkey.pem:ro
+      - ./nginx-game.html:/usr/share/nginx/html/nginx-game.html:ro
     restart: always
     networks:
       - webreader_network
