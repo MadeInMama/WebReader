@@ -100,7 +100,7 @@ jobs:
   starting2:
     runs-on: ubuntu-latest
     container: alpine:3.19
-    needs: build
+    needs: restarting
     steps:
       - name: Install SSH tools
         run: apk add --no-cache openssh-client sshpass
