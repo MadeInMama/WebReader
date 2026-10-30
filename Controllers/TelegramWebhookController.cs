@@ -23,10 +23,6 @@ public class TelegramWebhookController(
     {
         try
         {
-            foreach (var header in Request.Headers)
-                logger.LogInformation("Header: {Key} = {Value}", header.Key, header.Value);
-
-            // Validate Telegram secret token header
             var secretToken = Request.Headers["X-Telegram-Bot-Api-Secret-Token"].FirstOrDefault();
             var expectedToken = telegramBotClientConfig.Value.SecretToken!;
 
@@ -36,14 +32,13 @@ public class TelegramWebhookController(
                 return Unauthorized();
             }
 
-            if (update.Message is { } message)
-                if (message.Text is { } text)
-                {
-                    if (text.StartsWith("/start"))
-                        await HandleStartCommand(message.Chat.Id, message.From);
-                    else if (text.StartsWith("/unsubscribe"))
-                        await HandleUnsubscribeCommand(message.Chat.Id);
-                }
+            if (update.Message is { Text: { } text } message)
+            {
+                if (text.StartsWith("/start"))
+                    await HandleStartCommand(message.Chat.Id, message.From, text[6..].Trim());
+                else if (text.StartsWith("/unsubscribe"))
+                    await HandleUnsubscribeCommand(message.Chat.Id);
+            }
 
             return Ok();
         }
@@ -54,14 +49,50 @@ public class TelegramWebhookController(
         }
     }
 
-    private async Task HandleStartCommand(long chatId, User? user)
+    private async Task HandleStartCommand(long chatId, User? user, string startParameter)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
+        // Try to parse as deep link code (GUID)
+        if (Guid.TryParse(startParameter, out var linkCode))
+        {
+            var link = await context.UserTelegramLinks
+                .FirstOrDefaultAsync(x => x.Code == linkCode && !x.IsUsed && x.ExpiresAt > DateTimeOffset.UtcNow);
+
+            if (link != null)
+            {
+                // Mark link as used
+                link.IsUsed = true;
+                link.UsedAt = DateTimeOffset.UtcNow;
+
+                // Find or create subscriber and link to user
+                var subscriber = await context.SubscriberTgs
+                    .FirstOrDefaultAsync(x => x.ChatId == chatId);
+
+                if (subscriber != null)
+                    subscriber.UserId = link.UserId;
+                else
+                    context.SubscriberTgs.Add(new SubscriberTg
+                    {
+                        ChatId = chatId,
+                        UserId = link.UserId
+                    });
+
+                await botClient.SendMessage(chatId, "Telegram account linked successfully! ✅");
+
+                await context.SaveChangesAsync();
+                return;
+            }
+
+            await botClient.SendMessage(chatId,
+                "Link code expired or invalid. Go to the website and generate a new one.");
+            return;
+        }
+
+        // Regular /start logic
         if (await context.SubscriberTgs.AnyAsync(x => x.ChatId == chatId))
         {
             await botClient.SendMessage(chatId, "You already subscribed.");
-
             return;
         }
 

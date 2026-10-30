@@ -348,6 +348,40 @@ namespace WebReader.Migrations
                     b.ToTable("UserReadings");
                 });
 
+            modelBuilder.Entity("WebReader.Models.Entities.UserTelegramLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Code")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTelegramLinks");
+                });
+
             modelBuilder.Entity("WebReader.Models.Entities.Bucket", b =>
                 {
                     b.HasOne("WebReader.Models.Entities.CustomUser", "User")
@@ -407,6 +441,17 @@ namespace WebReader.Migrations
                         .IsRequired();
 
                     b.Navigation("File");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WebReader.Models.Entities.UserTelegramLink", b =>
+                {
+                    b.HasOne("WebReader.Models.Entities.CustomUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

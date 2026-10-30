@@ -69,6 +69,10 @@
                     <a asp-controller="Home" asp-action="Index" class="click-effect">Home</a>
                 </li>
 
+                <li>
+                    <a asp-controller="AccountProfile" asp-action="Index" class="click-effect">Profile</a>
+                </li>
+
                 @if (User.GetUserRoles().Contains(RoleType.Admin))
                 {
                     <li>

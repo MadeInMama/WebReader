@@ -15,6 +15,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RequestAttemptsLog> RequestAttemptsLogs { get; set; }
     public DbSet<UserReading> UserReadings { get; set; }
     public DbSet<SubscriberTg> SubscriberTgs { get; set; }
+    public DbSet<UserTelegramLink> UserTelegramLinks { get; set; }
     public DbSet<ScheduledTask> ScheduledTasks { get; set; }
     public DbSet<ScheduledTaskConfig> ScheduledTaskConfigs { get; set; }
 
