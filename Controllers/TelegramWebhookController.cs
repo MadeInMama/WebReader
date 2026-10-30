@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using WebReader.Configuration;
 using WebReader.Models.Entities;
+using WebReader.Models.Signal;
 using WebReader.Repositories;
 
 namespace WebReader.Controllers;
@@ -15,7 +17,8 @@ public class TelegramWebhookController(
     UserTgLinkRepository userTgLinkRepository,
     ITelegramBotClient botClient,
     ILogger<TelegramWebhookController> logger,
-    IOptions<TelegramBotClientConfig> telegramBotClientConfig)
+    IOptions<TelegramBotClientConfig> telegramBotClientConfig,
+    IHubContext<UserTgLinkHub> userTgLinkHubContext)
     : ControllerBase
 {
     [HttpPost]
@@ -80,6 +83,9 @@ public class TelegramWebhookController(
 
                 await botClient.SendMessage(chatId, "Telegram account linked successfully!",
                     cancellationToken: cancellationToken);
+
+                await userTgLinkHubContext.Clients.User(userTelegramLink.UserId.ToString())
+                    .SendAsync("UserTgLinkHub", cancellationToken);
 
                 return;
             }

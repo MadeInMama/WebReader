@@ -149,7 +149,7 @@ public class AccountController(
         var existingSubscriber = await subscriberTgRepository.FirstOrDefaultAsync(f => f.UserId == User.GetUserGuid(),
             null, cancellationToken);
 
-        if (existingSubscriber != null) return RedirectToAction("AccessDenied", "Account");
+        if (existingSubscriber != null) return RedirectToAction("Index", "Account");
 
         var userTelegramLink = new UserTgLink
         {

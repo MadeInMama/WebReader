@@ -496,6 +496,7 @@ app.MapGet("/9e528635-b058-493e-abca-925c6068c1f1.txt", async context =>
 #endregion
 
 app.MapHub<ScheduledTaskHub>("/ScheduledTaskHub");
+app.MapHub<UserTgLinkHub>("/UserTgLinkHub");
 
 app.Use((context, next) =>
 {
