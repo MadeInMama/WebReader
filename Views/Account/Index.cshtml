@@ -42,7 +42,9 @@ else
             .withUrl("/UserTgLinkHub")
             .build();
 
-        connection.on("UserTgLinkHub", window.reload)
+        connection.on("UserTgLinkHub", () => {
+            window.location.reload();
+        })
 
         connection.start()
             .then(() => {
