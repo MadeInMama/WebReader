@@ -4,7 +4,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @{
     var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
-    ViewBag.Title = "Scheduled Tasks";
+    ViewData["Title"] = "Scheduled Tasks";
 }
 
 @section Style

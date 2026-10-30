@@ -55,7 +55,8 @@ public static class GlobalFunctions
             TaskType.DeleteOldCompletedTasks,
             TaskType.DeleteOldErroredTasks,
             TaskType.DeleteOldInProgressTasks,
-            TaskType.DeleteOldRequestAttemptsLogs
+            TaskType.DeleteOldRequestAttemptsLogs,
+            TaskType.ClearUserTgLinks
         ];
     }
 

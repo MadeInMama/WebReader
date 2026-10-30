@@ -1,6 +1,8 @@
 ﻿@model WebReader.Models.Dtos.AccountDetailsModel
+@inject IHttpContextAccessor HttpContextAccessor
 
 @{
+    var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
     ViewData["Title"] = "Account";
 }
 
@@ -34,6 +36,7 @@ else
 
 @section Scripts
 {
+    <script nonce="@nonce" src="~/js/libs/signalr.min.js" referrerpolicy="no-referrer"></script>
     <script>
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/UserTgLinkHub")
