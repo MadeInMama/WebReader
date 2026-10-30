@@ -41,6 +41,9 @@
             @if (User.Identity is { IsAuthenticated: true })
             {
                 <li>
+                    <a asp-controller="Home" asp-action="Index" class="click-effect">Home</a>
+                </li>
+                <li>
                     <a asp-controller="File" asp-action="GetAllFilesByBucket" class="click-effect">Files</a>
                 </li>
             }
@@ -65,14 +68,6 @@
                 @*     </form> *@
                 @* </li> *@
 
-                <li>
-                    <a asp-controller="Home" asp-action="Index" class="click-effect">Home</a>
-                </li>
-
-                <li>
-                    <a asp-controller="AccountProfile" asp-action="Index" class="click-effect">Profile</a>
-                </li>
-
                 @if (User.GetUserRoles().Contains(RoleType.Admin))
                 {
                     <li>
@@ -81,6 +76,10 @@
                     </li>
                 }
 
+                <li>
+                    <a asp-controller="Account" asp-action="Index" class="click-effect">Account</a>
+                </li>
+                // TODO: move inside Account
                 <li>
                     <a asp-controller="Account" asp-action="Logout" class="click-effect">Logout</a>
                 </li>

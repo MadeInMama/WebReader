@@ -12,4 +12,6 @@ public class CustomUser : BaseEntity
     public IEnumerable<UserReading> UserReadings { get; set; } = new List<UserReading>();
 
     public Bucket? Bucket { get; set; }
+
+    public SubscriberTg? SubscriberTg { get; set; }
 }

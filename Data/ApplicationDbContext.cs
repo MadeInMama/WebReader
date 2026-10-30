@@ -9,15 +9,15 @@ namespace WebReader.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
-    public DbSet<CustomUser> Users { get; set; }
     public DbSet<Bucket> Buckets { get; set; }
+    public DbSet<CustomUser> Users { get; set; }
     public DbSet<File> Files { get; set; }
     public DbSet<RequestAttemptsLog> RequestAttemptsLogs { get; set; }
-    public DbSet<UserReading> UserReadings { get; set; }
-    public DbSet<SubscriberTg> SubscriberTgs { get; set; }
-    public DbSet<UserTelegramLink> UserTelegramLinks { get; set; }
     public DbSet<ScheduledTask> ScheduledTasks { get; set; }
     public DbSet<ScheduledTaskConfig> ScheduledTaskConfigs { get; set; }
+    public DbSet<SubscriberTg> SubscriberTgs { get; set; }
+    public DbSet<UserReading> UserReadings { get; set; }
+    public DbSet<UserTgLink> UserTgLinks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -211,7 +211,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.DeleteOldRequestAttemptsLogs,
                     DefaultPriority = sbyte.MinValue,
-                    Cron = TaskCron.EveryMonth,
+                    Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 4320}"),
                     IsActive = true
                 });
@@ -251,6 +251,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(f => f.Bucket)
             .WithOne(f => f.User)
             .HasForeignKey<Bucket>(f => f.UserId);
+
+        modelBuilder.Entity<CustomUser>()
+            .HasOne(f => f.SubscriberTg)
+            .WithOne(f => f.User)
+            .HasForeignKey<SubscriberTg>(f => f.UserId);
 
         modelBuilder.Entity<ScheduledTask>()
             .HasIndex(f => f.Priority);

@@ -1,17 +1,27 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
+using WebReader.Configuration;
 using WebReader.Helpers;
 using WebReader.Models.Dtos;
 using WebReader.Models.Entities;
+using WebReader.Repositories;
 using WebReader.Services;
 
 namespace WebReader.Controllers;
 
 [Route("[controller]/[action]")]
-public class AccountController(UserService userService) : Controller
+public class AccountController(
+    UserService userService,
+    CustomUserRepository userRepository,
+    SubscriberTgRepository subscriberTgRepository,
+    UserTgLinkRepository userTgLinkRepository,
+    IOptions<TelegramBotClientConfig> telegramConfig,
+    ILogger<AccountController> logger) : Controller
 {
     [HttpGet]
     [ServiceFilter(typeof(LogRequestAttribute))]
@@ -84,11 +94,9 @@ public class AccountController(UserService userService) : Controller
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> Logout()
     {
-        if (User.Identity is { IsAuthenticated: false })
-            return LocalRedirect(Url.Action("Index", "Home")!);
-
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Index", "Home");
     }
@@ -106,11 +114,76 @@ public class AccountController(UserService userService) : Controller
     }
 
     // [HttpDelete]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteMe(CancellationToken cancellationToken = default)
     {
         await userService.DeleteUserAsync(User.GetUserGuid(), cancellationToken);
         return RedirectToAction("Logout", "Account");
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+    {
+        var user = await userRepository.FirstOrDefaultAsync(f => f.Id == User.GetUserGuid(),
+            null, cancellationToken, true, f => f.SubscriberTg);
+
+        return View(new AccountDetailsModel
+        {
+            IsTgLinked = user != null
+        });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Link(CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(telegramConfig.Value.BotUsername))
+        {
+            logger.LogError("BotUsername not specified");
+            return RedirectToAction("AccessDenied", "Account");
+        }
+
+        var existingSubscriber = await subscriberTgRepository.FirstOrDefaultAsync(f => f.UserId == User.GetUserGuid(),
+            null, cancellationToken);
+
+        if (existingSubscriber != null) return RedirectToAction("AccessDenied", "Account");
+
+        //TODO: task
+        await subscriberTgRepository.DeleteAllByUserIdAsync(User.GetUserGuid(), cancellationToken);
+
+        var userTelegramLink = new UserTgLink
+        {
+            UserId = User.GetUserGuid(),
+            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10)
+        };
+
+        await userTgLinkRepository.AddAsync(userTelegramLink, cancellationToken);
+
+        await userTgLinkRepository.SaveChangesAsync(cancellationToken);
+
+        return View("Index", new AccountDetailsModel
+        {
+            LinkUrl = $"https://t.me/{telegramConfig.Value.BotUsername}?start={userTelegramLink.Code}"
+        });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Unlink(CancellationToken cancellationToken = default)
+    {
+        var deleteCount =
+            await subscriberTgRepository.DeleteAllByUserIdAsync(User.GetUserGuid(), cancellationToken);
+
+        if (deleteCount == 0) return RedirectToAction("AccessDenied", "Account");
+
+        //TODO: task
+        await userTgLinkRepository.DeleteAllUsedOrExpiredAsync(cancellationToken);
+
+        return View("Index", new AccountDetailsModel());
     }
 
     private async Task<IActionResult> SetUser(CustomUser user, bool rememberMe, string? returnUrl = null)

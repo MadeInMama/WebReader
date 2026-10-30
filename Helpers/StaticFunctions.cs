@@ -14,11 +14,13 @@ public static class StaticFunctions
 {
     public static List<RoleType> GetUserRoles(this ClaimsPrincipal user)
     {
-        return user.Claims
-            .Where(x => x.Type == ClaimTypes.Role)
-            .Select(x => x.Value)
-            .Select(Enum.Parse<RoleType>)
-            .ToList();
+        return
+        [
+            .. user.Claims
+                .Where(f => f.Type == ClaimTypes.Role)
+                .Select(f => f.Value)
+                .Select(Enum.Parse<RoleType>)
+        ];
     }
 
     public static Guid GetUserGuid(this ClaimsPrincipal user)

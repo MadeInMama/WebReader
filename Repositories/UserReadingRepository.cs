@@ -52,10 +52,10 @@ public class UserReadingRepository(
         return await query.Where(predicate).ToListAsync(cancellationToken);
     }
 
-    public async Task SetCurrPageAndScaleAndIsDoneAsync(Guid id, int page, int scale, bool isDone,
+    public async Task<int> SetCurrPageAndScaleAndIsDoneAsync(Guid id, int page, int scale, bool isDone,
         CancellationToken cancellationToken, ApplicationDbContext? ctx = null)
     {
-        await (ctx ?? context).UserReadings
+        return await (ctx ?? context).UserReadings
             .Where(r => r.Id == id)
             .ExecuteUpdateAsync(f =>
                 f.SetProperty(e => e.Page, page)
@@ -64,10 +64,10 @@ public class UserReadingRepository(
                     .SetProperty(e => e.UpdatedDate, DateTimeOffset.UtcNow), cancellationToken);
     }
 
-    public async Task SetCurrPageAndScaleAndIsDoneAsync(IEnumerable<UserReading> readings,
+    public async Task<int> SetCurrPageAndScaleAndIsDoneAsync(IEnumerable<UserReading> readings,
         CancellationToken cancellationToken)
     {
-        var tasks = new List<Task>();
+        var tasks = new List<Task<int>>();
 
         foreach (var reading in readings)
         {
@@ -77,16 +77,17 @@ public class UserReadingRepository(
         }
 
         await Task.WhenAll(tasks);
+
+        return tasks.Sum(f => f.Result);
     }
 
-    public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0)
-            return;
+        if (idsArray.Length == 0) return 0;
 
-        await context.UserReadings
+        return await context.UserReadings
             .Where(r => idsArray.Contains(r.Id))
             .ExecuteDeleteAsync(cancellationToken);
     }

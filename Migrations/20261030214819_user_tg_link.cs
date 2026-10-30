@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebReader.Migrations
 {
     /// <inheritdoc />
-    public partial class user_telegram_link : Migration
+    public partial class user_tg_link : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "UserTelegramLinks",
+                name: "UserTgLinks",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -26,9 +26,9 @@ namespace WebReader.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserTelegramLinks", x => x.Id);
+                    table.PrimaryKey("PK_UserTgLinks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserTelegramLinks_Users_UserId",
+                        name: "FK_UserTgLinks_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -36,8 +36,14 @@ namespace WebReader.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserTelegramLinks_UserId",
-                table: "UserTelegramLinks",
+                name: "IX_SubscriberTgs_UserId",
+                table: "SubscriberTgs",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserTgLinks_UserId",
+                table: "UserTgLinks",
                 column: "UserId");
         }
 
@@ -45,7 +51,16 @@ namespace WebReader.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "UserTelegramLinks");
+                name: "UserTgLinks");
+
+            migrationBuilder.DropIndex(
+                name: "IX_SubscriberTgs_UserId",
+                table: "SubscriberTgs");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubscriberTgs_UserId",
+                table: "SubscriberTgs",
+                column: "UserId");
         }
     }
 }

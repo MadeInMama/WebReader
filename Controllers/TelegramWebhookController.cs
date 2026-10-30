@@ -1,25 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using WebReader.Configuration;
-using WebReader.Data;
 using WebReader.Models.Entities;
+using WebReader.Repositories;
 
 namespace WebReader.Controllers;
 
 [ApiController]
 [Route("api/tgwh")]
 public class TelegramWebhookController(
+    SubscriberTgRepository subscriberTgRepository,
+    UserTgLinkRepository userTgLinkRepository,
     ITelegramBotClient botClient,
     ILogger<TelegramWebhookController> logger,
-    IDbContextFactory<ApplicationDbContext> contextFactory,
     IOptions<TelegramBotClientConfig> telegramBotClientConfig)
     : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> HandleUpdate([FromBody] Update update)
+    public async Task<IActionResult> HandleUpdate([FromBody] Update update,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -35,9 +36,9 @@ public class TelegramWebhookController(
             if (update.Message is { Text: { } text } message)
             {
                 if (text.StartsWith("/start"))
-                    await HandleStartCommand(message.Chat.Id, message.From, text[6..].Trim());
+                    await HandleStartCommand(message.Chat.Id, message.From, text[6..].Trim(), cancellationToken);
                 else if (text.StartsWith("/unsubscribe"))
-                    await HandleUnsubscribeCommand(message.Chat.Id);
+                    await HandleUnsubscribeCommand(message.Chat.Id, cancellationToken);
             }
 
             return Ok();
@@ -49,84 +50,76 @@ public class TelegramWebhookController(
         }
     }
 
-    private async Task HandleStartCommand(long chatId, User? user, string startParameter)
+    private async Task HandleStartCommand(long chatId, User? user, string startParameter,
+        CancellationToken cancellationToken)
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
-
-        // Try to parse as deep link code (GUID)
         if (Guid.TryParse(startParameter, out var linkCode))
         {
-            var link = await context.UserTelegramLinks
-                .FirstOrDefaultAsync(x => x.Code == linkCode && !x.IsUsed && x.ExpiresAt > DateTimeOffset.UtcNow);
+            var userTelegramLink = await userTgLinkRepository.FirstOrDefaultAsync(
+                f => f.Code == linkCode && !f.IsUsed && f.ExpiresAt > DateTimeOffset.UtcNow, null, cancellationToken);
 
-            if (link != null)
+            if (userTelegramLink != null)
             {
-                // Mark link as used
-                link.IsUsed = true;
-                link.UsedAt = DateTimeOffset.UtcNow;
+                userTelegramLink.IsUsed = true;
+                userTelegramLink.UsedAt = DateTimeOffset.UtcNow;
 
-                // Find or create subscriber and link to user
-                var subscriber = await context.SubscriberTgs
-                    .FirstOrDefaultAsync(x => x.ChatId == chatId);
+                var expectedSubscriber =
+                    await subscriberTgRepository.FirstOrDefaultAsync(f => f.ChatId == chatId, null, cancellationToken);
 
-                if (subscriber != null)
-                    subscriber.UserId = link.UserId;
+                if (expectedSubscriber != null)
+                    expectedSubscriber.UserId = userTelegramLink.UserId;
                 else
-                    context.SubscriberTgs.Add(new SubscriberTg
+                    await subscriberTgRepository.AddAsync(new SubscriberTg
                     {
                         ChatId = chatId,
-                        UserId = link.UserId
-                    });
+                        UserId = userTelegramLink.UserId
+                    }, cancellationToken);
 
-                await botClient.SendMessage(chatId, "Telegram account linked successfully! ✅");
+                await subscriberTgRepository.SaveChangesAsync(cancellationToken);
+                await userTgLinkRepository.SaveChangesAsync(cancellationToken);
 
-                await context.SaveChangesAsync();
+                await botClient.SendMessage(chatId, "Telegram account linked successfully!",
+                    cancellationToken: cancellationToken);
+
                 return;
             }
 
             await botClient.SendMessage(chatId,
-                "Link code expired or invalid. Go to the website and generate a new one.");
+                "Link code expired or invalid. Go to the website and generate a new one.",
+                cancellationToken: cancellationToken);
+
             return;
         }
 
-        // Regular /start logic
-        if (await context.SubscriberTgs.AnyAsync(x => x.ChatId == chatId))
+        var existingSubscriber =
+            await subscriberTgRepository.FirstOrDefaultAsync(f => f.ChatId == chatId, null, cancellationToken);
+
+        if (existingSubscriber != null)
         {
-            await botClient.SendMessage(chatId, "You already subscribed.");
+            await botClient.SendMessage(chatId, "You already subscribed.", cancellationToken: cancellationToken);
             return;
         }
 
-        context.SubscriberTgs.Add(new SubscriberTg
+        await subscriberTgRepository.AddAsync(new SubscriberTg
         {
             ChatId = chatId
-        });
+        }, cancellationToken);
 
-        await context.SaveChangesAsync();
+        await subscriberTgRepository.SaveChangesAsync(cancellationToken);
 
-        await botClient.SendMessage(
-            chatId,
-            $"Welcome, {user?.FirstName}! You're now subscribed to updates. 🎉"
-        );
+        await botClient.SendMessage(chatId, $"Welcome, {user?.FirstName}! You're now subscribed to updates.",
+            cancellationToken: cancellationToken);
     }
 
-    private async Task HandleUnsubscribeCommand(long chatId)
+    private async Task HandleUnsubscribeCommand(long chatId, CancellationToken cancellationToken)
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
+        var deletedCount =
+            await subscriberTgRepository.DeleteByChatIdAsync(chatId, cancellationToken);
 
-        var subscriberTg = await context.SubscriberTgs.FirstOrDefaultAsync(x => x.ChatId == chatId);
-
-        if (subscriberTg != null)
-        {
-            context.SubscriberTgs.Remove(subscriberTg);
-            await context.SaveChangesAsync();
-            await botClient.SendMessage(
-                chatId,
-                "You've been unsubscribed. Type /start to subscribe again."
-            );
-        }
+        if (deletedCount == 0)
+            await botClient.SendMessage(chatId, "You already unsubscribed.", cancellationToken: cancellationToken);
         else
-        {
-            await botClient.SendMessage(chatId, "You already unsubscribed.");
-        }
+            await botClient.SendMessage(chatId, "You've been unsubscribed. Type /start to subscribe again.",
+                cancellationToken: cancellationToken);
     }
 }

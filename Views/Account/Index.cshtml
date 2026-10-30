@@ -1,0 +1,33 @@
+﻿@model WebReader.Models.Dtos.AccountDetailsModel
+
+@{
+    ViewData["Title"] = "Account";
+}
+
+@section SpecialInfo
+{
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <h3 class="special-info-big">Hello, @User.Identity.Name!</h3>
+    }
+}
+
+@if (Model.IsTgLinked)
+{
+    <form method="post" asp-action="Unlink">
+        <button type="submit">Unlink Telegram</button>
+    </form>
+}
+else
+{
+    @if (Model.LinkUrl != null)
+    {
+        <a href="@Model.LinkUrl">Click to link</a>
+    }
+    else
+    {
+        <form method="post" asp-action="Link">
+            <button type="submit">Link Telegram</button>
+        </form>
+    }
+}

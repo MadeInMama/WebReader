@@ -68,21 +68,21 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         return await res.ToListAsync(cancellationToken);
     }
 
-    public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0) return;
+        if (idsArray.Length == 0) return 0;
 
-        await context.Buckets
+        return await context.Buckets
             .Where(r => idsArray.Contains(r.Id))
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid? id, CancellationToken cancellationToken)
+    public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return;
+        if (id == null) return 0;
 
-        await DeleteAllAsync([id.Value], cancellationToken);
+        return await DeleteAllAsync([id.Value], cancellationToken);
     }
 }

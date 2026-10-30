@@ -286,11 +286,11 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
             .ToListAsync(cancellationToken);
     }
 
-    public async Task DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0) return;
+        if (idsArray.Length == 0) return 0;
 
         var joinedIds = string.Join(",", idsArray.Select(f => $"'{f.ToString()}'"));
 
@@ -309,13 +309,13 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                    WHERE "{readingFileIdProperty.GetColumnName()}" IN ({joinedIds});
                    """;
 
-        await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        return await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid? id, CancellationToken cancellationToken)
+    public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return;
+        if (id == null) return 0;
 
-        await DeleteAllAsync([id.Value], cancellationToken);
+        return await DeleteAllAsync([id.Value], cancellationToken);
     }
 }

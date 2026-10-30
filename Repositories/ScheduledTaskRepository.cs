@@ -91,10 +91,10 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task SetStatusProgressResultAsync(Guid id, TaskStatus status, decimal? progress, string? result,
+    public async Task<int> SetStatusProgressResultAsync(Guid id, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken)
     {
-        await context.ScheduledTasks
+        return await context.ScheduledTasks
             .Where(r => r.Id == id)
             .ExecuteUpdateAsync(f => f
                     .SetProperty(e => e.Status, status)

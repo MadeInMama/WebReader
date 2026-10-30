@@ -90,20 +90,23 @@ builder.Services.AddSingleton<IMinioClient>(_ => new MinioClient()
     .WithSSL(false)
     .Build());
 
-builder.Services.AddScoped<BucketService>();
-builder.Services.AddScoped<MinioService>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<FileUploadService>();
-builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<BucketRepository>();
 builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
-builder.Services.AddScoped<UserReadingRepository>();
-builder.Services.AddScoped<FileControllerService>();
-builder.Services.AddScoped<AuthRestService>();
 builder.Services.AddScoped<RequestAttemptsLogRepository>();
 builder.Services.AddScoped<ScheduledTaskConfigRepository>();
 builder.Services.AddScoped<ScheduledTaskRepository>();
+builder.Services.AddScoped<SubscriberTgRepository>();
+builder.Services.AddScoped<UserReadingRepository>();
+builder.Services.AddScoped<UserTgLinkRepository>();
+
+builder.Services.AddScoped<AuthRestService>();
+builder.Services.AddScoped<BucketService>();
+builder.Services.AddScoped<FileControllerService>();
+builder.Services.AddScoped<FileService>();
+builder.Services.AddScoped<FileUploadService>();
+builder.Services.AddScoped<MinioService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddScoped<LogRequestAttribute>();
 

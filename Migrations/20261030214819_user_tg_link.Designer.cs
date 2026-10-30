@@ -13,8 +13,8 @@ using WebReader.Data;
 namespace WebReader.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261030173051_user_telegram_link")]
-    partial class user_telegram_link
+    [Migration("20261030214819_user_tg_link")]
+    partial class user_tg_link
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -306,7 +306,8 @@ namespace WebReader.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("SubscriberTgs");
                 });
@@ -351,7 +352,7 @@ namespace WebReader.Migrations
                     b.ToTable("UserReadings");
                 });
 
-            modelBuilder.Entity("WebReader.Models.Entities.UserTelegramLink", b =>
+            modelBuilder.Entity("WebReader.Models.Entities.UserTgLink", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -382,7 +383,7 @@ namespace WebReader.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserTelegramLinks");
+                    b.ToTable("UserTgLinks");
                 });
 
             modelBuilder.Entity("WebReader.Models.Entities.Bucket", b =>
@@ -423,8 +424,8 @@ namespace WebReader.Migrations
             modelBuilder.Entity("WebReader.Models.Entities.SubscriberTg", b =>
                 {
                     b.HasOne("WebReader.Models.Entities.CustomUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                        .WithOne("SubscriberTg")
+                        .HasForeignKey("WebReader.Models.Entities.SubscriberTg", "UserId");
 
                     b.Navigation("User");
                 });
@@ -448,7 +449,7 @@ namespace WebReader.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WebReader.Models.Entities.UserTelegramLink", b =>
+            modelBuilder.Entity("WebReader.Models.Entities.UserTgLink", b =>
                 {
                     b.HasOne("WebReader.Models.Entities.CustomUser", "User")
                         .WithMany()
@@ -462,6 +463,8 @@ namespace WebReader.Migrations
             modelBuilder.Entity("WebReader.Models.Entities.CustomUser", b =>
                 {
                     b.Navigation("Bucket");
+
+                    b.Navigation("SubscriberTg");
 
                     b.Navigation("UserReadings");
                 });

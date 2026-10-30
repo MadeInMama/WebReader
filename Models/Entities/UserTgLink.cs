@@ -1,6 +1,6 @@
 ﻿namespace WebReader.Models.Entities;
 
-public class UserTelegramLink : BaseEntity
+public class UserTgLink : BaseEntity
 {
     public Guid Code { get; init; } = Guid.NewGuid();
     public Guid UserId { get; init; }
