@@ -8,7 +8,7 @@ using WebReader.Repositories;
 
 namespace WebReader.Controllers;
 
-[AllowAnonymous]
+[Authorize]
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class PwaNotificationController(
@@ -19,7 +19,7 @@ public class PwaNotificationController(
     public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? subscription,
         CancellationToken cancellationToken = default)
     {
-        logger.LogCritical("Subscribe {}", JsonSerializer.Serialize(subscription));
+        logger.LogWarning("Subscribe Data {}", JsonSerializer.Serialize(subscription));
         if (subscription == null) return BadRequest();
 
         var existingSubscriber = await subscriberPwaRepository.FirstOrDefaultAsync(
