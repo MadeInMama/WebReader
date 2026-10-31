@@ -136,20 +136,13 @@ self.addEventListener('fetch', event => {
 self.addEventListener('push', function (event) {
     if (event.data) {
         const payload = event.data.json();
-
         const options = {
-            body: payload.Body,
+            body: payload.Body || '',
+            // Для iOS иконка обязательно должна быть квадратной без прозрачности (PNG)
             icon: '/images/icon-192.png',
-            badge: '/images/icon-72.png',
-            vibrate: [100, 50, 100],
-            data: {
-                url: payload.Url // Ссылка для перехода при клике
-            }
+            data: {url: payload.Url || '/'}
         };
-
-        event.waitUntil(
-            self.registration.showNotification(payload.Title, options)
-        );
+        event.waitUntil(self.registration.showNotification(payload.Title || 'Уведомление', options));
     }
 });
 

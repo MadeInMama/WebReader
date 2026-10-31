@@ -1,16 +1,36 @@
 ﻿{
   "short_name": "WebReader",
   "name": "Web Reader Application",
-  "icons": [
-    {
-      "src": "/images/icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": "/",
+  "description": "Удобное приложение для чтения веб-публикаций в любом месте.",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "background_color": "#000000",
   "theme_color": "#000000",
   "display": "standalone",
-  "orientation": "any"
+  "orientation": "any",
+  "categories": [
+    "books",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-72.png",
+      "type": "image/png",
+      "sizes": "72x72",
+      "purpose": "any"
+    }
+  ]
 }

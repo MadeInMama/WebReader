@@ -59,7 +59,7 @@ async function initPushNotification() {
 // 2. Функция отправки подписки на контроллер MVC
 async function sendSubscriptionToServer(subscription) {
     console.log("PWA-Push: Отправка запроса через requestQueue...");
-    
+
     const rawSubscription = subscription.toJSON();
 
     console.log("PWA-Push: Извлеченные ключи:", rawSubscription.keys);
@@ -94,6 +94,20 @@ async function sendSubscriptionToServer(subscription) {
         });
 }
 
+function setupNotificationButton() {
+    const btn = document.getElementById('btn-enable-push');
+    if (!btn) return;
+
+    // Показываем кнопку только если подписка еще не оформлена
+    if (Notification.permission !== 'granted') {
+        btn.style.display = 'block';
+        btn.addEventListener('click', async () => {
+            // Важно: на iOS вызов должен происходить строго внутри этого click-события!
+            await initPushNotification();
+            btn.style.display = 'none';
+        });
+    }
+}
 
 // 3. Вспомогательная функция для конвертации VAPID ключа
 function urlBase64ToUint8Array(base64String) {

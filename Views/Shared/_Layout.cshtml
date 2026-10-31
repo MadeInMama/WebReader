@@ -8,17 +8,26 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
+    <!-- viewport-fit=cover отлично подходит для iPhone с "челкой" / Dynamic Island -->
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, maximum-scale=1.0"/>
 
+    <!-- Активация режима PWA для Android и iOS (ОБЯЗАТЕЛЬНО) -->
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <!-- Настройки статус-бара iOS (default, black или black-translucent) -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="WebReader">
-    <link rel="apple-touch-icon" href="~/images/icon-512.png">
-    <link rel="manifest" href="~/manifest.json">
+
+    <!-- Корректные абсолютные пути без знака тильды ~ -->
+    <link rel="apple-touch-icon" href="/images/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#000000">
 
     <title>@ViewData["Title"] - WebReader</title>
 
+    <!-- Использование разрешаемого Razor пути для статики внутри проекта -->
     <link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon"/>
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
@@ -127,14 +136,30 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => {
-                    console.log('PWA: Service Worker успешно зарегистрирован!', reg);
-                    initPushNotification(); // Запуск подписки из pwa-push.js
-                })
-                .catch(err => {
-                    console.error('PWA: ❌ Ошибка регистрации Service Worker:', err);
+                    console.log('PWA: Service Worker зарегистрирован!');
+
+                    // Проверяем, это iOS?
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    // Проверяем, запущено ли как PWA (на экране Домой)
+                    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
+                    if (isIOS) {
+                        if (!isStandalone) {
+                            console.log("PWA-iOS: Сайт открыт в Safari. Пуши недоступны, пока приложение не добавлено на экран Домой.");
+                            // Тут можно показать пользователю подсказку: "Нажмите Поделиться -> На экран Домой"
+                            return;
+                        }
+
+                        console.log("PWA-iOS: Приложение запущено с экрана Домой. Ожидаем клика для подписки.");
+                        // Для iOS привязываем функцию к кнопке в интерфейсе
+                        setupNotificationButton();
+                    } else {
+                        // Для Windows/Android оставляем автоматический вызов
+                        if (typeof initPushNotification === 'function') {
+                            initPushNotification();
+                        }
+                    }
                 });
-        } else {
-            console.warn('PWA: Браузер не поддерживает Service Worker.');
         }
     }
 
