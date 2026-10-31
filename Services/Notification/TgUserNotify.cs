@@ -12,7 +12,7 @@ public class TgUserNotify(ITelegramBotClient botClient, ILogger<TgUserNotify> lo
         if (user.SubscriberTg == null)
         {
             logger.LogInformation("{} skipped due to user tg not linked", nameof(TgUserNotify));
-            return await Task.FromResult(false);
+            return await Task.FromResult(true);
         }
 
         try

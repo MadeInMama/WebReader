@@ -23,7 +23,6 @@ public interface IRepository<T> where T : class
     Task<int> CountAsync(
         Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken,
-        bool asNoTracking = false,
         ApplicationDbContext? ctx = null,
         int take = int.MaxValue,
         int skip = 0,

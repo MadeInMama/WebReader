@@ -64,7 +64,7 @@ public class SendNotifications(
                         .Where(f => f.IsActive)
                         .Include(f => f.SubscriberTg)
                         .AsNoTracking()
-                        .OrderBy(u => u.Id)
+                        .OrderBy(f => f.Id)
                         .Skip(page * UsersBatchSize)
                         .Take(UsersBatchSize)
                         .ToListAsync(cancellationToken);

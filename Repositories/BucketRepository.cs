@@ -48,7 +48,6 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
     public async Task<int> CountAsync(
         Expression<Func<Bucket, bool>> predicate,
         CancellationToken cancellationToken,
-        bool asNoTracking = false,
         ApplicationDbContext? ctx = null,
         int take = int.MaxValue,
         int skip = 0,
@@ -59,8 +58,7 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         foreach (var include in includes)
             query = query.Include(include);
 
-        if (asNoTracking)
-            query = query.AsNoTracking();
+        query = query.AsNoTracking();
 
         return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }

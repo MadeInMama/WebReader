@@ -47,7 +47,6 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
     public async Task<int> CountAsync(
         Expression<Func<SubscriberTg, bool>> predicate,
         CancellationToken cancellationToken,
-        bool asNoTracking = false,
         ApplicationDbContext? ctx = null,
         int take = int.MaxValue,
         int skip = 0,
@@ -58,8 +57,7 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
         foreach (var include in includes)
             query = query.Include(include);
 
-        if (asNoTracking)
-            query = query.AsNoTracking();
+        query = query.AsNoTracking();
 
         return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }

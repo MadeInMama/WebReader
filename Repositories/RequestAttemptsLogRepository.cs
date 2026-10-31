@@ -46,7 +46,6 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
 
     public async Task<int> CountAsync(Expression<Func<RequestAttemptsLog, bool>> predicate,
         CancellationToken cancellationToken,
-        bool asNoTracking = false,
         ApplicationDbContext? ctx = null,
         int take = int.MaxValue,
         int skip = 0,
@@ -57,8 +56,7 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         foreach (var include in includes)
             query = query.Include(include);
 
-        if (asNoTracking)
-            query = query.AsNoTracking();
+        query = query.AsNoTracking();
 
         return await query.Where(predicate).OrderBy(f => f.Ip).CountAsync(cancellationToken);
     }

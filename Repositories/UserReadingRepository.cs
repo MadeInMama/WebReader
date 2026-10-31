@@ -48,7 +48,6 @@ public class UserReadingRepository(ApplicationDbContext context, IDbContextFacto
     public async Task<int> CountAsync(
         Expression<Func<UserReading, bool>> predicate,
         CancellationToken cancellationToken,
-        bool asNoTracking = false,
         ApplicationDbContext? ctx = null,
         int take = int.MaxValue,
         int skip = 0,
@@ -59,8 +58,7 @@ public class UserReadingRepository(ApplicationDbContext context, IDbContextFacto
         foreach (var include in includes)
             query = query.Include(include);
 
-        if (asNoTracking)
-            query = query.AsNoTracking();
+        query = query.AsNoTracking();
 
         return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
