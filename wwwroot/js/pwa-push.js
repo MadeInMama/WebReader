@@ -59,8 +59,12 @@ async function initPushNotification() {
 // 2. Функция отправки подписки на контроллер MVC
 async function sendSubscriptionToServer(subscription) {
     console.log("PWA-Push: Отправка запроса через requestQueue...");
+    
+    const rawSubscription = subscription.toJSON();
 
+    console.log("PWA-Push: Извлеченные ключи:", rawSubscription.keys);
     console.log(subscription);
+    console.log(subscription.keys);
 
     // subscription имеет структуру { endpoint: "...", keys: { auth: "...", p256dh: "..." } }
     requestQueue.enqueue({
@@ -68,7 +72,10 @@ async function sendSubscriptionToServer(subscription) {
         url: '/api/PwaNotification/Subscribe',
         data: {
             Endpoint: subscription.endpoint,
-            Keys: subscription.keys
+            Keys: {
+                p256dh: rawSubscription.keys?.p256dh || "",
+                auth: rawSubscription.keys?.auth || ""
+            }
         },
         options: {
             headers: {
