@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebReader.Helpers;
 using WebReader.Models.Dtos;
@@ -9,13 +10,16 @@ namespace WebReader.Controllers;
 
 [Authorize]
 [Route("api/[controller]/[action]")]
-public class PwaNotificationController(SubscriberPwaRepository subscriberPwaRepository) : Controller
+public class PwaNotificationController(
+    SubscriberPwaRepository subscriberPwaRepository,
+    ILogger<PwaNotificationController> logger) : Controller
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? subscription,
         CancellationToken cancellationToken = default)
     {
+        logger.LogCritical("Subscribe {}", JsonSerializer.Serialize(subscription));
         if (subscription == null) return BadRequest();
 
         var existingSubscriber = await subscriberPwaRepository.FirstOrDefaultAsync(
