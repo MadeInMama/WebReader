@@ -13,7 +13,7 @@ namespace WebReader.Controllers;
 [Route("api/[controller]/[action]")]
 public class PwaNotificationController(
     SubscriberPwaRepository subscriberPwaRepository,
-    ILogger<PwaNotificationController> logger) : Controller
+    ILogger<PwaNotificationController> logger) : ControllerBase
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -41,6 +41,6 @@ public class PwaNotificationController(
             await subscriberPwaRepository.SaveChangesAsync(cancellationToken);
         }
 
-        return Ok();
+        return Accepted();
     }
 }

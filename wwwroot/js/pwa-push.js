@@ -58,28 +58,33 @@ async function initPushNotification() {
 
 // 2. Функция отправки подписки на контроллер MVC
 async function sendSubscriptionToServer(subscription) {
-    console.log("PWA-Push: Отправка запроса на /api/PwaNotification/Subscribe...");
+    console.log("PWA-Push: Отправка запроса через requestQueue...");
 
-    try {
-        const response = await fetch('/api/PwaNotification/Subscribe', {
-            method: 'POST', // Обязательно POST для отправки данных подписки
+    // subscription имеет структуру { endpoint: "...", keys: { auth: "...", p256dh: "..." } }
+    requestQueue.enqueue({
+        method: 'POST',
+        url: '/api/PwaNotification/Subscribe',
+        data: {
+            Endpoint: subscription.endpoint,
+            Keys: subscription.keys
+        },
+        options: {
             headers: {
-                'Content-Type': 'application/json',
-                // Добавляем ваш валидационный токен ASP.NET Core MVC
                 'RequestVerificationToken': GetAntiForgeryToken()
             },
-            body: JSON.stringify(subscription)
-        });
-
-        if (response.ok) {
-            console.log("PWA-Push: 🎉 Отлично! Подписка успешно сохранена на сервере.");
-        } else {
-            console.error(`PWA-Push: Сервер вернул ошибку при сохранении. Статус: ${response.status}`);
+            withCredentials: true
+        },
+        beforeSend: () => {
         }
-    } catch (error) {
-        console.error("PWA-Push: Не удалось выполнить сетевой запрос к серверу:", error);
-    }
+    })
+        .then(response => {
+            console.log("PWA-Push: 🎉 Отлично! Подписка успешно сохранена на сервере.");
+        })
+        .catch(error => {
+            console.error("PWA-Push: ❌ Ошибка при отправке подписки через очередь:", error);
+        });
 }
+
 
 // 3. Вспомогательная функция для конвертации VAPID ключа
 function urlBase64ToUint8Array(base64String) {
