@@ -61,7 +61,7 @@ async function sendSubscriptionToServer(subscription) {
     console.log("PWA-Push: Отправка запроса на /PushNotification/Subscribe...");
 
     try {
-        const response = await fetch('api/PwaNotification/Subscribe', {
+        const response = await fetch('/api/PwaNotification/Subscribe', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
