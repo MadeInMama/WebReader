@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebReader.Helpers;
 using WebReader.Models.Dtos;
@@ -7,6 +8,7 @@ using WebReader.Repositories;
 
 namespace WebReader.Controllers;
 
+[AllowAnonymous]
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class PwaNotificationController(

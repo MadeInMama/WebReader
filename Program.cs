@@ -99,6 +99,7 @@ builder.Services.AddScoped<NotificationRepository>();
 builder.Services.AddScoped<RequestAttemptsLogRepository>();
 builder.Services.AddScoped<ScheduledTaskConfigRepository>();
 builder.Services.AddScoped<ScheduledTaskRepository>();
+builder.Services.AddScoped<SubscriberPwaRepository>();
 builder.Services.AddScoped<SubscriberTgRepository>();
 builder.Services.AddScoped<UserReadingRepository>();
 builder.Services.AddScoped<UserTgLinkRepository>();
