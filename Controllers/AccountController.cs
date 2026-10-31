@@ -124,6 +124,7 @@ public class AccountController(
 
     [HttpGet]
     [Authorize]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var user = await userRepository.FirstOrDefaultAsync(f => f.Id == User.GetUserGuid(),
@@ -138,6 +139,7 @@ public class AccountController(
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> Link(CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(telegramConfig.Value.BotUsername))
@@ -170,6 +172,7 @@ public class AccountController(
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
+    [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> Unlink(CancellationToken cancellationToken = default)
     {
         var deleteCount =

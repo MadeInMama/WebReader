@@ -27,6 +27,7 @@
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12"/>
         <PackageReference Include="System.Linq.Async" Version="7.0.1"/>
         <PackageReference Include="Telegram.Bot" Version="22.10.1"/>
+        <PackageReference Include="WebPush" Version="1.0.13"/>
         <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0"/>
         <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="9.0.14"/>
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.14"/>

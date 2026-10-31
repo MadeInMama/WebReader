@@ -14,4 +14,5 @@ public class CustomUser : BaseEntity
     public Bucket? Bucket { get; set; }
 
     public SubscriberTg? SubscriberTg { get; set; }
+    public SubscriberPwa? SubscriberPwa { get; set; }
 }

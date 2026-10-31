@@ -16,6 +16,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<RequestAttemptsLog> RequestAttemptsLogs { get; set; }
     public DbSet<ScheduledTask> ScheduledTasks { get; set; }
     public DbSet<ScheduledTaskConfig> ScheduledTaskConfigs { get; set; }
+    public DbSet<SubscriberPwa> SubscriberPwas { get; set; }
     public DbSet<SubscriberTg> SubscriberTgs { get; set; }
     public DbSet<UserReading> UserReadings { get; set; }
     public DbSet<UserTgLink> UserTgLinks { get; set; }
@@ -278,6 +279,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithOne(f => f.User)
             .HasForeignKey<SubscriberTg>(f => f.UserId);
 
+        modelBuilder.Entity<CustomUser>()
+            .HasOne(f => f.SubscriberPwa)
+            .WithOne(f => f.User)
+            .HasForeignKey<SubscriberPwa>(f => f.UserId);
+
         modelBuilder.Entity<ScheduledTask>()
             .HasIndex(f => f.Priority);
         modelBuilder.Entity<ScheduledTask>()
@@ -287,6 +293,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasKey(f => new { f.Ip, f.CreatedDate });
         modelBuilder.Entity<RequestAttemptsLog>()
             .HasIndex(f => f.Ip);
+
+        modelBuilder.Entity<SubscriberPwa>()
+            .HasIndex(f => f.Endpoint)
+            .IsUnique();
 
         base.OnModelCreating(modelBuilder);
     }

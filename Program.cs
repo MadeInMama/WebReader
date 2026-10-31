@@ -301,6 +301,8 @@ builder.Services.AddRateLimiter(options =>
 
 builder.WebHost.ConfigureKestrel(serverOptions => { serverOptions.Limits.MaxRequestBodySize = long.MaxValue; });
 
+builder.Services.Configure<VapidKeysConfig>(builder.Configuration.GetSection("VapidKeys"));
+
 var app = builder.Build();
 
 app.UseForwardedHeaders();

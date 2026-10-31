@@ -19,8 +19,7 @@ public class TgUserNotify(ITelegramBotClient botClient, ILogger<TgUserNotify> lo
         {
             await botClient.SendMessage(user.SubscriberTg!.ChatId,
                 notification.Message.RootElement.GetProperty(StaticJsonNames.NotificationBody).GetString() ??
-                string.Empty,
-                cancellationToken: cancellationToken);
+                string.Empty, cancellationToken: cancellationToken);
         }
         catch (Exception e)
         {

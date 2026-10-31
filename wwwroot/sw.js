@@ -132,3 +132,31 @@ self.addEventListener('fetch', event => {
             })
     );
 });
+
+self.addEventListener('push', function (event) {
+    if (event.data) {
+        const payload = event.data.json();
+
+        const options = {
+            body: payload.Body,
+            icon: '/images/icon-192.png',
+            badge: '/images/icon-72.png',
+            vibrate: [100, 50, 100],
+            data: {
+                url: payload.Url // Ссылка для перехода при клике
+            }
+        };
+
+        event.waitUntil(
+            self.registration.showNotification(payload.Title, options)
+        );
+    }
+});
+
+// Переход по ссылке при клике на уведомление
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow(event.notification.data.url)
+    );
+});
