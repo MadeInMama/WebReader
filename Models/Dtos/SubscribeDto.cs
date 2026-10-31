@@ -2,6 +2,6 @@
 
 public class SubscribeDto
 {
-    public required string Endpoint { get; set; }
-    public required Dictionary<string, string> Keys { get; set; } = new();
+    public string? Endpoint { get; set; }
+    public Dictionary<string, string> Keys { get; set; } = new();
 }

@@ -1,31 +1,44 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebReader.Helpers;
+using WebReader.Models.Dtos;
+using WebReader.Models.Entities;
 using WebReader.Repositories;
 
 namespace WebReader.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class PwaNotificationController(
-    SubscriberPwaRepository subscriberPwaRepository,
-    ILogger<PwaNotificationController> logger) : ControllerBase
+public class PwaNotificationController(SubscriberPwaRepository subscriberPwaRepository) : ControllerBase
 {
     [HttpPost]
     [AllowAnonymous]
     [IgnoreAntiforgeryToken]
-    public async Task<IActionResult> Subscribe(
+    public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? subscription,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Subscribe Data");
+        if (subscription == null ||
+            string.IsNullOrWhiteSpace(subscription.Endpoint) ||
+            subscription.Keys.Count == 0 ||
+            !User.Identity?.IsAuthenticated == true) return NoContent();
 
-        if (!User.Identity?.IsAuthenticated == true)
-            return Accepted();
+        var existingSubscriber = await subscriberPwaRepository.FirstOrDefaultAsync(
+            f => f.Endpoint == subscription.Endpoint, null, cancellationToken);
 
-        var userId = User.GetUserGuid();
-
-
-        logger.LogInformation("Subscribe Data {}", userId);
+        if (existingSubscriber == null)
+        {
+            await subscriberPwaRepository.AddAsync(new SubscriberPwa
+            {
+                Endpoint = subscription.Endpoint,
+                Keys = subscription.Keys,
+                UserId = User.GetUserGuid()
+            }, cancellationToken);
+        }
+        else
+        {
+            existingSubscriber.Keys = subscription.Keys;
+            await subscriberPwaRepository.SaveChangesAsync(cancellationToken);
+        }
 
         return Accepted();
     }
