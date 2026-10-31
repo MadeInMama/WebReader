@@ -58,13 +58,15 @@ async function initPushNotification() {
 
 // 2. Функция отправки подписки на контроллер MVC
 async function sendSubscriptionToServer(subscription) {
-    console.log("PWA-Push: Отправка запроса на /PushNotification/Subscribe...");
+    console.log("PWA-Push: Отправка запроса на /api/PwaNotification/Subscribe...");
 
     try {
         const response = await fetch('/api/PwaNotification/Subscribe', {
-            method: 'POST',
+            method: 'POST', // Обязательно POST для отправки данных подписки
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                // Добавляем ваш валидационный токен ASP.NET Core MVC
+                'RequestVerificationToken': GetAntiForgeryToken()
             },
             body: JSON.stringify(subscription)
         });
