@@ -25,8 +25,13 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<Bucket>> AllAsync(Expression<Func<Bucket, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
+    public async Task<IEnumerable<Bucket>> AllAsync(
+        Expression<Func<Bucket, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
         params Expression<Func<Bucket, object>>[] includes)
     {
         IQueryable<Bucket> query = (ctx ?? context).Set<Bucket>();
@@ -37,7 +42,27 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).ToListAsync(cancellationToken);
+        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(
+        Expression<Func<Bucket, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
+        params Expression<Func<Bucket, object>>[] includes)
+    {
+        IQueryable<Bucket> query = (ctx ?? context).Set<Bucket>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<Bucket> AddAsync(Bucket entity, CancellationToken cancellationToken)

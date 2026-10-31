@@ -20,7 +20,9 @@ public enum TaskType
 
     CalcAllBooksSizes,
 
-    ClearUserTgLinks
+    ClearUserTgLinks,
+
+    SendNotifications
 
     //TODO: delete in s3 tasks
 }

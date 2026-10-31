@@ -11,18 +11,15 @@ using TaskStatus = WebReader.Models.TaskStatus;
 namespace WebReader.Background.SyncDbWithS3;
 
 public class UpdateBucketData(
-    IServiceProvider services,
+    BucketRepository bucketRepository,
     ScheduledTaskRepository taskRepository,
+    MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ILogger<UpdateBucketData> logger)
     : AbstractBackgroundTasked<UpdateBucketData>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        using var scope = services.CreateScope();
-        var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
-
         var allBucketsInDb = (await bucketRepository.AllAsync(f => true, cancellationToken)).ToList();
 
         var toSave = new List<Bucket>();

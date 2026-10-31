@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Telegram.Bot;
 using WebReader.Data;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
@@ -11,15 +10,14 @@ namespace WebReader.Background.AutoDownloadNewParts;
 public class AutoDownloadNewPartsSoloLeveling(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
-    MinioService minioService,
-    ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
     ILogger<AutoDownloadNewPartsSoloLeveling> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
-    ScheduledTaskRepository taskRepository)
+    ScheduledTaskRepository taskRepository,
+    NotificationRepository notificationRepository)
     : AbstractAutoDownloadNewParts<AutoDownloadNewPartsSoloLeveling>(
-        contextFactory, fileUploadService, minioService, botClient, httpClientFactory, logger, scheduledTaskHubContext,
-        taskRepository)
+        contextFactory, fileUploadService, httpClientFactory, logger, scheduledTaskHubContext,
+        taskRepository, notificationRepository)
 {
     protected override string FileCustomName => "Поднятие уровня в одиночку";
     protected override string Url => "https://1.readmanga.club/podniatie_urovnia_v_odinochku__A5ea4";

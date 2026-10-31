@@ -71,6 +71,7 @@ public class BackgroundTaskManager(
                     .ToImmutableDictionary(f => f.Key, f => f.ToList());
 
                 var tasks = new List<ScheduledTask>();
+                tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.Every15Mins, [])));
                 tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryHour, [])));
                 tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryDay, [])));
                 tasks.AddRange(await CreateTasksFromConfigs(taskConfigs.GetOrDefault(TaskCron.EveryWeek, [])));
@@ -112,6 +113,7 @@ public class BackgroundTaskManager(
         {
             return cron switch
             {
+                TaskCron.Every15Mins => lastHaveToStartAt.AddMinutes(15),
                 TaskCron.EveryHour => lastHaveToStartAt.AddHours(1),
                 TaskCron.EveryDay => lastHaveToStartAt.AddDays(1),
                 TaskCron.EveryWeek => lastHaveToStartAt.AddDays(7),
@@ -136,7 +138,7 @@ public class BackgroundTaskManager(
 
     private async Task RunAsSoonAsPossible(CancellationToken cancellationToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
 
         using var scope = serviceScopeFactory.CreateScope();
 

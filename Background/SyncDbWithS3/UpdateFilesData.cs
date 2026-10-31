@@ -12,19 +12,17 @@ using TaskStatus = WebReader.Models.TaskStatus;
 namespace WebReader.Background.SyncDbWithS3;
 
 public class UpdateFilesData(
-    IServiceProvider services,
+    FileRepository fileRepository,
     ScheduledTaskRepository taskRepository,
+    MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ILogger<UpdateFilesData> logger)
     : AbstractBackgroundTasked<UpdateFilesData>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        using var scope = services.CreateScope();
-        var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
-
-        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, false, null, f => f.Bucket))
+        var allFilesInDb =
+            (await fileRepository.AllAsync(f => true, cancellationToken, false, null, int.MaxValue, 0, f => f.Bucket))
             .ToList();
         var allBucketsInS3 = (await minioService.ListBucketsAsync(cancellationToken)).ToList();
         Dictionary<string, Task<List<Item>>> allFilesInS3 =

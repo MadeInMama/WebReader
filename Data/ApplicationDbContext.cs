@@ -12,6 +12,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Bucket> Buckets { get; set; }
     public DbSet<CustomUser> Users { get; set; }
     public DbSet<File> Files { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
     public DbSet<RequestAttemptsLog> RequestAttemptsLogs { get; set; }
     public DbSet<ScheduledTask> ScheduledTasks { get; set; }
     public DbSet<ScheduledTaskConfig> ScheduledTaskConfigs { get; set; }
@@ -233,6 +234,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.ClearUserTgLinks,
                     DefaultPriority = sbyte.MinValue + 26,
                     Cron = TaskCron.EveryHour,
+                    IsActive = true
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.SendNotifications))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.SendNotifications,
+                    DefaultPriority = sbyte.MinValue + 28,
+                    Cron = TaskCron.Every15Mins,
                     IsActive = true
                 });
 

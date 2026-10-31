@@ -58,6 +58,7 @@ public class TelegramWebhookController(
     {
         if (Guid.TryParse(startParameter, out var linkCode))
         {
+            //TODO: maybe AllAsync with take 1 skip 0 orderBy ExpiresAt OR compare with all link for user
             var userTelegramLink = await userTgLinkRepository.FirstOrDefaultAsync(
                 f => f.Code == linkCode && !f.IsUsed && f.ExpiresAt > DateTimeOffset.UtcNow, null, cancellationToken);
 

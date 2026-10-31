@@ -9,18 +9,15 @@ using TaskStatus = WebReader.Models.TaskStatus;
 namespace WebReader.Background.SyncDbWithS3;
 
 public class MakeUnavailableBucketsThatNotExistsInS3(
-    IServiceProvider services,
+    BucketRepository bucketRepository,
     ScheduledTaskRepository taskRepository,
+    MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ILogger<MakeUnavailableBucketsThatNotExistsInS3> logger)
     : AbstractBackgroundTasked<MakeUnavailableBucketsThatNotExistsInS3>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        using var scope = services.CreateScope();
-        var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
-
         var allBucketsInDb = (await bucketRepository.AllAsync(f => true, cancellationToken)).ToList();
 
         logger.LogTrace(

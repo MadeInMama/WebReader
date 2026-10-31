@@ -5,9 +5,8 @@ using WebReader.Models.Entities;
 
 namespace WebReader.Repositories;
 
-public class UserReadingRepository(
-    ApplicationDbContext context,
-    IDbContextFactory<ApplicationDbContext> contextFactory) : IRepository<UserReading>
+public class UserReadingRepository(ApplicationDbContext context, IDbContextFactory<ApplicationDbContext> contextFactory)
+    : IRepository<UserReading>
 {
     public async Task<UserReading?> FirstOrDefaultAsync(Expression<Func<UserReading, bool>> predicate,
         ApplicationDbContext? ctx,
@@ -26,19 +25,13 @@ public class UserReadingRepository(
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<UserReading> AddAsync(UserReading entity, CancellationToken cancellationToken)
-    {
-        var res = await context.UserReadings.AddAsync(entity, cancellationToken);
-        return res.Entity;
-    }
-
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
-    {
-        return await context.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task<IEnumerable<UserReading>> AllAsync(Expression<Func<UserReading, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
+    public async Task<IEnumerable<UserReading>> AllAsync(
+        Expression<Func<UserReading, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
         params Expression<Func<UserReading, object>>[] includes)
     {
         IQueryable<UserReading> query = (ctx ?? context).Set<UserReading>();
@@ -49,7 +42,38 @@ public class UserReadingRepository(
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).ToListAsync(cancellationToken);
+        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(
+        Expression<Func<UserReading, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
+        params Expression<Func<UserReading, object>>[] includes)
+    {
+        IQueryable<UserReading> query = (ctx ?? context).Set<UserReading>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
+    }
+
+    public async Task<UserReading> AddAsync(UserReading entity, CancellationToken cancellationToken)
+    {
+        var res = await context.UserReadings.AddAsync(entity, cancellationToken);
+        return res.Entity;
+    }
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        return await context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<int> SetCurrPageAndScaleAndIsDoneAsync(Guid id, int page, int scale, bool isDone,

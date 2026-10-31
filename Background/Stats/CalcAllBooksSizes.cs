@@ -15,8 +15,11 @@ using TaskStatus = WebReader.Models.TaskStatus;
 namespace WebReader.Background.Stats;
 
 public class CalcAllBooksSizes(
-    IServiceProvider services,
+    BucketRepository bucketRepository,
+    FileRepository fileRepository,
     ScheduledTaskRepository taskRepository,
+    CustomUserRepository userRepository,
+    MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ILogger<CalcAllBooksSizes> logger)
     : AbstractBackgroundTasked<CalcAllBooksSizes>(taskRepository, scheduledTaskHubContext, logger)
@@ -26,12 +29,6 @@ public class CalcAllBooksSizes(
 
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        using var scope = services.CreateScope();
-        var userRepository = scope.ServiceProvider.GetRequiredService<CustomUserRepository>();
-        var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
-        var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
-
         var allUsersInDb = await userRepository.AllAsync(f => true, cancellationToken, true);
 
         var allBucketsInDb = new List<Bucket>();

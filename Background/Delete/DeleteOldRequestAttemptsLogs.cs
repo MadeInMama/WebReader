@@ -1,4 +1,5 @@
 ﻿using FluentResults;
+using WebReader.Helpers;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
 using TaskStatus = WebReader.Models.TaskStatus;
@@ -8,14 +9,12 @@ namespace WebReader.Background.Delete;
 public class DeleteOldRequestAttemptsLogs(IServiceProvider services, ILogger<DeleteOldRequestAttemptsLogs> logger)
     : IBackgroundTasked
 {
-    private const string SettingOlderThenInHoursToDelete = "older_then_in_hours";
-
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         if (!task.Settings.RootElement
-                .GetProperty(SettingOlderThenInHoursToDelete)
+                .GetProperty(StaticJsonNames.OlderThenInHours)
                 .TryGetUInt16(out var days))
-            return Result.Fail($"Can't get '{nameof(SettingOlderThenInHoursToDelete)}' param.");
+            return Result.Fail($"Can't get '{nameof(StaticJsonNames.OlderThenInHours)}' param.");
 
         using var scope = services.CreateScope();
         var scheduledTaskRepository = scope.ServiceProvider.GetRequiredService<RequestAttemptsLogRepository>();

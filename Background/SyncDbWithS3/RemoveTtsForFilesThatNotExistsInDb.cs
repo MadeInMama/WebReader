@@ -11,18 +11,15 @@ using TaskStatus = WebReader.Models.TaskStatus;
 namespace WebReader.Background.SyncDbWithS3;
 
 public class RemoveTtsForFilesThatNotExistsInDb(
-    IServiceProvider services,
     ScheduledTaskRepository taskRepository,
+    FileRepository fileRepository,
+    MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ILogger<RemoveTtsForFilesThatNotExistsInDb> logger)
     : AbstractBackgroundTasked<RemoveTtsForFilesThatNotExistsInDb>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        using var scope = services.CreateScope();
-        var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
-
         var filesWithTtsInDb =
             fileRepository.AllAsync(f =>
                     f.Bucket!.IsAvailable &&
@@ -32,6 +29,8 @@ public class RemoveTtsForFilesThatNotExistsInDb(
                 cancellationToken,
                 false,
                 null,
+                int.MaxValue,
+                0,
                 f => f.Bucket);
         var ttsFilesInS3 = minioService.ListObjectsAsync("tts", cancellationToken);
 

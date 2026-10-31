@@ -24,8 +24,13 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<SubscriberTg>> AllAsync(Expression<Func<SubscriberTg, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
+    public async Task<IEnumerable<SubscriberTg>> AllAsync(
+        Expression<Func<SubscriberTg, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
         params Expression<Func<SubscriberTg, object>>[] includes)
     {
         IQueryable<SubscriberTg> query = (ctx ?? context).Set<SubscriberTg>();
@@ -36,7 +41,27 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).ToListAsync(cancellationToken);
+        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(
+        Expression<Func<SubscriberTg, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
+        params Expression<Func<SubscriberTg, object>>[] includes)
+    {
+        IQueryable<SubscriberTg> query = (ctx ?? context).Set<SubscriberTg>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<SubscriberTg> AddAsync(SubscriberTg entity, CancellationToken cancellationToken)

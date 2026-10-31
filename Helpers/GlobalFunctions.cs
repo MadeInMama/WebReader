@@ -60,11 +60,12 @@ public static class GlobalFunctions
         ];
     }
 
-    public static IEnumerable<TaskType> GetStatsTypes()
+    public static IEnumerable<TaskType> GetOtherTypes()
     {
         return
         [
-            TaskType.CalcAllBooksSizes
+            TaskType.CalcAllBooksSizes,
+            TaskType.SendNotifications
         ];
     }
 }

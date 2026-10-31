@@ -18,6 +18,7 @@ using Telegram.Bot;
 using WebReader.Background;
 using WebReader.Background.AutoDownloadNewParts;
 using WebReader.Background.Delete;
+using WebReader.Background.Notification;
 using WebReader.Background.Stats;
 using WebReader.Background.SyncDbWithS3;
 using WebReader.Configuration;
@@ -27,6 +28,7 @@ using WebReader.Models;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
+using WebReader.Services.Notification;
 using WebReader.Services.Tts;
 using Yarp.ReverseProxy.Model;
 using MinioConfig = WebReader.Configuration.MinioConfig;
@@ -93,6 +95,7 @@ builder.Services.AddSingleton<IMinioClient>(_ => new MinioClient()
 builder.Services.AddScoped<BucketRepository>();
 builder.Services.AddScoped<CustomUserRepository>();
 builder.Services.AddScoped<FileRepository>();
+builder.Services.AddScoped<NotificationRepository>();
 builder.Services.AddScoped<RequestAttemptsLogRepository>();
 builder.Services.AddScoped<ScheduledTaskConfigRepository>();
 builder.Services.AddScoped<ScheduledTaskRepository>();
@@ -143,6 +146,12 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldRequestAttemptsLo
 
 builder.Services.AddKeyedTransient<IBackgroundTasked, CalcAllBooksSizes>(
     TaskType.CalcAllBooksSizes);
+
+builder.Services.AddKeyedTransient<IBackgroundTasked, SendNotifications>(
+    TaskType.SendNotifications);
+
+builder.Services.AddTransient<IUserNotify, TgUserNotify>();
+builder.Services.AddTransient<IUserNotify, PwaUserNotify>();
 
 builder.Services.Configure<BackgroundTaskConfig>(builder.Configuration.GetSection("BackgroundTasks"));
 

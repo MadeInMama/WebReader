@@ -24,8 +24,13 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<RequestAttemptsLog>> AllAsync(Expression<Func<RequestAttemptsLog, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
+    public async Task<IEnumerable<RequestAttemptsLog>> AllAsync(
+        Expression<Func<RequestAttemptsLog, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
         params Expression<Func<RequestAttemptsLog, object>>[] includes)
     {
         IQueryable<RequestAttemptsLog> query = (ctx ?? context).Set<RequestAttemptsLog>();
@@ -36,7 +41,26 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).ToListAsync(cancellationToken);
+        return await query.Where(predicate).OrderBy(f => f.Ip).Skip(skip).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(Expression<Func<RequestAttemptsLog, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
+        params Expression<Func<RequestAttemptsLog, object>>[] includes)
+    {
+        IQueryable<RequestAttemptsLog> query = (ctx ?? context).Set<RequestAttemptsLog>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate).OrderBy(f => f.Ip).CountAsync(cancellationToken);
     }
 
     public async Task<RequestAttemptsLog> AddAsync(RequestAttemptsLog entity, CancellationToken cancellationToken)

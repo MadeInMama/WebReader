@@ -24,8 +24,13 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<CustomUser>> AllAsync(Expression<Func<CustomUser, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
+    public async Task<IEnumerable<CustomUser>> AllAsync(
+        Expression<Func<CustomUser, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
         params Expression<Func<CustomUser, object>>[] includes)
     {
         IQueryable<CustomUser> query = (ctx ?? context).Set<CustomUser>();
@@ -36,7 +41,27 @@ public class CustomUserRepository(ApplicationDbContext context) : IRepository<Cu
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).ToListAsync(cancellationToken);
+        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(
+        Expression<Func<CustomUser, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
+        params Expression<Func<CustomUser, object>>[] includes)
+    {
+        IQueryable<CustomUser> query = (ctx ?? context).Set<CustomUser>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<CustomUser> AddAsync(CustomUser entity, CancellationToken cancellationToken)

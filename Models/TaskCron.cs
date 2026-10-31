@@ -2,6 +2,7 @@
 
 public enum TaskCron
 {
+    Every15Mins,
     EveryHour,
     EveryDay,
     EveryWeek,

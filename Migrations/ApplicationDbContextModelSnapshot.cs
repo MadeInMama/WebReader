@@ -175,6 +175,41 @@ namespace WebReader.Migrations
                     b.ToTable("Files");
                 });
 
+            modelBuilder.Entity("WebReader.Models.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsSent")
+                        .HasColumnType("boolean");
+
+                    b.Property<JsonDocument>("Message")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("WebReader.Models.Entities.RequestAttemptsLog", b =>
                 {
                     b.Property<string>("Ip")
@@ -407,6 +442,15 @@ namespace WebReader.Migrations
                     b.Navigation("Bucket");
 
                     b.Navigation("NextPart");
+                });
+
+            modelBuilder.Entity("WebReader.Models.Entities.Notification", b =>
+                {
+                    b.HasOne("WebReader.Models.Entities.CustomUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WebReader.Models.Entities.ScheduledTask", b =>

@@ -51,7 +51,7 @@ typeSelect.onchange = (e) => {
 }
 
 function updateCreateTaskFromField(value) {
-    const defs = taskConfigDefinitions[value];
+    const defs = taskConfigDefinitions.find(f => String(f.Type) === value);
 
     priorityInput.value = defs.Priority;
     settingsInput.value = JSON.stringify(defs.Settings, null, 2);

@@ -10,20 +10,18 @@ using TaskStatus = WebReader.Models.TaskStatus;
 namespace WebReader.Background.SyncDbWithS3;
 
 public class RemoveFilesThatNotExistsInDb(
-    IServiceProvider services,
+    BucketRepository bucketRepository,
+    FileRepository fileRepository,
     ScheduledTaskRepository taskRepository,
+    MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ILogger<RemoveFilesThatNotExistsInDb> logger)
     : AbstractBackgroundTasked<RemoveFilesThatNotExistsInDb>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
-        using var scope = services.CreateScope();
-        var bucketRepository = scope.ServiceProvider.GetRequiredService<BucketRepository>();
-        var fileRepository = scope.ServiceProvider.GetRequiredService<FileRepository>();
-        var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
-
-        var allFilesInDb = (await fileRepository.AllAsync(f => true, cancellationToken, true, null, f => f.Bucket))
+        var allFilesInDb =
+            (await fileRepository.AllAsync(f => true, cancellationToken, true, null, int.MaxValue, 0, f => f.Bucket))
             .ToList();
         var systemBucketNames = (await bucketRepository.AllAsync(f => f.IsSystem, cancellationToken, true))
             .Select(f => f.Name).ToList();

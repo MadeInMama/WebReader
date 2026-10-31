@@ -9,8 +9,6 @@ using FluentResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
-using Telegram.Bot;
-using Telegram.Bot.Exceptions;
 using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
@@ -27,16 +25,14 @@ namespace WebReader.Background.AutoDownloadNewParts;
 public abstract partial class AbstractAutoDownloadNewParts<T>(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
-    MinioService minioService,
-    ITelegramBotClient botClient,
     IHttpClientFactory httpClientFactory,
     ILogger<T> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
-    ScheduledTaskRepository taskRepository)
+    ScheduledTaskRepository taskRepository,
+    NotificationRepository notificationRepository)
     : AbstractBackgroundTasked<T>(taskRepository, scheduledTaskHubContext, logger)
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
-    private const string SettingSizeName = "max_size";
 
     private readonly BrowserFetcher _browserFetcher = new();
 
@@ -172,7 +168,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     {
         const uint toByteMultiplier = 1024u * 1024u;
 
-        if (settings.RootElement.GetProperty(SettingSizeName).TryGetUInt64(out var res))
+        if (settings.RootElement.GetProperty(StaticJsonNames.MaxSize).TryGetUInt64(out var res))
             return res * toByteMultiplier;
 
         return DefaultMaxSize * toByteMultiplier;
@@ -317,29 +313,6 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         return res;
     }
 
-    protected virtual async Task BroadcastAllSubs(ApplicationDbContext context, ITelegramBotClient botClient,
-        string message)
-    {
-        await foreach (var el in context.SubscriberTgs.AsAsyncEnumerable())
-            try
-            {
-                await botClient.SendMessage(el.ChatId, message);
-                await Task.Delay(30);
-            }
-            catch (ApiRequestException ex) when (ex.ErrorCode == 403)
-            {
-                var subscriberTg = await context.SubscriberTgs
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.ChatId == el.ChatId);
-
-                if (subscriberTg != null)
-                {
-                    context.SubscriberTgs.Remove(subscriberTg);
-                    await context.SaveChangesAsync();
-                }
-            }
-    }
-
     protected virtual async Task CloseBrowser(IBrowser browser)
     {
         await browser.CloseAsync();
@@ -471,8 +444,19 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        await BroadcastAllSubs(context, botClient,
-            $"File {FileCustomName} {currentPartName} has been uploaded automatically.");
+        using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>
+               {
+                   [StaticJsonNames.NotificationBody] = $"File '{FileCustomName}' has new part '{currentPartName}'."
+               }))
+        {
+            await notificationRepository.AddAsync(new Models.Entities.Notification
+            {
+                Message = message,
+                Type = NotificationType.NewFile
+            }, cancellationToken);
+
+            await notificationRepository.SaveChangesAsync(cancellationToken);
+        }
 
         var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
 

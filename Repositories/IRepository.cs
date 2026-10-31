@@ -11,10 +11,22 @@ public interface IRepository<T> where T : class
         bool asNoTracking = false,
         params Expression<Func<T, object>>[] includes);
 
-    Task<IEnumerable<T>> AllAsync(Expression<Func<T, bool>> predicate,
+    Task<IEnumerable<T>> AllAsync(
+        Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
         ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
+        params Expression<Func<T, object>>[] includes);
+
+    Task<int> CountAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
         params Expression<Func<T, object>>[] includes);
 
     Task<T> AddAsync(T entity, CancellationToken cancellationToken);

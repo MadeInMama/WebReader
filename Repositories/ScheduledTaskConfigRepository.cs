@@ -24,8 +24,13 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<ScheduledTaskConfig>> AllAsync(Expression<Func<ScheduledTaskConfig, bool>> predicate,
-        CancellationToken cancellationToken, bool asNoTracking = false, ApplicationDbContext? ctx = null,
+    public async Task<IEnumerable<ScheduledTaskConfig>> AllAsync(
+        Expression<Func<ScheduledTaskConfig, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
         params Expression<Func<ScheduledTaskConfig, object>>[] includes)
     {
         IQueryable<ScheduledTaskConfig> query = (ctx ?? context).Set<ScheduledTaskConfig>();
@@ -39,7 +44,31 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         return await query.Where(predicate)
             .OrderByDescending(f => f.DefaultPriority)
             .ThenBy(f => f.Type)
+            .Skip(skip).Take(take)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(
+        Expression<Func<ScheduledTaskConfig, bool>> predicate,
+        CancellationToken cancellationToken,
+        bool asNoTracking = false,
+        ApplicationDbContext? ctx = null,
+        int take = int.MaxValue,
+        int skip = 0,
+        params Expression<Func<ScheduledTaskConfig, object>>[] includes)
+    {
+        IQueryable<ScheduledTaskConfig> query = (ctx ?? context).Set<ScheduledTaskConfig>();
+
+        foreach (var include in includes)
+            query = query.Include(include);
+
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.Where(predicate)
+            .OrderByDescending(f => f.DefaultPriority)
+            .ThenBy(f => f.Type)
+            .CountAsync(cancellationToken);
     }
 
     public async Task<ScheduledTaskConfig> AddAsync(ScheduledTaskConfig entity, CancellationToken cancellationToken)
