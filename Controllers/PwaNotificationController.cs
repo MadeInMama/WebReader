@@ -19,8 +19,9 @@ public class PwaNotificationController(
     public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? subscription,
         CancellationToken cancellationToken = default)
     {
-        logger.LogWarning("Subscribe Data {}", JsonSerializer.Serialize(subscription));
-        if (subscription == null) return BadRequest();
+        logger.LogInformation("Subscribe Data {}", JsonSerializer.Serialize(subscription));
+        if (subscription == null) throw new Exception("HYINYA");
+        ;
 
         var existingSubscriber = await subscriberPwaRepository.FirstOrDefaultAsync(
             f => f.Endpoint == subscription.Endpoint, null, cancellationToken);
