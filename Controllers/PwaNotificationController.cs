@@ -9,6 +9,7 @@ using WebReader.Repositories;
 namespace WebReader.Controllers;
 
 [Authorize]
+[ApiController]
 [Route("api/[controller]/[action]")]
 public class PwaNotificationController(
     SubscriberPwaRepository subscriberPwaRepository,
