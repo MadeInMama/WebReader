@@ -64,7 +64,10 @@ async function sendSubscriptionToServer(subscription) {
     requestQueue.enqueue({
         method: 'POST',
         url: '/api/PwaNotification/Subscribe',
-        data: {},
+        data: {
+            Endpoint: subscription.endpoint,
+            Keys: subscription.keys
+        },
         options: {
             headers: {
                 'RequestVerificationToken': GetAntiForgeryToken()
