@@ -15,7 +15,6 @@ public class PwaNotificationController(
     ILogger<PwaNotificationController> logger) : Controller
 {
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? subscription,
         CancellationToken cancellationToken = default)
     {
