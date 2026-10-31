@@ -120,57 +120,28 @@
 <script nonce="@nonce" src="~/js/to-local-date-time.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", false)
 
+<script src="~/js/pwa-push.js"></script>
 <script nonce="@nonce">
-    const applicationServerKey = "BM4cx4uxndGMF0b01rOaztwWfoeU7TjTQh1SgHR7uq-VrQsRZ8dYTuFYryPIk9mG5puf7UWL6uu75hyGwW3N6Ec";
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+    function registerMyServiceWorker() {
+        if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('Service Worker зарегистрирован!', reg))
-                .catch(err => console.error('Ошибка регистрации SW:', err));
-        });
-
-        if ('PushManager' in window) {
-            try {
-                const registration = await navigator.serviceWorker.ready;
-
-                let subscription = await registration.pushManager.getSubscription();
-
-                if (!subscription) {
-                    const convertedKey = urlBase64ToUint8Array(applicationServerKey);
-
-                    subscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: convertedKey
-                    });
-                }
-
-                await saveSubscriptionOnServer(subscription);
-                console.log('Пользователь успешно подписан на Push.');
-
-            } catch (error) {
-                console.error('Ошибка при подписке:', error);
-            }
+                .then(reg => {
+                    console.log('PWA: Service Worker успешно зарегистрирован!', reg);
+                    initPushNotification(); // Запуск подписки из pwa-push.js
+                })
+                .catch(err => {
+                    console.error('PWA: ❌ Ошибка регистрации Service Worker:', err);
+                });
+        } else {
+            console.warn('PWA: Браузер не поддерживает Service Worker.');
         }
     }
 
-    function urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    }
-
-    async function saveSubscriptionOnServer(subscription) {
-        await fetch('api/PwaNotification/Subscribe', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(subscription)
-        });
+    // Если страница уже загружена — регистрируем сразу. Если нет — ждем загрузки.
+    if (document.readyState === 'complete') {
+        registerMyServiceWorker();
+    } else {
+        window.addEventListener('load', registerMyServiceWorker);
     }
 
     document.addEventListener('touchstart', () => {

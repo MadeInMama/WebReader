@@ -16,7 +16,7 @@ public class CoverController(
     ILogger<CoverController> logger) : Controller
 {
     [HttpGet]
-    [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any)]
+    [ResponseCache(Duration = 500, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetCover(Guid bucketId, Guid fileId,
         CancellationToken cancellationToken = default)
     {
@@ -31,8 +31,8 @@ public class CoverController(
 
         var customOptions = new HybridCacheEntryOptions
         {
-            LocalCacheExpiration = TimeSpan.FromSeconds(3000),
-            Expiration = TimeSpan.FromSeconds(3000)
+            LocalCacheExpiration = TimeSpan.FromSeconds(500),
+            Expiration = TimeSpan.FromSeconds(500)
         };
 
         var presignedUrl = await cache.GetOrCreateWithLoggingAsync(
