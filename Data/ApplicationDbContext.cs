@@ -280,9 +280,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey<SubscriberTg>(f => f.UserId);
 
         modelBuilder.Entity<CustomUser>()
-            .HasOne(f => f.SubscriberPwa)
+            .HasMany(f => f.SubscriberPwas)
             .WithOne(f => f.User)
-            .HasForeignKey<SubscriberPwa>(f => f.UserId);
+            .HasForeignKey(f => f.UserId);
 
         modelBuilder.Entity<ScheduledTask>()
             .HasIndex(f => f.Priority);

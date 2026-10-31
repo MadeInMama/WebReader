@@ -63,7 +63,7 @@ public class SendNotifications(
                     var usersBatch = await userContext.Users
                         .Where(f => f.IsActive)
                         .Include(f => f.SubscriberTg)
-                        .Include(f => f.SubscriberPwa)
+                        .Include(f => f.SubscriberPwas)
                         .AsNoTracking()
                         .OrderBy(f => f.Id)
                         .Skip(page * UsersBatchSize)

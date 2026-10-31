@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
 using WebPush;
 using WebReader.Configuration;
@@ -15,7 +14,7 @@ public class PwaUserNotify(IOptions<VapidKeysConfig> vapidKeysConfig, ILogger<Pw
     public async Task<bool> SendAsync(CustomUser user, Models.Entities.Notification notification,
         CancellationToken cancellationToken)
     {
-        if (user.SubscriberPwa == null)
+        if (!user.SubscriberPwas.Any())
         {
             logger.LogInformation("{} skipped due to user pwa not linked", nameof(PwaUserNotify));
             return await Task.FromResult(true);
@@ -33,23 +32,29 @@ public class PwaUserNotify(IOptions<VapidKeysConfig> vapidKeysConfig, ILogger<Pw
                 Title = "WebReader",
                 Body = notification.Message.RootElement.GetProperty(StaticJsonNames.NotificationBody).GetString() ??
                        string.Empty,
-                Url = "TODO"
+                Url = "TODO" //TODO
             });
 
-            var pushSubscription = new PushSubscription(
-                user.SubscriberPwa.Endpoint,
-                user.SubscriberPwa.Keys["p256dh"],
-                user.SubscriberPwa.Keys["auth"]
-            );
-
-            await _webPushClient.SendNotificationAsync(pushSubscription, payload, vapidDetails, cancellationToken);
-        }
-        catch (WebPushException e)
-        {
-            logger.LogError(e, "{} not sent due to WebPush error", nameof(PwaUserNotify));
-            // Если статус 410 (Gone) или 404 (Not Found), подписка больше не активна (пользователь удалил PWA)
-            if (e.StatusCode is HttpStatusCode.Gone or HttpStatusCode.NotFound)
-                return await Task.FromResult(true);
+            foreach (var subscriberPwa in user.SubscriberPwas)
+            {
+                var pushSubscription = new PushSubscription(
+                    subscriberPwa.Endpoint,
+                    subscriberPwa.Keys["p256dh"],
+                    subscriberPwa.Keys["auth"]
+                );
+                try
+                {
+                    await _webPushClient.SendNotificationAsync(pushSubscription, payload, vapidDetails,
+                        cancellationToken);
+                }
+                catch (WebPushException e)
+                {
+                    logger.LogError(e, "{} not sent due to WebPush error, status={status}", nameof(PwaUserNotify),
+                        e.StatusCode);
+                    // Если статус 410 (Gone) или 404 (Not Found), подписка больше не активна (пользователь удалил PWA)
+                    //if (e.StatusCode is HttpStatusCode.Gone or HttpStatusCode.NotFound) TODO: remove unavailable sub
+                }
+            }
         }
         catch (Exception e)
         {

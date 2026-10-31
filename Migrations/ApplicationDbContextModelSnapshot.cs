@@ -348,8 +348,7 @@ namespace WebReader.Migrations
                     b.HasIndex("Endpoint")
                         .IsUnique();
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("SubscriberPwas");
                 });
@@ -504,8 +503,8 @@ namespace WebReader.Migrations
             modelBuilder.Entity("WebReader.Models.Entities.SubscriberPwa", b =>
                 {
                     b.HasOne("WebReader.Models.Entities.CustomUser", "User")
-                        .WithOne("SubscriberPwa")
-                        .HasForeignKey("WebReader.Models.Entities.SubscriberPwa", "UserId")
+                        .WithMany("SubscriberPwas")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -555,7 +554,7 @@ namespace WebReader.Migrations
                 {
                     b.Navigation("Bucket");
 
-                    b.Navigation("SubscriberPwa");
+                    b.Navigation("SubscriberPwas");
 
                     b.Navigation("SubscriberTg");
 
