@@ -16,12 +16,18 @@ public class PwaNotificationController(
     ILogger<PwaNotificationController> logger) : ControllerBase
 {
     [HttpPost]
+    [AllowAnonymous]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? subscription,
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Subscribe Data {}", JsonSerializer.Serialize(subscription));
-        if (subscription == null) throw new Exception("HYINYA");
-        ;
+        if (subscription == null) return BadRequest();
+
+        if (!User.Identity?.IsAuthenticated == true)
+            return Accepted();
+
+        var userId = User.GetUserGuid();
 
         var existingSubscriber = await subscriberPwaRepository.FirstOrDefaultAsync(
             f => f.Endpoint == subscription.Endpoint, null, cancellationToken);
@@ -32,7 +38,7 @@ public class PwaNotificationController(
             {
                 Endpoint = subscription.Endpoint,
                 Keys = subscription.Keys,
-                UserId = User.GetUserGuid()
+                UserId = userId
             }, cancellationToken);
         }
         else
