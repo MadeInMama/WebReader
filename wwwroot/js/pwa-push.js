@@ -60,6 +60,8 @@ async function initPushNotification() {
 async function sendSubscriptionToServer(subscription) {
     console.log("PWA-Push: Отправка запроса через requestQueue...");
 
+    console.log(subscription);
+
     // subscription имеет структуру { endpoint: "...", keys: { auth: "...", p256dh: "..." } }
     requestQueue.enqueue({
         method: 'POST',
