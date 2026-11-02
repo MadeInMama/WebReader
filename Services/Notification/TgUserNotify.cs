@@ -1,12 +1,16 @@
 ﻿using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using WebReader.Helpers;
 using WebReader.Models.Entities;
 
 namespace WebReader.Services.Notification;
 
-public class TgUserNotify(ITelegramBotClient botClient, ILogger<TgUserNotify> logger) : IUserNotify
+public class TgUserNotify(
+    ITelegramBotClient botClient,
+    LinkGenerationService linkGenerationService,
+    ILogger<TgUserNotify> logger) : AbstractUserNotify(linkGenerationService)
 {
-    public async Task<bool> SendAsync(CustomUser user, Models.Entities.Notification notification,
+    public override async Task<bool> SendAsync(CustomUser user, Models.Entities.Notification notification,
         CancellationToken cancellationToken)
     {
         if (user.SubscriberTg == null)
@@ -17,9 +21,21 @@ public class TgUserNotify(ITelegramBotClient botClient, ILogger<TgUserNotify> lo
 
         try
         {
-            await botClient.SendMessage(user.SubscriberTg!.ChatId,
-                notification.Message.RootElement.GetProperty(StaticJsonNames.NotificationBody).GetString() ??
-                string.Empty, cancellationToken: cancellationToken);
+            var notificationBody = notification.Message.RootElement
+                .GetProperty(StaticJsonNames.NotificationBody).GetString() ?? string.Empty;
+
+            var link = GetUrl(notification);
+
+            var htmlMessage = $"{notificationBody}";
+
+            if (!string.IsNullOrWhiteSpace(link)) htmlMessage = $"<a href=\"{link}\">{notificationBody}</a>";
+
+            await botClient.SendMessage(
+                user.SubscriberTg!.ChatId,
+                htmlMessage,
+                ParseMode.Html,
+                cancellationToken: cancellationToken
+            );
         }
         catch (Exception e)
         {

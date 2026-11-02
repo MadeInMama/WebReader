@@ -17,32 +17,64 @@
 @if (Model.IsTgLinked)
 {
     <form method="post" asp-action="Unlink">
-        <button type="submit">Unlink Telegram</button>
+        <button class="btn" type="submit">Unlink Telegram</button>
     </form>
 }
 else
 {
     @if (Model.LinkUrl != null)
     {
-        <a href="@Model.LinkUrl" target="_blank" rel="noopener noreferrer">Click to link</a>
+        <a class="btn" href="@Model.LinkUrl" target="_blank" rel="noopener noreferrer">Click to link</a>
     }
     else
     {
         <form method="post" asp-action="Link">
-            <button type="submit">Link Telegram</button>
+            <button class="btn" type="submit">Link Telegram</button>
         </form>
     }
 }
 <br/>
+<button id="btn-enable-push" class="btn" style="display:none;">Enable PWA notifications</button>
 <br/>
-<br/>
-<br/>
-<button id="btn-enable-push" style="display:none;">Включить уведомления</button>
+<button id="btn-disable-push" class="btn" style="display:none;">Disable PWA notifications</button>
 
 @section Scripts
 {
+    <script nonce="@nonce" src="~/js/libs/axios.min.js"></script>
     <script nonce="@nonce" src="~/js/libs/signalr.min.js" referrerpolicy="no-referrer"></script>
+    <script nonce="@nonce" src="~/js/pwa-push.js"></script>
     <script>
+        function setupNotificationButtons() {
+            const btnEnable = document.getElementById('btn-enable-push');
+            const btnDisable = document.getElementById('btn-disable-push');
+
+            const isNotificationGranted = Notification.permission === 'granted';
+
+            if (btnEnable) {
+                if (!isNotificationGranted) {
+                    btnEnable.style.display = 'block';
+                    btnEnable.addEventListener('click', async () => {
+                        await initPushNotification();
+                        btnEnable.style.display = 'none';
+                        btnDisable.style.display = 'block';
+                    });
+                }
+            }
+
+            if (btnDisable) {
+                if (isNotificationGranted) {
+                    btnDisable.style.display = 'block';
+                    btnDisable.addEventListener('click', async () => {
+                        unsubscribe();
+                        btnEnable.style.display = 'block';
+                        btnDisable.style.display = 'none';
+                    });
+                }
+            }
+        }
+
+        setupNotificationButtons();
+
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/UserTgLinkHub", {
                 skipNegotiation: true,                          // Пропускаем этап создания ID сессии

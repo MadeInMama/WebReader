@@ -446,7 +446,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>
                {
-                   [StaticJsonNames.NotificationBody] = $"File '{FileCustomName}' has new part '{currentPartName}'."
+                   [StaticJsonNames.NotificationBody] = $"File '{FileCustomName}' has new part '{currentPartName}'.",
+                   [StaticJsonNames.NotificationBucketId] = fileUploadResult.Value.BucketId.ToString(),
+                   [StaticJsonNames.NotificationFileId] = fileUploadResult.Value.Id.ToString()
                }))
         {
             await notificationRepository.AddAsync(new Models.Entities.Notification

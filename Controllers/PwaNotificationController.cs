@@ -39,4 +39,18 @@ public class PwaNotificationController(SubscriberPwaRepository subscriberPwaRepo
 
         return Accepted();
     }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> Unsubscribe(CancellationToken cancellationToken = default)
+    {
+        if (User.Identity?.IsAuthenticated == false) return NoContent();
+
+        var res = await subscriberPwaRepository.DeleteAllByUserIdAsync(User.GetUserGuid(), cancellationToken);
+
+        if (res == 0) return NoContent();
+
+        return Accepted();
+    }
 }

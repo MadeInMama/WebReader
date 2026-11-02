@@ -120,7 +120,6 @@
 
 <div id="safe-area-inset-bottom"></div>
 
-<script nonce="@nonce" src="~/js/libs/axios.min.js"></script>
 <script nonce="@nonce" src="~/js/cache/cache.js" asp-append-version="true"></script>
 <script nonce="@nonce" src="~/js/window-height-setter.js" asp-append-version="true"></script>
 <script nonce="@nonce" src="~/js/site.js" asp-append-version="true"></script>
@@ -129,41 +128,16 @@
 <script nonce="@nonce" src="~/js/custom-fixed-axios.js" asp-append-version="true"></script>
 <script nonce="@nonce" src="~/js/to-local-date-time.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", false)
-
-<script src="~/js/pwa-push.js"></script>
 <script nonce="@nonce">
     function registerMyServiceWorker() {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
-                .then(reg => {
-                    console.log('PWA: Service Worker зарегистрирован!');
-
-                    // Проверяем, это iOS?
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                    // Проверяем, запущено ли как PWA (на экране Домой)
-                    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-
-                    if (isIOS) {
-                        if (!isStandalone) {
-                            console.log("PWA-iOS: Сайт открыт в Safari. Пуши недоступны, пока приложение не добавлено на экран Домой.");
-                            // Тут можно показать пользователю подсказку: "Нажмите Поделиться -> На экран Домой"
-                            return;
-                        }
-
-                        console.log("PWA-iOS: Приложение запущено с экрана Домой. Ожидаем клика для подписки.");
-                        // Для iOS привязываем функцию к кнопке в интерфейсе
-                        setupNotificationButton();
-                    } else {
-                        // Для Windows/Android оставляем автоматический вызов
-                        if (typeof initPushNotification === 'function') {
-                            initPushNotification();
-                        }
-                    }
+                .then(_ => {
+                    console.log('PWA: Service Worker registered!');
                 });
         }
     }
 
-    // Если страница уже загружена — регистрируем сразу. Если нет — ждем загрузки.
     if (document.readyState === 'complete') {
         registerMyServiceWorker();
     } else {

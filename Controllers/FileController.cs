@@ -202,6 +202,22 @@ public class FileController(
             return View(string.Empty, errorMessage.FirstOrDefault()?.Message);
         }
 
+        // TODO: using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>
+        //        {
+        //            [StaticJsonNames.NotificationBody] = $"File '{FileCustomName}' has new part '{currentPartName}'.",
+        //            [StaticJsonNames.NotificationBucketId] = fileUploadResult.Value.BucketId.ToString(),
+        //            [StaticJsonNames.NotificationFileId] = fileUploadResult.Value.Id.ToString()
+        //        }))
+        // {
+        //     await notificationRepository.AddAsync(new Models.Entities.Notification
+        //     {
+        //         Message = message,
+        //         Type = NotificationType.NewFile
+        //     }, cancellationToken);
+        //
+        //     await notificationRepository.SaveChangesAsync(cancellationToken);
+        // }
+
         return request.AsParentOfId.HasValue || request.AsPartOfId.HasValue
             ? RedirectToAction("GetAllPartsInFile",
                 new { bucketId = bucket.Id, fileId = uploadFileResult.Value.Id })

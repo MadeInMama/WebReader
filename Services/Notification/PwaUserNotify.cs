@@ -7,11 +7,14 @@ using WebReader.Models.Entities;
 
 namespace WebReader.Services.Notification;
 
-public class PwaUserNotify(IOptions<VapidKeysConfig> vapidKeysConfig, ILogger<PwaUserNotify> logger) : IUserNotify
+public class PwaUserNotify(
+    IOptions<VapidKeysConfig> vapidKeysConfig,
+    LinkGenerationService linkGenerationService,
+    ILogger<PwaUserNotify> logger) : AbstractUserNotify(linkGenerationService)
 {
     private readonly WebPushClient _webPushClient = new();
 
-    public async Task<bool> SendAsync(CustomUser user, Models.Entities.Notification notification,
+    public override async Task<bool> SendAsync(CustomUser user, Models.Entities.Notification notification,
         CancellationToken cancellationToken)
     {
         if (!user.SubscriberPwas.Any())
@@ -32,7 +35,7 @@ public class PwaUserNotify(IOptions<VapidKeysConfig> vapidKeysConfig, ILogger<Pw
                 Title = "WebReader",
                 Body = notification.Message.RootElement.GetProperty(StaticJsonNames.NotificationBody).GetString() ??
                        string.Empty,
-                Url = "TODO" //TODO
+                Url = GetUrl(notification)
             });
 
             foreach (var subscriberPwa in user.SubscriberPwas)

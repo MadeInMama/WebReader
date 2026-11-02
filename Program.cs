@@ -109,6 +109,7 @@ builder.Services.AddScoped<BucketService>();
 builder.Services.AddScoped<FileControllerService>();
 builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<FileUploadService>();
+builder.Services.AddScoped<LinkGenerationService>();
 builder.Services.AddScoped<MinioService>();
 builder.Services.AddScoped<UserService>();
 
@@ -160,6 +161,8 @@ builder.Services.Configure<TelegramBotClientConfig>(builder.Configuration.GetSec
 var telegramConfig = new TelegramBotClientConfig();
 builder.Configuration.GetRequiredSection("Telegram").Bind(telegramConfig);
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(telegramConfig.BotToken!));
+
+builder.Services.Configure<AdditionalValuesConfig>(builder.Configuration.GetSection("AdditionalValues"));
 
 var jwtConfig = new JwtConfig();
 builder.Configuration.GetRequiredSection(nameof(JwtConfig)).Bind(jwtConfig);

@@ -94,19 +94,26 @@ async function sendSubscriptionToServer(subscription) {
         });
 }
 
-function setupNotificationButton() {
-    const btn = document.getElementById('btn-enable-push');
-    if (!btn) return;
-
-    // Показываем кнопку только если подписка еще не оформлена
-    if (Notification.permission !== 'granted') {
-        btn.style.display = 'block';
-        btn.addEventListener('click', async () => {
-            // Важно: на iOS вызов должен происходить строго внутри этого click-события!
-            await initPushNotification();
-            btn.style.display = 'none';
+function unsubscribe() {
+    requestQueue.enqueue({
+        method: 'POST',
+        url: '/api/PwaNotification/Unsubscribe',
+        data: {},
+        options: {
+            headers: {
+                'RequestVerificationToken': GetAntiForgeryToken()
+            },
+            withCredentials: true
+        },
+        beforeSend: () => {
+        }
+    })
+        .then(response => {
+            console.log("PWA-Push: 🎉 Отлично! Отписка успешно сохранена на сервере.");
+        })
+        .catch(error => {
+            console.error("PWA-Push: ❌ Ошибка при отправке отписки через очередь:", error);
         });
-    }
 }
 
 // 3. Вспомогательная функция для конвертации VAPID ключа
