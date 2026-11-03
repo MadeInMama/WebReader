@@ -154,30 +154,40 @@ self.addEventListener('notificationclick', function (event) {
     event.waitUntil(
         clients.matchAll({type: 'window', includeUncontrolled: true})
             .then(function (clientList) {
-                // Если есть хотя бы одно открытое окно PWA (даже в фоне или на Split View)
+                // Если есть открытые окна (приложение запущено)
                 if (clientList && clientList.length > 0) {
 
-                    // 1. Фокусируемся на самом первом доступном окне
-                    if ('focus' in clientList[0]) {
-                        clientList[0].focus();
+                    // Выбираем первое доступное окно
+                    let client = clientList;
+
+                    // 1. Принудительно фокусируемся на окне
+                    if (typeof client.focus === 'function') {
+                        client.focus();
                     }
 
-                    // 2. Отправляем сообщение КАЖДОМУ открытому окну (для надежности на iPadOS)
-                    clientList.forEach(client => {
+                    // 2. Дублирующий шаг для iPhone/iPad: отправляем postMessage
+                    if (typeof client.postMessage === 'function') {
                         client.postMessage({
                             action: 'navigate',
                             url: targetUrl
                         });
-                    });
+                    }
+
+                    // 3. КРИТИЧЕСКИЙ ШАГ ДЛЯ iPadOS: если postMessage проигнорирован,
+                    // выполняем жесткую навигацию самого окна браузера
+                    if (typeof client.navigate === 'function') {
+                        return client.navigate(targetUrl);
+                    }
 
                     return;
                 }
 
-                // Если приложение было полностью закрыто
+                // Если приложение полностью закрыто
                 if (clients.openWindow) {
                     return clients.openWindow(targetUrl);
                 }
             })
     );
 });
+
 

@@ -71,23 +71,10 @@ jobs:
           sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "/${{ secrets.SERVER_USER }}/Projects/deploy_start.sh"
 
-  pruning:
-    runs-on: ubuntu-latest
-    container: alpine:3.19
-    needs: starting
-    steps:
-      - name: Install SSH tools
-        run: apk add --no-cache openssh-client sshpass
-      - name: Pruning Docker system
-        run: |
-          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
-          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "/${{ secrets.SERVER_USER }}/Projects/deploy_prune.sh"
-
   restarting:
     runs-on: ubuntu-latest
     container: alpine:3.19
-    needs: pruning
+    needs: starting
     steps:
       - name: Install SSH tools
         run: apk add --no-cache openssh-client sshpass
@@ -96,3 +83,16 @@ jobs:
           export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
           sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "/${{ secrets.SERVER_USER }}/Projects/deploy_restart.sh"
+
+  pruning:
+    runs-on: ubuntu-latest
+    container: alpine:3.19
+    needs: restarting
+    steps:
+      - name: Install SSH tools
+        run: apk add --no-cache openssh-client sshpass
+      - name: Pruning Docker system
+        run: |
+          export SSHPASS="${{ secrets.SERVER_PASSWORD }}"
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "/${{ secrets.SERVER_USER }}/Projects/deploy_prune.sh"
