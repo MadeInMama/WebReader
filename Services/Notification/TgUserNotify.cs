@@ -24,7 +24,7 @@ public class TgUserNotify(
             var notificationBody = notification.Message.RootElement
                 .GetProperty(StaticJsonNames.NotificationBody).GetString() ?? string.Empty;
 
-            var link = GetUrl(notification);
+            var link = GetUrl(notification, true);
 
             var htmlMessage = $"{notificationBody}";
 

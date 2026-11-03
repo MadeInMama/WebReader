@@ -9,7 +9,7 @@ public abstract class AbstractUserNotify(LinkGenerationService linkGenerationSer
     public abstract Task<bool> SendAsync(CustomUser user, Models.Entities.Notification notification,
         CancellationToken cancellationToken);
 
-    protected string? GetUrl(Models.Entities.Notification notification)
+    protected string? GetUrl(Models.Entities.Notification notification, bool isAbsolute)
     {
         switch (notification.Type)
         {
@@ -21,7 +21,7 @@ public abstract class AbstractUserNotify(LinkGenerationService linkGenerationSer
                 var fileId = notification.Message.RootElement.GetProperty(StaticJsonNames.NotificationFileId)
                     .GetString();
                 if (bucketId == null || fileId == null) return null;
-                return linkGenerationService.GenerateGetFileUrl(Guid.Parse(bucketId), Guid.Parse(fileId));
+                return linkGenerationService.GenerateGetFileUrl(Guid.Parse(bucketId), Guid.Parse(fileId), isAbsolute);
             default:
                 throw new ArgumentOutOfRangeException();
         }

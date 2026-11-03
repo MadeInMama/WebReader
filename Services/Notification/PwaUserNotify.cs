@@ -35,7 +35,7 @@ public class PwaUserNotify(
                 Title = "WebReader",
                 Body = notification.Message.RootElement.GetProperty(StaticJsonNames.NotificationBody).GetString() ??
                        string.Empty,
-                Url = GetUrl(notification)
+                Url = GetUrl(notification, false)
             });
 
             foreach (var subscriberPwa in user.SubscriberPwas)
