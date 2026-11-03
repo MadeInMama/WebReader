@@ -148,20 +148,38 @@
         }
     }
 
-    // Слушатель канала BroadcastChannel для ультимативного обхода багов iPadOS/iOS
-    try {
+    if ('BroadcastChannel' in window) {
         const bc = new BroadcastChannel('pwa_navigation_channel');
+
         bc.onmessage = function (event) {
             if (event.data && event.data.action === 'navigate') {
                 const targetUrl = event.data.url;
-                console.log("PWA (BroadcastChannel): Получена команда перехода на:", targetUrl);
+                console.log("PWA: Перехват навигации для iPadOS. Цель:", targetUrl);
 
-                // Нативный фронтенд-переход, который на iPadOS работает в 100% случаев
-                window.location.href = targetUrl;
+                // Проверяем, запущен ли сайт на iPad/iPhone
+                const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                    (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(navigator.userAgent));
+
+                if (isAppleMobile) {
+                    // ХАК ДЛЯ iPadOS: Вместо window.location.href (который блокируется при открытом PWA)
+                    // мы мягко пушим изменение URL в историю браузера без перезагрузки страницы
+                    window.history.pushState({}, '', targetUrl);
+
+                    // Триггерим событие смены страницы для вашего MVC / SPA скрипта, чтобы он обновил DOM-дерево
+                    // Если у вас Turbo, Blazor, или обычный роутер — они увидят смену URL.
+                    // В крайнем случае, если страница сама не перерисовалась, вызываем нативный перезапуск контента:
+                    if (typeof window.onpopstate === 'function') {
+                        window.onpopstate();
+                    } else {
+                        // Форсированное обновление контента текущего окна, разрешенное в WebKit
+                        window.location.replace(targetUrl);
+                    }
+                } else {
+                    // Стандартное поведение для Android/Windows
+                    window.location.href = targetUrl;
+                }
             }
         };
-    } catch (e) {
-        console.error("Браузер не поддерживает BroadcastChannel API", e);
     }
 
     if (document.readyState === 'complete') {

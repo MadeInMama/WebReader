@@ -151,26 +151,29 @@ self.addEventListener('notificationclick', function (event) {
 
     let targetUrl = event.notification.data?.url || '/';
 
-    // 1. Создаем широковещательный канал
-    const bc = new BroadcastChannel('pwa_navigation_channel');
-
-    // 2. Отправляем URL всем живым окнам в обход ограничений WebKit
-    bc.postMessage({action: 'navigate', url: targetUrl});
-    bc.close(); // Сразу закрываем канал в SW
-
     event.waitUntil(
-        // Пытаемся найти окна стандартным путем для Windows/Android/iPhone
         clients.matchAll({type: 'window', includeUncontrolled: true})
             .then(function (clientList) {
                 if (clientList && clientList.length > 0) {
-                    // Если нашли (Windows/Android/iPhone), фокусируемся
-                    if ('focus' in clientList) clientList.focus();
-                    if ('navigate' in clientList) return clientList.navigate(targetUrl);
+                    let client = clientList[0];
+
+                    if ('focus' in client) client.focus();
+
+                    // Отправляем точный URL через BroadcastChannel (самый надежный способ для iOS/iPadOS)
+                    const bc = new BroadcastChannel('pwa_navigation_channel');
+                    bc.postMessage({action: 'navigate', url: targetUrl});
+                    bc.close();
+
+                    // Дополнительно дублируем встроенным методом (для Windows/Android)
+                    if ('navigate' in client) {
+                        client.navigate(targetUrl).catch(() => {
+                            console.log("iPadOS заблокировал метод client.navigate, сработает BroadcastChannel.");
+                        });
+                    }
                     return;
                 }
 
-                // Резервный вариант: если приложение было ПОЛНОСТЬЮ ЗАКРЫТО,
-                // openWindow сработает на iPad без блокировок Pop-up
+                // Если приложение было полностью ЗАКРЫТО (тут на iPad проблем нет, откроется сразу)
                 if (clients.openWindow) {
                     return clients.openWindow(targetUrl);
                 }
