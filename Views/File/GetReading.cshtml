@@ -9,35 +9,6 @@
 {
     <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/lazy-image.css" asp-append-version="true"/>
-    <style>
-        summary > span {
-            cursor: pointer;
-            position: relative;
-        }
-
-        summary > span::after {
-            position: absolute;
-            content: "";
-            width: 0;
-            bottom: 0;
-            left: 50%;
-            height: 0.025em;
-            display: block;
-            background: var(--foreground-color);
-            transition: 150ms;
-        }
-
-        summary > span:hover::after {
-            width: 100%;
-            left: 0;
-        }
-
-        @@media (hover: none) and (pointer: coarse) {
-            summary > span:hover::after {
-                display: none;
-            }
-        }
-    </style>
 }
 
 @section SpecialInfo {

@@ -187,9 +187,14 @@ header.opened > .header-toggle {
     flex-shrink: 0;
 }
 
+details > summary {
+    pointer-events: none;
+}
+
 details > summary > span {
     font-size: 1.2em;
     font-weight: 700;
+    pointer-events: all;
 }
 
 .always-open-details {

@@ -6,6 +6,27 @@
     ViewData["Title"] = "Account";
 }
 
+@section Style
+{
+    <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
+    <style>
+        details > div {
+            grid-template-columns: 100%;
+            justify-content: flex-start;
+            gap: 0.5em;
+        }
+
+        details > div > div, details > div > form {
+            display: grid;
+            grid-template-columns: 11em max-content;
+            grid-template-rows: min-content;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0;
+        }
+    </style>
+}
+
 @section SpecialInfo
 {
     @if (User.Identity is { IsAuthenticated: true })
@@ -14,28 +35,47 @@
     }
 }
 
-@if (Model.IsTgLinked)
-{
-    <form method="post" asp-action="Unlink">
-        <button class="btn" type="submit">Unlink Telegram</button>
-    </form>
-}
-else
-{
-    @if (Model.LinkUrl != null)
-    {
-        <a class="btn" href="@Model.LinkUrl" target="_blank" rel="noopener noreferrer">Click to link</a>
-    }
-    else
-    {
-        <form method="post" asp-action="Link">
-            <button class="btn" type="submit">Link Telegram</button>
-        </form>
-    }
-}
-<br/>
-<button id="btn-enable-push" class="btn" style="display:none;">Enable PWA notifications</button>
-<button id="btn-disable-push" class="btn" style="display:none;">Disable PWA notifications</button>
+<details open>
+    <summary>
+        <span>Notifications and Links</span>
+    </summary>
+
+    <div>
+        @if (Model.IsTgLinked)
+        {
+            <form method="post" asp-action="Unlink">
+                <label>Telegram:</label>
+                <button class="btn" type="submit">Unlink</button>
+            </form>
+        }
+        else
+        {
+            @if (Model.LinkUrl != null)
+            {
+                <div>
+                    <label>Telegram:</label>
+                    <a class="btn" href="@Model.LinkUrl" rel="noopener noreferrer">Click to link</a>
+                </div>
+            }
+            else
+            {
+                <form method="post" asp-action="Link">
+                    <label>Telegram:</label>
+                    <button class="btn" type="submit">Link</button>
+                </form>
+            }
+        }
+        <div id="btn-enable-push" style="display:none;">
+            <label>In-App Notification:</label>
+            <button class="btn">Enable PWA notifications</button>
+        </div>
+
+        <div id="btn-disable-push" style="display:none;">
+            <label>In-App Notification:</label>
+            <button class="btn">Disable PWA notifications</button>
+        </div>
+    </div>
+</details>
 
 @section Scripts
 {
@@ -56,21 +96,21 @@ else
 
             if (btnEnable) {
                 if (!isSubscribed) {
-                    btnEnable.style.display = 'block';
-                    btnEnable.addEventListener('click', async () => {
+                    btnEnable.removeAttribute('style');
+                    document.querySelector("#btn-enable-push > button").addEventListener('click', async () => {
                         await initPushNotification();
                         btnEnable.style.display = 'none';
-                        btnDisable.style.display = 'block';
+                        btnDisable.removeAttribute('style');
                     });
                 }
             }
 
             if (btnDisable) {
                 if (isSubscribed) {
-                    btnDisable.style.display = 'block';
-                    btnDisable.addEventListener('click', async () => {
+                    btnDisable.removeAttribute('style');
+                    document.querySelector("#btn-disable-push > button").addEventListener('click', async () => {
                         await unsubscribeUserFromPush();
-                        btnEnable.style.display = 'block';
+                        btnEnable.removeAttribute('style');
                         btnDisable.style.display = 'none';
                     });
                 }
