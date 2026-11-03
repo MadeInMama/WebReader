@@ -200,9 +200,8 @@ public class BackgroundTaskManager(
                         if (result.IsSuccess)
                             await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Completed, 1.0m,
                                 result.ValueOrDefault, cancellationToken);
-                        else if (result.Reasons.Count != 0)
-                            await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null,
-                                string.Join(", ", result.Reasons.Select(f => f.Message)), cancellationToken);
+                        else if (result.IsFailed)
+                            throw new Exception(string.Join(", ", result.Reasons.Select(f => f.Message)));
                     }
                     catch (OperationCanceledException e)
                     {
