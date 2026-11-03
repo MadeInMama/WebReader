@@ -154,40 +154,28 @@ self.addEventListener('notificationclick', function (event) {
     event.waitUntil(
         clients.matchAll({type: 'window', includeUncontrolled: true})
             .then(function (clientList) {
-                // Если есть открытые окна (приложение запущено)
+                // Нормальное поведение для Windows/Android/iPhone:
                 if (clientList && clientList.length > 0) {
+                    let client = clientList[0];
+                    if (typeof client.focus === 'function') client.focus();
 
-                    // Выбираем первое доступное окно
-                    let client = clientList;
+                    // Отправляем сообщение
+                    client.postMessage({action: 'navigate', url: targetUrl});
 
-                    // 1. Принудительно фокусируемся на окне
-                    if (typeof client.focus === 'function') {
-                        client.focus();
-                    }
-
-                    // 2. Дублирующий шаг для iPhone/iPad: отправляем postMessage
-                    if (typeof client.postMessage === 'function') {
-                        client.postMessage({
-                            action: 'navigate',
-                            url: targetUrl
-                        });
-                    }
-
-                    // 3. КРИТИЧЕСКИЙ ШАГ ДЛЯ iPadOS: если postMessage проигнорирован,
-                    // выполняем жесткую навигацию самого окна браузера
+                    // Выполняем навигацию окружения
                     if (typeof client.navigate === 'function') {
                         return client.navigate(targetUrl);
                     }
-
                     return;
                 }
 
-                // Если приложение полностью закрыто
+                // ХАК ДЛЯ iPadOS: Если Safari изолировал окна и clientList пуст,
+                // мы ВСЕ РАВНО вызываем openWindow.
+                // Для закрытого приложения это откроет его, а для открытого —
+                // Safari обновит текущую активную сессию PWA на этот URL.
                 if (clients.openWindow) {
                     return clients.openWindow(targetUrl);
                 }
             })
     );
 });
-
-
