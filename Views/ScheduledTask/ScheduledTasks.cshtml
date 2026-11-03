@@ -30,25 +30,25 @@
             <label for="create-task-types">Type:</label>
             <select id="create-task-types" class="click-effect" required>
                 <optgroup label="S3">
-                    @foreach (var item in Model.Items.Where(f => GetS3Types().Contains(f.Type)))
+                    @foreach (var item in Model.Items.Where(f => GetS3Types().Contains(f.Type)).OrderBy(f => f.Type).ToList())
                     {
                         <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
                 </optgroup>
                 <optgroup label="Download">
-                    @foreach (var item in Model.Items.Where(f => GetDownloadTypes().Contains(f.Type)))
+                    @foreach (var item in Model.Items.Where(f => GetDownloadTypes().Contains(f.Type)).OrderBy(f => f.Type).ToList())
                     {
                         <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
                 </optgroup>
                 <optgroup label="Delete">
-                    @foreach (var item in Model.Items.Where(f => GetDeleteTypes().Contains(f.Type)))
+                    @foreach (var item in Model.Items.Where(f => GetDeleteTypes().Contains(f.Type)).OrderBy(f => f.Type).ToList())
                     {
                         <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
                 </optgroup>
                 <optgroup label="Other">
-                    @foreach (var item in Model.Items.Where(f => GetOtherTypes().Contains(f.Type)))
+                    @foreach (var item in Model.Items.Where(f => GetOtherTypes().Contains(f.Type)).OrderBy(f => f.Type).ToList())
                     {
                         <option value="@((int)item.Type)">@($"{item.Type}({(int)item.Type})")</option>
                     }
@@ -89,25 +89,25 @@
     <select id="task-filter-types" class="click-effect">
         <option value="All">All Types</option>
         <optgroup label="S3">
-            @foreach (var item in GetS3Types())
+            @foreach (var item in GetS3Types().OrderBy(f => f).ToList())
             {
                 <option value="@((int)item)">@($"{item}({(int)item})")</option>
             }
         </optgroup>
         <optgroup label="Download">
-            @foreach (var item in GetDownloadTypes())
+            @foreach (var item in GetDownloadTypes().OrderBy(f => f).ToList())
             {
                 <option value="@((int)item)">@($"{item}({(int)item})")</option>
             }
         </optgroup>
         <optgroup label="Delete">
-            @foreach (var item in GetDeleteTypes())
+            @foreach (var item in GetDeleteTypes().OrderBy(f => f).ToList())
             {
                 <option value="@((int)item)">@($"{item}({(int)item})")</option>
             }
         </optgroup>
         <optgroup label="Other">
-            @foreach (var item in GetOtherTypes())
+            @foreach (var item in GetOtherTypes().OrderBy(f => f).ToList())
             {
                 <option value="@((int)item)">@($"{item}({(int)item})")</option>
             }
@@ -115,14 +115,14 @@
     </select>
     <select id="task-filter-statuses" class="click-effect">
         <option value="All">All Statuses</option>
-        @foreach (var item in Enum.GetValues<TaskStatus>())
+        @foreach (var item in Enum.GetValues<TaskStatus>().OrderBy(f => f).ToList())
         {
             <option value="@((int)item)">@($"{item}({(int)item})")</option>
         }
     </select>
     <select id="task-filter-crons" class="click-effect">
         <option value="All">All Crons</option>
-        @foreach (var item in Enum.GetValues<TaskCron>())
+        @foreach (var item in Enum.GetValues<TaskCron>().OrderBy(f => f).ToList())
         {
             <option value="@((int)item)">@($"{item}({(int)item})")</option>
         }
