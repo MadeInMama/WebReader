@@ -147,34 +147,37 @@ self.addEventListener('push', function (event) {
 });
 
 self.addEventListener('notificationclick', function (event) {
-    event.notification.close(); // Закрываем шторку уведомления
+    event.notification.close();
 
     let targetUrl = event.notification.data?.url || '/';
 
     event.waitUntil(
-        // Ищем все открытые окна (вкладки) нашего PWA
         clients.matchAll({type: 'window', includeUncontrolled: true})
             .then(function (clientList) {
-                // Ищем окно, которое сейчас на первом плане (фокусе)
-                let activeClient = clientList.find(c => c.visibilityState === 'visible') || clientList[0];
+                // Если есть хотя бы одно открытое окно PWA (даже в фоне или на Split View)
+                if (clientList && clientList.length > 0) {
 
-                if (activeClient) {
-                    // Фокусируемся на приложении
-                    activeClient.focus();
+                    // 1. Фокусируемся на самом первом доступном окне
+                    if ('focus' in clientList[0]) {
+                        clientList[0].focus();
+                    }
 
-                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ ДЛЯ iOS:
-                    // Вместо client.navigate() отправляем URL сообщением внутрь приложения
-                    activeClient.postMessage({
-                        action: 'navigate',
-                        url: targetUrl
+                    // 2. Отправляем сообщение КАЖДОМУ открытому окну (для надежности на iPadOS)
+                    clientList.forEach(client => {
+                        client.postMessage({
+                            action: 'navigate',
+                            url: targetUrl
+                        });
                     });
+
                     return;
                 }
 
-                // Если приложение полностью закрыто — открываем новое окно
+                // Если приложение было полностью закрыто
                 if (clients.openWindow) {
                     return clients.openWindow(targetUrl);
                 }
             })
     );
 });
+
