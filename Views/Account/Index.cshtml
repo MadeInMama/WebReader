@@ -85,6 +85,18 @@
     <script nonce="@nonce" src="~/js/pwa-push.js" asp-append-version="true"></script>
     <script>
         async function setupNotificationButtons() {
+            document.querySelector("#btn-enable-push > button").addEventListener('click', async () => {
+                await initPushNotification();
+                document.querySelector("#btn-enable-push").style.display = 'none';
+                document.querySelector("#btn-disable-push").removeAttribute('style');
+            });
+
+            document.querySelector("#btn-disable-push > button").addEventListener('click', async () => {
+                await unsubscribeUserFromPush();
+                document.querySelector("#btn-enable-push").removeAttribute('style');
+                document.querySelector("#btn-disable-push").style.display = 'none';
+            });
+
             const btnEnable = document.getElementById('btn-enable-push');
             const btnDisable = document.getElementById('btn-disable-push');
 
@@ -97,22 +109,12 @@
             if (btnEnable) {
                 if (!isSubscribed) {
                     btnEnable.removeAttribute('style');
-                    document.querySelector("#btn-enable-push > button").addEventListener('click', async () => {
-                        await initPushNotification();
-                        btnEnable.style.display = 'none';
-                        btnDisable.removeAttribute('style');
-                    });
                 }
             }
 
             if (btnDisable) {
                 if (isSubscribed) {
                     btnDisable.removeAttribute('style');
-                    document.querySelector("#btn-disable-push > button").addEventListener('click', async () => {
-                        await unsubscribeUserFromPush();
-                        btnEnable.removeAttribute('style');
-                        btnDisable.style.display = 'none';
-                    });
                 }
             }
         }
