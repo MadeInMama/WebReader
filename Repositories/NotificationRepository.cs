@@ -92,4 +92,12 @@ public class NotificationRepository(ApplicationDbContext context) : IRepository<
 
         return await DeleteAllAsync([id.Value], cancellationToken);
     }
+
+    public async Task<int> DeleteAllSentAndOlderThenAsync(DateTimeOffset createdDate,
+        CancellationToken cancellationToken)
+    {
+        return await context.Notifications
+            .Where(f => f.IsSent && f.SentAt < createdDate)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

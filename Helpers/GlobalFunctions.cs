@@ -4,20 +4,25 @@ namespace WebReader.Helpers;
 
 public static class GlobalFunctions
 {
-    public static string FormatSize(ulong size)
+    private static readonly string[] SizeSuffixes = { "Bytes", "KB", "MB", "GB", "TB", "PB", "EB" };
+
+    public static string FormatSize(ulong bytes, int decimalPlaces = 2)
     {
-        if (size == 0)
-            return "0B";
+        if (bytes == 0) return string.Format("{0:F" + decimalPlaces + "} Bytes", 0);
 
-        var digits = size.ToString().Length;
+        var mag = (int)Math.Log(bytes, 1024);
 
-        return digits switch
+        if (mag >= SizeSuffixes.Length) mag = SizeSuffixes.Length - 1;
+
+        var adjustedSize = bytes / Math.Pow(1024, mag);
+
+        if (Math.Round(adjustedSize, decimalPlaces) >= 1024 && mag < SizeSuffixes.Length - 1)
         {
-            > 10 => size / 1024 / 1024 / 1024 + "GB",
-            > 6 => size / 1024 / 1024 + "MB",
-            > 3 => size / 1024 + "KB",
-            _ => size + "B"
-        };
+            mag++;
+            adjustedSize /= 1024;
+        }
+
+        return string.Format("{0:F" + decimalPlaces + "} {1}", adjustedSize, SizeSuffixes[mag]);
     }
 
     public static string FormatSize(long size)
@@ -56,6 +61,7 @@ public static class GlobalFunctions
             TaskType.DeleteOldErroredTasks,
             TaskType.DeleteOldInProgressTasks,
             TaskType.DeleteOldRequestAttemptsLogs,
+            TaskType.DeleteSentNotifications,
             TaskType.ClearUserTgLinks
         ];
     }

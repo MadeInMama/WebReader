@@ -3,6 +3,7 @@ using FluentResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using WebReader.Data;
+using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
@@ -28,7 +29,6 @@ public class SendNotifications(
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         var totalSentCount = 0;
-        var totalUpdatedInDb = 0;
 
         await using var notificationContext = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -61,7 +61,8 @@ public class SendNotifications(
                     await using var userContext = await contextFactory.CreateDbContextAsync(cancellationToken);
 
                     var usersBatch = await userContext.Users
-                        .Where(f => f.IsActive)
+                        .Where(f => f.IsActive && (notification.Type != NotificationType.System ||
+                                                   f.Roles.Contains(RoleType.Admin)))
                         .Include(f => f.SubscriberTg)
                         .Include(f => f.SubscriberPwas)
                         .AsNoTracking()
@@ -92,7 +93,7 @@ public class SendNotifications(
 
             if (currentIndex % NotificationsSaveChangesBatch == 0)
             {
-                totalUpdatedInDb += await notificationContext.SaveChangesAsync(cancellationToken);
+                await notificationContext.SaveChangesAsync(cancellationToken);
                 notificationContext.ChangeTracker.Clear();
             }
 
@@ -101,8 +102,8 @@ public class SendNotifications(
         }
 
         if (notificationContext.ChangeTracker.HasChanges())
-            totalUpdatedInDb += await notificationContext.SaveChangesAsync(cancellationToken);
+            await notificationContext.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok($"Sent count: {totalSentCount} | Updated in DB: {totalUpdatedInDb}");
+        return Result.Ok($"Sent count: {totalSentCount}");
     }
 }

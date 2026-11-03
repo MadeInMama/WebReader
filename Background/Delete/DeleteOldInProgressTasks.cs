@@ -6,7 +6,9 @@ using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.Delete;
 
-public class DeleteOldInProgressTasks(IServiceProvider services, ILogger<DeleteOldInProgressTasks> logger)
+public class DeleteOldInProgressTasks(
+    ScheduledTaskRepository scheduledTaskRepository,
+    ILogger<DeleteOldInProgressTasks> logger)
     : IBackgroundTasked
 {
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
@@ -15,9 +17,6 @@ public class DeleteOldInProgressTasks(IServiceProvider services, ILogger<DeleteO
                 .GetProperty(StaticJsonNames.OlderThenInHours)
                 .TryGetUInt16(out var days))
             return Result.Fail($"Can't get '{nameof(StaticJsonNames.OlderThenInHours)}' param.");
-
-        using var scope = services.CreateScope();
-        var scheduledTaskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
 
         var result = await scheduledTaskRepository.DeleteAllOlderThenAsync(
             DateTimeOffset.UtcNow.AddHours(-days), [TaskStatus.InProgress], cancellationToken);

@@ -6,7 +6,9 @@ using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Background.Delete;
 
-public class DeleteOldRequestAttemptsLogs(IServiceProvider services, ILogger<DeleteOldRequestAttemptsLogs> logger)
+public class DeleteOldRequestAttemptsLogs(
+    RequestAttemptsLogRepository requestAttemptsLogRepository,
+    ILogger<DeleteOldRequestAttemptsLogs> logger)
     : IBackgroundTasked
 {
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
@@ -16,10 +18,7 @@ public class DeleteOldRequestAttemptsLogs(IServiceProvider services, ILogger<Del
                 .TryGetUInt16(out var days))
             return Result.Fail($"Can't get '{nameof(StaticJsonNames.OlderThenInHours)}' param.");
 
-        using var scope = services.CreateScope();
-        var scheduledTaskRepository = scope.ServiceProvider.GetRequiredService<RequestAttemptsLogRepository>();
-
-        var result = await scheduledTaskRepository.DeleteAllOlderThenAsync(
+        var result = await requestAttemptsLogRepository.DeleteAllOlderThenAsync(
             DateTimeOffset.UtcNow.AddHours(-days), cancellationToken);
 
         logger.LogTrace($"{nameof(DeleteOldCompletedTasks)}: Deleted rows count: {{}}", result);

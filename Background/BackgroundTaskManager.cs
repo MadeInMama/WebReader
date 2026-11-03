@@ -1,9 +1,11 @@
 ﻿using System.Collections.Immutable;
+using System.Text.Json;
 using AngleSharp.Common;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using WebReader.Configuration;
+using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
@@ -143,6 +145,7 @@ public class BackgroundTaskManager(
         using var scope = serviceScopeFactory.CreateScope();
 
         var taskRepository = scope.ServiceProvider.GetRequiredService<ScheduledTaskRepository>();
+        var notificationRepository = scope.ServiceProvider.GetRequiredService<NotificationRepository>();
         var scheduledTaskHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ScheduledTaskHub>>();
 
         while (await timer.WaitForNextTickAsync(cancellationToken)) await DoWork(scope);
@@ -210,6 +213,21 @@ public class BackgroundTaskManager(
                     {
                         await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null, e.Message,
                             cancellationToken);
+
+                        using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>
+                               {
+                                   [StaticJsonNames.NotificationBody] =
+                                       $"Task '({(int)task.Type}){task.Type}' has failed with error: '{e.Message}'."
+                               }))
+                        {
+                            await notificationRepository.AddAsync(new Models.Entities.Notification
+                            {
+                                Message = message,
+                                Type = NotificationType.System
+                            }, cancellationToken);
+
+                            await notificationRepository.SaveChangesAsync(cancellationToken);
+                        }
                     }
                 }
 

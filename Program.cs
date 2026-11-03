@@ -145,6 +145,8 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldInProgressTasks>(
     TaskType.DeleteOldInProgressTasks);
 builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteOldRequestAttemptsLogs>(
     TaskType.DeleteOldRequestAttemptsLogs);
+builder.Services.AddKeyedTransient<IBackgroundTasked, DeleteSentNotifications>(
+    TaskType.DeleteSentNotifications);
 
 builder.Services.AddKeyedTransient<IBackgroundTasked, CalcAllBooksSizes>(
     TaskType.CalcAllBooksSizes);

@@ -1,15 +1,18 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using WebPush;
 using WebReader.Configuration;
 using WebReader.Helpers;
 using WebReader.Models.Entities;
+using WebReader.Repositories;
 
 namespace WebReader.Services.Notification;
 
 public class PwaUserNotify(
     IOptions<VapidKeysConfig> vapidKeysConfig,
     LinkGenerationService linkGenerationService,
+    SubscriberPwaRepository subscriberPwaRepository,
     ILogger<PwaUserNotify> logger) : AbstractUserNotify(linkGenerationService)
 {
     private readonly WebPushClient _webPushClient = new();
@@ -38,6 +41,8 @@ public class PwaUserNotify(
                 Url = GetUrl(notification, false)
             });
 
+            var subscriberIdToDelete = new List<Guid>();
+
             foreach (var subscriberPwa in user.SubscriberPwas)
             {
                 var pushSubscription = new PushSubscription(
@@ -54,10 +59,13 @@ public class PwaUserNotify(
                 {
                     logger.LogError(e, "{} not sent due to WebPush error, status={status}", nameof(PwaUserNotify),
                         e.StatusCode);
-                    // Если статус 410 (Gone) или 404 (Not Found), подписка больше не активна (пользователь удалил PWA)
-                    //if (e.StatusCode is HttpStatusCode.Gone or HttpStatusCode.NotFound) TODO: remove unavailable sub
+
+                    if (e.StatusCode is HttpStatusCode.Gone or HttpStatusCode.NotFound)
+                        subscriberIdToDelete.Add(subscriberPwa.Id);
                 }
             }
+
+            await subscriberPwaRepository.DeleteAllAsync(subscriberIdToDelete, cancellationToken);
         }
         catch (Exception e)
         {

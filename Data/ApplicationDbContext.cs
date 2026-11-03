@@ -219,6 +219,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.DeleteSentNotifications))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.DeleteSentNotifications,
+                    DefaultPriority = sbyte.MinValue,
+                    Cron = TaskCron.EveryWeek,
+                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 4320}"),
+                    IsActive = true
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
                     .Any(f => f.Type == TaskType.CalcAllBooksSizes))
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
