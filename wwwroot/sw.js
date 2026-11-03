@@ -151,28 +151,26 @@ self.addEventListener('notificationclick', function (event) {
 
     let targetUrl = event.notification.data?.url || '/';
 
+    // 1. Создаем широковещательный канал
+    const bc = new BroadcastChannel('pwa_navigation_channel');
+
+    // 2. Отправляем URL всем живым окнам в обход ограничений WebKit
+    bc.postMessage({action: 'navigate', url: targetUrl});
+    bc.close(); // Сразу закрываем канал в SW
+
     event.waitUntil(
+        // Пытаемся найти окна стандартным путем для Windows/Android/iPhone
         clients.matchAll({type: 'window', includeUncontrolled: true})
             .then(function (clientList) {
-                // Нормальное поведение для Windows/Android/iPhone:
                 if (clientList && clientList.length > 0) {
-                    let client = clientList[0];
-                    if (typeof client.focus === 'function') client.focus();
-
-                    // Отправляем сообщение
-                    client.postMessage({action: 'navigate', url: targetUrl});
-
-                    // Выполняем навигацию окружения
-                    if (typeof client.navigate === 'function') {
-                        return client.navigate(targetUrl);
-                    }
+                    // Если нашли (Windows/Android/iPhone), фокусируемся
+                    if ('focus' in clientList) clientList.focus();
+                    if ('navigate' in clientList) return clientList.navigate(targetUrl);
                     return;
                 }
 
-                // ХАК ДЛЯ iPadOS: Если Safari изолировал окна и clientList пуст,
-                // мы ВСЕ РАВНО вызываем openWindow.
-                // Для закрытого приложения это откроет его, а для открытого —
-                // Safari обновит текущую активную сессию PWA на этот URL.
+                // Резервный вариант: если приложение было ПОЛНОСТЬЮ ЗАКРЫТО,
+                // openWindow сработает на iPad без блокировок Pop-up
                 if (clients.openWindow) {
                     return clients.openWindow(targetUrl);
                 }

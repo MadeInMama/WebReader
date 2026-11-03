@@ -148,6 +148,22 @@
         }
     }
 
+    // Слушатель канала BroadcastChannel для ультимативного обхода багов iPadOS/iOS
+    try {
+        const bc = new BroadcastChannel('pwa_navigation_channel');
+        bc.onmessage = function (event) {
+            if (event.data && event.data.action === 'navigate') {
+                const targetUrl = event.data.url;
+                console.log("PWA (BroadcastChannel): Получена команда перехода на:", targetUrl);
+
+                // Нативный фронтенд-переход, который на iPadOS работает в 100% случаев
+                window.location.href = targetUrl;
+            }
+        };
+    } catch (e) {
+        console.error("Браузер не поддерживает BroadcastChannel API", e);
+    }
+
     if (document.readyState === 'complete') {
         registerMyServiceWorker();
     } else {
