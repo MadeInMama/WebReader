@@ -39,18 +39,23 @@ else
 
 @section Scripts
 {
-    <script nonce="@nonce" src="~/js/libs/axios.min.js"></script>
-    <script nonce="@nonce" src="~/js/libs/signalr.min.js" referrerpolicy="no-referrer"></script>
+    <script nonce="@nonce" src="~/js/libs/axios.min.js" asp-append-version="true"></script>
+    <script nonce="@nonce" src="~/js/libs/signalr.min.js" referrerpolicy="no-referrer"
+            asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/pwa-push.js" asp-append-version="true"></script>
     <script>
-        function setupNotificationButtons() {
+        async function setupNotificationButtons() {
             const btnEnable = document.getElementById('btn-enable-push');
             const btnDisable = document.getElementById('btn-disable-push');
 
-            const isNotificationGranted = Notification.permission === 'granted';
+            const registration = await navigator.serviceWorker.ready;
+
+            const subscription = await registration.pushManager.getSubscription();
+
+            const isSubscribed = subscription !== null && Notification.permission === 'granted';
 
             if (btnEnable) {
-                if (!isNotificationGranted) {
+                if (!isSubscribed) {
                     btnEnable.style.display = 'block';
                     btnEnable.addEventListener('click', async () => {
                         await initPushNotification();
@@ -61,7 +66,7 @@ else
             }
 
             if (btnDisable) {
-                if (isNotificationGranted) {
+                if (isSubscribed) {
                     btnDisable.style.display = 'block';
                     btnDisable.addEventListener('click', async () => {
                         await unsubscribeUserFromPush();

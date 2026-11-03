@@ -154,14 +154,14 @@ else
 
 @section Scripts
 {
-    <script nonce="@nonce" src="~/js/libs/axios.min.js"></script>
+    <script nonce="@nonce" src="~/js/libs/axios.min.js" asp-append-version="true"></script>
     @switch (Model.Type)
     {
         case FileType.Pdf:
-            <script nonce="@nonce" src="~/js/libs/pdf.min.mjs" type="module"></script>
+            <script nonce="@nonce" src="~/js/libs/pdf.min.mjs" type="module" asp-append-version="true"></script>
             break;
         case FileType.ZipWithImg:
-            <script nonce="@nonce" src="~/js/libs/jszip.min.js"></script>
+            <script nonce="@nonce" src="~/js/libs/jszip.min.js" asp-append-version="true"></script>
             break;
         case FileType.Fb2:
             break;
