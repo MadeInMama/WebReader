@@ -146,10 +146,35 @@ self.addEventListener('push', function (event) {
     }
 });
 
-// Переход по ссылке при клике на уведомление
 self.addEventListener('notificationclick', function (event) {
-    event.notification.close();
+    event.notification.close(); // Закрываем шторку уведомления
+
+    let targetUrl = event.notification.data?.url || '/';
+
     event.waitUntil(
-        clients.openWindow(event.notification.data.url)
+        // Ищем все открытые окна (вкладки) нашего PWA
+        clients.matchAll({type: 'window', includeUncontrolled: true})
+            .then(function (clientList) {
+                // Ищем окно, которое сейчас на первом плане (фокусе)
+                let activeClient = clientList.find(c => c.visibilityState === 'visible') || clientList[0];
+
+                if (activeClient) {
+                    // Фокусируемся на приложении
+                    activeClient.focus();
+
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ ДЛЯ iOS:
+                    // Вместо client.navigate() отправляем URL сообщением внутрь приложения
+                    activeClient.postMessage({
+                        action: 'navigate',
+                        url: targetUrl
+                    });
+                    return;
+                }
+
+                // Если приложение полностью закрыто — открываем новое окно
+                if (clients.openWindow) {
+                    return clients.openWindow(targetUrl);
+                }
+            })
     );
 });

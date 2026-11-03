@@ -135,6 +135,17 @@
                 .then(_ => {
                     console.log('PWA: Service Worker registered!');
                 });
+
+            navigator.serviceWorker.addEventListener('message', function (event) {
+                // Проверяем, что пришла именно команда навигации
+                if (event.data && event.data.action === 'navigate') {
+                    const targetUrl = event.data.url;
+                    console.log("PWA: Получена команда навигации из SW на URL:", targetUrl);
+
+                    // Выполняем нативный фронтенд-переход, который на iOS работает идеально
+                    window.location.href = targetUrl;
+                }
+            });
         }
     }
 
