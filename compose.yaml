@@ -1,7 +1,7 @@
 services:
   webreader:
     image: webreader
-    scale: 2
+    scale: 1
     expose:
       - "80"
     build:

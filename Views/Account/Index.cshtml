@@ -35,7 +35,6 @@ else
 }
 <br/>
 <button id="btn-enable-push" class="btn" style="display:none;">Enable PWA notifications</button>
-<br/>
 <button id="btn-disable-push" class="btn" style="display:none;">Disable PWA notifications</button>
 
 @section Scripts
@@ -65,7 +64,7 @@ else
                 if (isNotificationGranted) {
                     btnDisable.style.display = 'block';
                     btnDisable.addEventListener('click', async () => {
-                        unsubscribe();
+                        await unsubscribeUserFromPush();
                         btnEnable.style.display = 'block';
                         btnDisable.style.display = 'none';
                     });

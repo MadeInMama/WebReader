@@ -94,11 +94,51 @@ async function sendSubscriptionToServer(subscription) {
         });
 }
 
-function unsubscribe() {
+async function unsubscribeUserFromPush() {
+    console.log("PWA-Push: Начало процесса отписки...");
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return;
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.ready;
+
+        // 1. Получаем текущую активную подписку в браузере
+        const subscription = await registration.pushManager.getSubscription();
+
+        if (subscription) {
+            const endpoint = subscription.endpoint;
+
+            // 2. Отменяем подписку в push-службе браузера
+            const successful = await subscription.unsubscribe();
+
+            if (successful) {
+                console.log("PWA-Push: Браузер успешно аннулировал подписку.");
+
+                // 3. Отправляем запрос на удаление из базы данных ASP.NET Core
+                await removeSubscriptionFromServer(endpoint);
+            } else {
+                console.error("PWA-Push: Не удалось отменить подписку в браузере.");
+            }
+        } else {
+            console.log("PWA-Push: Активной подписки в браузере не обнаружено.");
+        }
+    } catch (error) {
+        console.error("PWA-Push: ❌ Ошибка при отписке:", error);
+    }
+}
+
+// Функция отправки запроса на удаление через вашу очередь
+async function removeSubscriptionFromServer(endpoint) {
+    console.log("PWA-Push: Отправка запроса на удаление подписки с сервера...");
+
     requestQueue.enqueue({
         method: 'POST',
         url: '/api/PwaNotification/Unsubscribe',
-        data: {},
+        data: {
+            Endpoint: endpoint
+        },
         options: {
             headers: {
                 'RequestVerificationToken': GetAntiForgeryToken()
@@ -108,11 +148,11 @@ function unsubscribe() {
         beforeSend: () => {
         }
     })
-        .then(response => {
-            console.log("PWA-Push: 🎉 Отлично! Отписка успешно сохранена на сервере.");
+        .then(() => {
+            console.log("PWA-Push: 🎉 Подписка успешно удалена из базы данных сервера.");
         })
         .catch(error => {
-            console.error("PWA-Push: ❌ Ошибка при отправке отписки через очередь:", error);
+            console.error("PWA-Push: ❌ Ошибка при удалении подписки с сервера:", error);
         });
 }
 

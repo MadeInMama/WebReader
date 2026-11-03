@@ -93,6 +93,16 @@ public class SubscriberPwaRepository(ApplicationDbContext context) : IRepository
             .ExecuteDeleteAsync(cancellationToken);
     }
 
+    public async Task<int> DeleteByUserIdAndEndpointAsync(Guid? id, string? endpoint,
+        CancellationToken cancellationToken)
+    {
+        if (id == null || endpoint == null) return 0;
+
+        return await context.SubscriberPwas
+            .Where(f => f.UserId == id && f.Endpoint == endpoint)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
         if (id == null) return 0;
