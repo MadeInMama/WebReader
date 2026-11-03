@@ -24,15 +24,17 @@ select {
 .tools > form {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-template-rows: 2em 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr;
     gap: 0.5em;
     place-items: center;
+
 }
 
 .tools > form > h3 {
     grid-column-start: 1;
     grid-column-end: 5;
     grid-row: 1;
+    align-self: start;
 }
 
 .tools > form > div {
@@ -220,7 +222,7 @@ pre {
 @media (width < 800px) {
     .tools > form {
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 2em 1fr 2fr 1fr;
+        grid-template-rows: auto 1fr 2fr 1fr;
     }
 
     .tools > form > h3 {
