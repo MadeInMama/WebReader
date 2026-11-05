@@ -497,14 +497,14 @@ function convertNode(node, imageMap, isPage = true) {
             if (href.startsWith('#')) {
                 const src = imageMap.get(href.slice(1));
                 if (!isPage) {
-                    return `<span class="fb2-image"><img src="${escapeHtml(src)}" class="fb2-image"  alt="Image missing"/></span>`;
+                    return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image"  alt="Image missing"/></div>`;
                 } else {
-                    return `<span class="fb2-image">
+                    return `<div class="fb2-image-container">
                                 <details style="display:inline-block;">
                                     <summary><span>Image (click)</span></summary>
                                     <img onclick='this.parentNode.removeAttribute("open")' src="${escapeHtml(src)}" class="fb2-image" alt="Image missing"/>
                                 </details>
-                            </span>`;
+                            </div>`;
                 }
             }
             return `<span>[Image missing: ${escapeHtml(href)}]</span>`;
