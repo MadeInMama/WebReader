@@ -2,25 +2,30 @@
 
 async function getDeviceName() {
     const ua = navigator.userAgent;
-    const width = window.screen.width;
-    const height = window.screen.height;
+
+    // Используем min и max, чтобы код не зависел от поворота экрана (портрет/альбом)
+    const screenW = window.screen.width;
+    const screenH = window.screen.height;
+    const minDim = Math.min(screenW, screenH);
+    const maxDim = Math.max(screenW, screenH);
     const ratio = window.devicePixelRatio;
 
-    // КРИТИЧЕСКИЙ ШАГ: Проверяем, запущено ли приложение как установленное PWA
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    // Проверяем, запущено ли приложение как PWA
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+        ('standalone' in navigator && navigator.standalone);
 
-    // Isolate Application Frame Layer Context
+    // Определяем браузер с учетом особенностей iOS (CriOS, FxiOS и т.д.)
     let browser = isPWA ? "PWA" : "Browser";
     if (!isPWA) {
-        if (/OPR\/|Opera\//.test(ua)) browser = "Opera";
-        else if (/Edg\//.test(ua)) browser = "Edge";
+        if (/OPR\/|Opera\/|OPT\//.test(ua)) browser = "Opera";
+        else if (/Edg\/|EdgiOS/.test(ua)) browser = "Edge";
         else if (/YaBrowser\//.test(ua)) browser = "Yandex Browser";
-        else if (/Chrome\//.test(ua)) browser = /wv/.test(ua) ? "WebView" : "Chrome";
-        else if (/Firefox\//.test(ua)) browser = "Firefox";
-        else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = "Safari";
+        else if (/Chrome\/|CriOS/.test(ua)) browser = /wv/.test(ua) ? "WebView" : "Chrome";
+        else if (/Firefox\/|FxiOS/.test(ua)) browser = "Firefox";
+        else if (/Safari\//.test(ua) && !/Chrome\/|CriOS\/|FxiOS\/|EdgiOS\//.test(ua)) browser = "Safari";
     }
 
-    // Modern High-Entropy Parsing Channel for Android Devices (Chromium Engine Hints)
+    // 1. High-Entropy Hints для Android (Chromium)
     if (navigator.userAgentData && navigator.userAgentData.mobile) {
         try {
             const hints = await navigator.userAgentData.getHighEntropyValues(['model']);
@@ -44,22 +49,23 @@ async function getDeviceName() {
                 if (debugInfo) {
                     const gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
 
-                    if (width === 440 && height === 956) model = "iPhone 16 Pro Max";
-                    else if (width === 402 && height === 874) model = "iPhone 16 Pro";
-                    else if (width === 430 && height === 932) model = gpu.includes("Apple GPU") ? "iPhone 16 Plus / 15 Pro Max" : "iPhone 15 Plus / 14 Pro Max";
-                    else if (width === 393 && height === 852) model = gpu.includes("Apple GPU") ? "iPhone 16 / 15 Pro" : "iPhone 15 / 14 Pro";
-                    else if (width === 428 && height === 926) model = "iPhone 14 Plus / 13 Pro Max";
-                    else if (width === 390 && height === 844) model = "iPhone 14 / 13 / 13 Pro";
-                    else if (width === 414 && height === 896) model = ratio === 3 ? "iPhone 11 Pro Max / XS Max" : "iPhone 11 / XR";
-                    else if (width === 375 && height === 812) model = "iPhone 11 Pro / X / XS / 13 mini";
-                    else if (width === 414 && height === 736) model = "iPhone 8 Plus / 7 Plus";
-                    else if (width === 375 && height === 667) model = "iPhone SE / 8";
+                    // Сравнение по minDim и maxDim решает проблему поворота экрана
+                    if (minDim === 440 && maxDim === 956) model = "iPhone 16 Pro Max";
+                    else if (minDim === 402 && maxDim === 874) model = "iPhone 16 Pro";
+                    else if (minDim === 430 && maxDim === 932) model = gpu.includes("Apple GPU") ? "iPhone 16 Plus / 15 Pro Max" : "iPhone 15 Plus / 14 Pro Max";
+                    else if (minDim === 393 && maxDim === 852) model = gpu.includes("Apple GPU") ? "iPhone 16 / 15 Pro" : "iPhone 15 / 14 Pro";
+                    else if (minDim === 428 && maxDim === 926) model = "iPhone 14 Plus / 13 Pro Max";
+                    else if (minDim === 390 && maxDim === 844) model = "iPhone 14 / 13 / 13 Pro";
+                    else if (minDim === 414 && maxDim === 896) model = ratio === 3 ? "iPhone 11 Pro Max / XS Max" : "iPhone 11 / XR";
+                    else if (minDim === 375 && maxDim === 812) model = ratio === 3 ? "iPhone 11 Pro / X / XS" : "iPhone 13 mini / 12 mini";
+                    else if (minDim === 414 && maxDim === 736) model = "iPhone 8 Plus / 7 Plus";
+                    else if (minDim === 375 && maxDim === 667) model = "iPhone SE / 8 / 7";
                 }
             }
         } catch (e) {
+            // Игнорируем ошибки canvas
         }
 
-        // Для iOS: если это PWA, то пишем просто "PWA на iPhone...", иначе "Safari на iPhone..."
         const displayBrowser = isPWA ? "PWA" : (browser === "Safari" ? "Safari" : `${browser} for iOS`);
         return `${displayBrowser} on ${model}`;
     }
@@ -68,9 +74,9 @@ async function getDeviceName() {
     const isiPad = /iPad/.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(ua));
     if (isiPad) {
         let model = "iPad";
-        if (width >= 1024 && height >= 1366 || width >= 1366 && height >= 1024) model = "iPad Pro 13\"";
-        else if (width >= 834 && height >= 1194 || width >= 1194 && height >= 834) model = "iPad Pro 11\" / Air";
-        else if (width === 768 && height === 1024) model = "iPad Classic / mini";
+        if (maxDim >= 1366) model = "iPad Pro 13\"";
+        else if (maxDim >= 1194) model = "iPad Pro 11\" / Air";
+        else if (minDim === 768 && maxDim === 1024) model = "iPad Classic / mini";
 
         const displayBrowser = isPWA ? "PWA" : (browser === "Safari" ? "Safari" : `${browser} for iOS`);
         return `${displayBrowser} on ${model}`;
@@ -79,10 +85,15 @@ async function getDeviceName() {
     // --- ANDROID ---
     if (/Android/.test(ua)) {
         let model = "Android Device";
-        const match = ua.match(/Android\s+[^;]+;\s+([^;)]+)/);
+        // Более надежный поиск модели во всей строке после слова Android
+        const match = ua.match(/Android\s+\d+[^;]*;\s*([^;)]+)/) || ua.match(/\bLinux;\s*Android.+?;\s*([^;)]+)/);
         if (match && match[1]) {
             let m = match[1].trim();
-            if (m.length > 2 && !m.includes("Build")) {
+            // Отсекаем служебную информацию вроде "Build/..."
+            if (m.includes("Build/")) {
+                m = m.split("Build/")[0].trim();
+            }
+            if (m.length > 2) {
                 if (m.startsWith("SM-")) m = `Samsung ${m}`;
                 if (m.startsWith("Pixel")) m = `Google ${m}`;
                 model = m;
