@@ -36,47 +36,66 @@ async function getDeviceName() {
         }
     }
 
+    // Вспомогательный блок для получения GPU (нужен для разделения схожих экранов Apple)
+    let gpu = "";
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+                gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
+            }
+        }
+    } catch (e) {
+    }
+
     // 2. ОПРЕДЕЛЯЕМ ОПЕРАЦИОННУЮ СИСТЕМУ И МОДЕЛЬ
 
     // --- APPLE IPHONE ---
     if (/iPhone/.test(ua)) {
         let model = "iPhone";
-        try {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            if (gl) {
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                if (debugInfo) {
-                    const gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
-
-                    // Сравнение по minDim и maxDim решает проблему поворота экрана
-                    if (minDim === 440 && maxDim === 956) model = "iPhone 16 Pro Max";
-                    else if (minDim === 402 && maxDim === 874) model = "iPhone 16 Pro";
-                    else if (minDim === 430 && maxDim === 932) model = gpu.includes("Apple GPU") ? "iPhone 16 Plus / 15 Pro Max" : "iPhone 15 Plus / 14 Pro Max";
-                    else if (minDim === 393 && maxDim === 852) model = gpu.includes("Apple GPU") ? "iPhone 16 / 15 Pro" : "iPhone 15 / 14 Pro";
-                    else if (minDim === 428 && maxDim === 926) model = "iPhone 14 Plus / 13 Pro Max";
-                    else if (minDim === 390 && maxDim === 844) model = "iPhone 14 / 13 / 13 Pro";
-                    else if (minDim === 414 && maxDim === 896) model = ratio === 3 ? "iPhone 11 Pro Max / XS Max" : "iPhone 11 / XR";
-                    else if (minDim === 375 && maxDim === 812) model = ratio === 3 ? "iPhone 11 Pro / X / XS" : "iPhone 13 mini / 12 mini";
-                    else if (minDim === 414 && maxDim === 736) model = "iPhone 8 Plus / 7 Plus";
-                    else if (minDim === 375 && maxDim === 667) model = "iPhone SE / 8 / 7";
-                }
-            }
-        } catch (e) {
-            // Игнорируем ошибки canvas
-        }
+        if (minDim === 440 && maxDim === 956) model = "iPhone 16 Pro Max";
+        else if (minDim === 402 && maxDim === 874) model = "iPhone 16 Pro";
+        else if (minDim === 430 && maxDim === 932) model = gpu.includes("Apple GPU") ? "iPhone 16 Plus / 15 Pro Max" : "iPhone 15 Plus / 14 Pro Max";
+        else if (minDim === 393 && maxDim === 852) model = gpu.includes("Apple GPU") ? "iPhone 16 / 15 Pro" : "iPhone 15 / 14 Pro";
+        else if (minDim === 428 && maxDim === 926) model = "iPhone 14 Plus / 13 Pro Max";
+        else if (minDim === 390 && maxDim === 844) model = "iPhone 14 / 13 / 13 Pro";
+        else if (minDim === 414 && maxDim === 896) model = ratio === 3 ? "iPhone 11 Pro Max / XS Max" : "iPhone 11 / XR";
+        else if (minDim === 375 && maxDim === 812) model = ratio === 3 ? "iPhone 11 Pro / X / XS" : "iPhone 13 mini / 12 mini";
+        else if (minDim === 414 && maxDim === 736) model = "iPhone 8 Plus / 7 Plus";
+        else if (minDim === 375 && maxDim === 667) model = "iPhone SE / 8 / 7";
 
         const displayBrowser = isPWA ? "PWA" : (browser === "Safari" ? "Safari" : `${browser} for iOS`);
         return `${displayBrowser} on ${model}`;
     }
 
     // --- APPLE IPAD ---
+    // Учитываем маскировку iPad под Mac (проверка maxTouchPoints)
     const isiPad = /iPad/.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(ua));
     if (isiPad) {
         let model = "iPad";
-        if (maxDim >= 1366) model = "iPad Pro 13\"";
-        else if (maxDim >= 1194) model = "iPad Pro 11\" / Air";
-        else if (minDim === 768 && maxDim === 1024) model = "iPad Classic / mini";
+
+        // Распознавание моделей iPad по физическим точкам экрана (Logical Pixels)
+        if (minDim === 1032 && maxDim === 1376) {
+            model = "iPad Pro 13\" (M4, 2024)";
+        } else if (minDim === 1024 && maxDim === 1366) {
+            model = "iPad Pro 12.9\"";
+        } else if (minDim === 834 && maxDim === 1210) {
+            model = "iPad Pro 11\" (M4, 2024)";
+        } else if (minDim === 834 && maxDim === 1194) {
+            // Разделение iPad Pro 11 и iPad Air 11 по чипу (если доступно в GPU, M-серия часто видна как Apple GPU)
+            model = gpu.includes("Apple GPU") ? "iPad Pro 11\" / Air 11\"" : "iPad Pro 11\"";
+        } else if (minDim === 820 && maxDim === 1180) {
+            model = "iPad Air (Gen 4/5) / iPad 10.9\"";
+        } else if (minDim === 834 && maxDim === 1112) {
+            model = "iPad Air 10.5\" (Gen 3) / iPad Pro 10.5\"";
+        } else if (minDim === 768 && maxDim === 1024) {
+            // Старые iPad 9.7", базовые iPad до 9-го поколения включительно и mini до 5-го поколения
+            model = ratio === 2 ? "iPad (Gen 5-9) / mini (Gen 2-5)" : "iPad (Gen 1-4) / mini 1";
+        } else if (minDim === 744 && maxDim === 1133) {
+            model = "iPad mini (Gen 6/7)";
+        }
 
         const displayBrowser = isPWA ? "PWA" : (browser === "Safari" ? "Safari" : `${browser} for iOS`);
         return `${displayBrowser} on ${model}`;
@@ -109,6 +128,7 @@ async function getDeviceName() {
 
     return `${browser} (Unknown OS)`;
 }
+
 
 // 1. Главная функция инициализации и подписки
 async function initPushNotification() {
