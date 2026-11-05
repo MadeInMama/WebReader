@@ -338,40 +338,48 @@ using (var scope = app.Services.CreateScope())
     // var ttsService = scope.ServiceProvider.GetRequiredService<TtsService>();
     // var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
     //
-    // const string outputPath = @"E:\Projects\ProcessTts\test_output.xml";
-    // var doc = XDocument.Load(outputPath);
-    // var ns = doc.Root!.GetDefaultNamespace();
-    //
-    // var counter = 0;
-    //
-    // foreach (var el in doc.Root.Element(ns + "body")!.Descendants())
+    // var paths = new List<string>
     // {
-    //     if (!el.Attributes().Select(f => f.Name).Select(f => f.LocalName).Contains("tts-id")) continue;
+    //     @"C:\Users\Пользователь\Downloads\the_egyptian_myths_a_guide_to_the_ancient_gods_and_legends.fb2",
+    //     @"C:\Users\Пользователь\Downloads\edith_hamilton_mythology_timeless_tales_of_gods_and_heroes.fb2"
+    // };
     //
-    //     var ttsId = el.Attributes().First(f => f.Name.LocalName == "tts-id").Value;
-    //     var ttsType = el.Attributes().First(f => f.Name.LocalName == "tts-type").Value;
+    // foreach (var path in paths)
+    // {
+    //     var doc = XDocument.Load(path);
+    //     var ns = doc.Root!.GetDefaultNamespace();
     //
-    //     var text = string.Concat(
-    //         el.Nodes()
-    //             .OfType<XText>()
-    //             .Select(node => node.Value)
-    //     ).Trim().Replace("\n", " ");
+    //     var counter = 0;
     //
-    //     if (++counter >= 255) break;
-    //
-    //     if (await minioService.ObjectExistsAsync(StaticNames.TtsBucketName, $"{ttsId}.ogg", CancellationToken.None))
+    //     foreach (var el in doc.Root.Element(ns + "body")!.Descendants())
     //     {
+    //         if (!el.Attributes().Select(f => f.Name).Select(f => f.LocalName).Contains("tts-id")) continue;
+    //
+    //         var ttsId = el.Attributes().First(f => f.Name.LocalName == "tts-id").Value;
+    //         var ttsType = el.Attributes().First(f => f.Name.LocalName == "tts-type").Value;
+    //
+    //         // var text = string.Concat(
+    //         //     el.Nodes()
+    //         //         .OfType<XText>()
+    //         //         .Select(node => node.Value)
+    //         // ).Trim().Replace("\n", " ");
+    //
+    //         // if (++counter >= 255) break;
+    //
+    //         if (await minioService.ObjectExistsAsync(StaticNames.TtsBucketName, $"{ttsId}.ogg", CancellationToken.None))
+    //         {
+    //             Console.WriteLine();
+    //             Console.WriteLine($"TTS {ttsId} skipped");
+    //             continue;
+    //         }
+    //
     //         Console.WriteLine();
-    //         Console.WriteLine($"TTS {ttsId} skipped");
-    //         continue;
+    //         Console.WriteLine($"TTS attempt {ttsId}");
+    //
+    //         var res = await ttsService.GenerateSpeechAsync(el.Value, ttsType, ttsId, CancellationToken.None);
+    //
+    //         Console.WriteLine($"TTS {ttsId} {(res ? "done" : "error")}");
     //     }
-    //
-    //     Console.WriteLine();
-    //     Console.WriteLine($"TTS attempt {ttsId}");
-    //
-    //     var res = await ttsService.GenerateSpeechAsync(text, ttsType, ttsId, CancellationToken.None);
-    //
-    //     Console.WriteLine($"TTS {ttsId} {(res ? "done" : "error")}");
     // }
 }
 
