@@ -3,6 +3,100 @@
 // ==========================================
 const APPLICATION_SERVER_KEY = "BM4cx4uxndGMF0b01rOaztwWfoeU7TjTQh1SgHR7uq-VrQsRZ8dYTuFYryPIk9mG5puf7UWL6uu75hyGwW3N6Ec";
 
+function getDeviceName() {
+    const ua = navigator.userAgent;
+    const width = window.screen.width;
+    const height = window.screen.height;
+    const ratio = window.devicePixelRatio;
+
+    // 1. ОПРЕДЕЛЯЕМ БРАУЗЕР
+    let browser = "Браузер";
+
+    if (/OPR\/|Opera\//.test(ua)) {
+        browser = "Opera";
+    } else if (/Edg\//.test(ua)) {
+        browser = "Edge";
+    } else if (/YaBrowser\//.test(ua)) {
+        browser = "Яндекс.Браузер";
+    } else if (/Chrome\//.test(ua)) {
+        // Проверяем, что это не пустой WebView внутри приложений
+        browser = /wv/.test(ua) ? "WebView" : "Chrome";
+    } else if (/Firefox\//.test(ua)) {
+        browser = "Firefox";
+    } else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) {
+        browser = "Safari";
+    } else if (/MSIE\s|Trident\//.test(ua)) {
+        browser = "Internet Explorer";
+    }
+
+    // 2. ОПРЕДЕЛЯЕМ ОПЕРАЦИОННУЮ СИСТЕМУ И МОДЕЛЬ
+
+    // --- APPLE IPHONE ---
+    if (/iPhone/.test(ua)) {
+        let model = "iPhone";
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    const gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
+
+                    // Детальное сопоставление по экрану и видеочипу
+                    if (width === 440 && height === 956) model = "iPhone 16 Pro Max";
+                    else if (width === 402 && height === 874) model = "iPhone 16 Pro";
+                    else if (width === 430 && height === 932) model = gpu.includes("Apple GPU") ? "iPhone 16 Plus / 15 Pro Max" : "iPhone 15 Plus / 14 Pro Max";
+                    else if (width === 393 && height === 852) model = gpu.includes("Apple GPU") ? "iPhone 16 / 15 Pro" : "iPhone 15 / 14 Pro";
+                    else if (width === 428 && height === 926) model = "iPhone 14 Plus / 13 Pro Max";
+                    else if (width === 390 && height === 844) model = "iPhone 14 / 13 / 13 Pro";
+                    else if (width === 414 && height === 896) model = ratio === 3 ? "iPhone 11 Pro Max / XS Max" : "iPhone 11 / XR";
+                    else if (width === 375 && height === 812) model = "iPhone 11 Pro / X / XS / 13 mini";
+                    else if (width === 414 && height === 736) model = "iPhone 8 Plus / 7 Plus";
+                    else if (width === 375 && height === 667) model = "iPhone SE / 8";
+                }
+            }
+        } catch (e) {
+        }
+
+        // На iOS сторонние браузеры используют движок Safari, помечаем это
+        const displayBrowser = browser === "Safari" ? "Safari" : `${browser} для iOS`;
+        return `${displayBrowser} на ${model}`;
+    }
+
+    // --- APPLE IPAD ---
+    const isiPad = /iPad/.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(ua));
+    if (isiPad) {
+        let model = "iPad";
+        if (width >= 1024 && height >= 1366 || width >= 1366 && height >= 1024) model = "iPad Pro 13\"";
+        else if (width >= 834 && height >= 1194 || width >= 1194 && height >= 834) model = "iPad Pro 11\" / Air";
+        else if (width === 768 && height === 1024) model = "iPad Classic / mini";
+
+        const displayBrowser = browser === "Safari" ? "Safari" : `${browser} для iOS`;
+        return `${displayBrowser} на ${model}`;
+    }
+
+    // --- ANDROID ---
+    if (/Android/.test(ua)) {
+        let model = "Android";
+        const match = ua.match(/Android\s+[^;]+;\s+([^;)]+)/);
+        if (match && match[1] && !match[1].includes("Build")) {
+            let m = match[1].trim();
+            if (m.startsWith("SM-")) m = `Samsung ${m}`;
+            if (m.startsWith("Pixel")) m = `Google ${m}`;
+            model = m;
+        }
+        return `${browser} на ${model}`;
+    }
+
+    // --- ДЕСКТОПНЫЕ ОС ---
+    if (/Windows/.test(ua)) return `${browser} на Windows`;
+    if (/Macintosh/.test(ua)) return `${browser} на macOS`;
+    if (/Linux/.test(ua)) return `${browser} на Linux`;
+
+    return `${browser} (Unknown OS)`;
+}
+
+
 // 1. Главная функция инициализации и подписки
 async function initPushNotification() {
     console.log("PWA-Push: Инициализация подписки...");
@@ -75,7 +169,8 @@ async function sendSubscriptionToServer(subscription) {
             Keys: {
                 p256dh: rawSubscription.keys?.p256dh || "",
                 auth: rawSubscription.keys?.auth || ""
-            }
+            },
+            DeviceName: getDeviceName()
         },
         options: {
             headers: {

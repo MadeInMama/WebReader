@@ -26,14 +26,20 @@ public class PwaNotificationController(SubscriberPwaRepository subscriberPwaRepo
             f => f.Endpoint == subscription.Endpoint, null, cancellationToken);
 
         if (existingSubscriber == null)
+        {
             await subscriberPwaRepository.AddAsync(new SubscriberPwa
             {
                 Endpoint = subscription.Endpoint,
                 Keys = subscription.Keys,
-                UserId = User.GetUserGuid()
+                UserId = User.GetUserGuid(),
+                DeviceName = subscription.DeviceName ?? "Unknown device"
             }, cancellationToken);
+        }
         else
+        {
             existingSubscriber.Keys = subscription.Keys;
+            existingSubscriber.DeviceName = subscription.DeviceName ?? "Unknown device";
+        }
 
         await subscriberPwaRepository.SaveChangesAsync(cancellationToken);
 
