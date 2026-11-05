@@ -487,6 +487,10 @@ function convertNode(node, imageMap, isPage = true) {
             return `<h${level}>${getChildrenHtml()}</h${level}>`;
         }
 
+        case 'subtitle': {
+            return `<h3>${getChildrenHtml()}</h3>`;
+        }
+
         case 'h1':
             return `<h1>${getChildrenHtml()}</h1>`;
         case 'h2':
@@ -501,7 +505,7 @@ function convertNode(node, imageMap, isPage = true) {
                     return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image"  alt="Image missing"/></div>`;
                 } else {
                     return `<div class="fb2-image-container">
-                                <details style="display:inline-block;">
+                                <details style="display:block;">
                                     <summary><span>Image (click)</span></summary>
                                     <img onclick='this.parentNode.removeAttribute("open")' src="${escapeHtml(src)}" class="fb2-image" alt="Image missing"/>
                                 </details>
