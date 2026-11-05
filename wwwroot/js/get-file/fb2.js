@@ -471,6 +471,7 @@ function convertNode(node, imageMap, isPage = true) {
         }
 
         case 'cite':
+        case 'text-author':
             return ` <span class="cite">— ${getChildrenHtml()}</span>`;
 
         case 'section': {
