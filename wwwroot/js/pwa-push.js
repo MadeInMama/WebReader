@@ -173,6 +173,8 @@ async function sendSubscriptionToServer(subscription) {
     console.log(subscription);
     console.log(subscription.keys);
 
+    const deviceName = await getDeviceName();
+
     // subscription имеет структуру { endpoint: "...", keys: { auth: "...", p256dh: "..." } }
     requestQueue.enqueue({
         method: 'POST',
@@ -183,7 +185,7 @@ async function sendSubscriptionToServer(subscription) {
                 p256dh: rawSubscription.keys?.p256dh || "",
                 auth: rawSubscription.keys?.auth || ""
             },
-            DeviceName: getDeviceName()
+            DeviceName: deviceName
         },
         options: {
             headers: {
