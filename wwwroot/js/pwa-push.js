@@ -1,7 +1,4 @@
-﻿// ==========================================
-// НАСТРОЙКА: Вставьте сюда ваш Публичный VAPID ключ
-// ==========================================
-const APPLICATION_SERVER_KEY = "BM4cx4uxndGMF0b01rOaztwWfoeU7TjTQh1SgHR7uq-VrQsRZ8dYTuFYryPIk9mG5puf7UWL6uu75hyGwW3N6Ec";
+﻿const APPLICATION_SERVER_KEY = "BM4cx4uxndGMF0b01rOaztwWfoeU7TjTQh1SgHR7uq-VrQsRZ8dYTuFYryPIk9mG5puf7UWL6uu75hyGwW3N6Ec";
 
 function getDeviceName() {
     const ua = navigator.userAgent;
@@ -9,10 +6,15 @@ function getDeviceName() {
     const height = window.screen.height;
     const ratio = window.devicePixelRatio;
 
-    // 1. ОПРЕДЕЛЯЕМ БРАУЗЕР
-    let browser = "Браузер";
+    // КРИТИЧЕСКИЙ ШАГ: Проверяем, запущено ли приложение как установленное PWA
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 
-    if (/OPR\/|Opera\//.test(ua)) {
+    // 1. ОПРЕДЕЛЯЕМ БРАУЗЕР (ИЛИ СТАВИМ PWA)
+    let browser = "Browser";
+
+    if (isPWA) {
+        browser = "PWA"; // Если запущено как приложение, имя браузера нам больше не важно
+    } else if (/OPR\/|Opera\//.test(ua)) {
         browser = "Opera";
     } else if (/Edg\//.test(ua)) {
         browser = "Edge";
@@ -58,9 +60,9 @@ function getDeviceName() {
         } catch (e) {
         }
 
-        // На iOS сторонние браузеры используют движок Safari, помечаем это
-        const displayBrowser = browser === "Safari" ? "Safari" : `${browser} для iOS`;
-        return `${displayBrowser} на ${model}`;
+        // Для iOS: если это PWA, то пишем просто "PWA на iPhone...", иначе "Safari на iPhone..."
+        const displayBrowser = isPWA ? "PWA" : (browser === "Safari" ? "Safari" : `${browser} for iOS`);
+        return `${displayBrowser} on ${model}`;
     }
 
     // --- APPLE IPAD ---
@@ -71,31 +73,33 @@ function getDeviceName() {
         else if (width >= 834 && height >= 1194 || width >= 1194 && height >= 834) model = "iPad Pro 11\" / Air";
         else if (width === 768 && height === 1024) model = "iPad Classic / mini";
 
-        const displayBrowser = browser === "Safari" ? "Safari" : `${browser} для iOS`;
-        return `${displayBrowser} на ${model}`;
+        const displayBrowser = isPWA ? "PWA" : (browser === "Safari" ? "Safari" : `${browser} for iOS`);
+        return `${displayBrowser} on ${model}`;
     }
 
     // --- ANDROID ---
     if (/Android/.test(ua)) {
         let model = "Android";
         const match = ua.match(/Android\s+[^;]+;\s+([^;)]+)/);
+
+        // ПРОВЕРКА: Проверяем, что регулярное выражение нашло совпадение (match)
+        // и в строке нет лишнего служебного слова "Build"
         if (match && match[1] && !match[1].includes("Build")) {
-            let m = match[1].trim();
+            let m = match[1].trim(); // Берем именно первую подгруппу (название модели)
             if (m.startsWith("SM-")) m = `Samsung ${m}`;
             if (m.startsWith("Pixel")) m = `Google ${m}`;
             model = m;
         }
-        return `${browser} на ${model}`;
+        return `${browser} on ${model}`;
     }
 
     // --- ДЕСКТОПНЫЕ ОС ---
-    if (/Windows/.test(ua)) return `${browser} на Windows`;
-    if (/Macintosh/.test(ua)) return `${browser} на macOS`;
-    if (/Linux/.test(ua)) return `${browser} на Linux`;
+    if (/Windows/.test(ua)) return `${browser} on Windows`;
+    if (/Macintosh/.test(ua)) return `${browser} on macOS`;
+    if (/Linux/.test(ua)) return `${browser} on Linux`;
 
     return `${browser} (Unknown OS)`;
 }
-
 
 // 1. Главная функция инициализации и подписки
 async function initPushNotification() {
