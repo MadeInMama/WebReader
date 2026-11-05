@@ -74,9 +74,11 @@
 }
 
 .fb2-canvas-container > section > h1 > p,
-.fb2-canvas-container > section > h2 > p {
+.fb2-canvas-container > section > h2 > p,
+.fb2-canvas-container > section > h3 > p {
     padding: 0.25em;
     border-radius: 0.25em;
+    font-weight: inherit;
 }
 
 .fb2-canvas-container > section > p:not(:has(.tts-btn)) {
