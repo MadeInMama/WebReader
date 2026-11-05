@@ -505,7 +505,7 @@ function convertNode(node, imageMap, isPage = true) {
                     return `<div class="fb2-image-container"><img src="${escapeHtml(src)}" class="fb2-image"  alt="Image missing"/></div>`;
                 } else {
                     return `<div class="fb2-image-container">
-                                <details style="display:block;">
+                                <details style="display:block;" open>
                                     <summary><span>Image (click)</span></summary>
                                     <img onclick='this.parentNode.removeAttribute("open")' src="${escapeHtml(src)}" class="fb2-image" alt="Image missing"/>
                                 </details>

@@ -47,7 +47,7 @@ details > div {
     display: grid;
     grid-template-columns: repeat(auto-fill, 10em);
     justify-content: center;
-    gap: 1.5em;
+    gap: 0.5em;
 }
 
 .item-line {
@@ -81,7 +81,7 @@ details > div {
 
     width: 100%;
     aspect-ratio: 9 / 16;
-    padding: 1em;
+    padding: 0.5em;
     text-align: center;
     line-height: 2em;
     background: linear-gradient(to bottom, var(--background-color) 0%, rgba(0, 0, 0, 0) 50%, var(--background-color) 100%);
