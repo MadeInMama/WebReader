@@ -285,6 +285,13 @@ builder.Services.Configure<KestrelServerOptions>(options => { options.Limits.Max
 
 builder.Services.Configure<IISServerOptions>(options => { options.MaxRequestBodySize = long.MaxValue; });
 
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = long.MaxValue;
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNamingPolicy = null; });
 
@@ -304,8 +311,6 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueLimit = 0;
     });
 });
-
-builder.WebHost.ConfigureKestrel(serverOptions => { serverOptions.Limits.MaxRequestBodySize = long.MaxValue; });
 
 builder.Services.Configure<VapidKeysConfig>(builder.Configuration.GetSection("VapidKeys"));
 
