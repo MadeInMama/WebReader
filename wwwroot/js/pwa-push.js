@@ -1,6 +1,6 @@
 ﻿const APPLICATION_SERVER_KEY = "BM4cx4uxndGMF0b01rOaztwWfoeU7TjTQh1SgHR7uq-VrQsRZ8dYTuFYryPIk9mG5puf7UWL6uu75hyGwW3N6Ec";
 
-function getDeviceName() {
+async function getDeviceName() {
     const ua = navigator.userAgent;
     const width = window.screen.width;
     const height = window.screen.height;
@@ -9,26 +9,26 @@ function getDeviceName() {
     // КРИТИЧЕСКИЙ ШАГ: Проверяем, запущено ли приложение как установленное PWA
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 
-    // 1. ОПРЕДЕЛЯЕМ БРАУЗЕР (ИЛИ СТАВИМ PWA)
-    let browser = "Browser";
+    // Isolate Application Frame Layer Context
+    let browser = isPWA ? "PWA" : "Browser";
+    if (!isPWA) {
+        if (/OPR\/|Opera\//.test(ua)) browser = "Opera";
+        else if (/Edg\//.test(ua)) browser = "Edge";
+        else if (/YaBrowser\//.test(ua)) browser = "Yandex Browser";
+        else if (/Chrome\//.test(ua)) browser = /wv/.test(ua) ? "WebView" : "Chrome";
+        else if (/Firefox\//.test(ua)) browser = "Firefox";
+        else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = "Safari";
+    }
 
-    if (isPWA) {
-        browser = "PWA"; // Если запущено как приложение, имя браузера нам больше не важно
-    } else if (/OPR\/|Opera\//.test(ua)) {
-        browser = "Opera";
-    } else if (/Edg\//.test(ua)) {
-        browser = "Edge";
-    } else if (/YaBrowser\//.test(ua)) {
-        browser = "Яндекс.Браузер";
-    } else if (/Chrome\//.test(ua)) {
-        // Проверяем, что это не пустой WebView внутри приложений
-        browser = /wv/.test(ua) ? "WebView" : "Chrome";
-    } else if (/Firefox\//.test(ua)) {
-        browser = "Firefox";
-    } else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) {
-        browser = "Safari";
-    } else if (/MSIE\s|Trident\//.test(ua)) {
-        browser = "Internet Explorer";
+    // Modern High-Entropy Parsing Channel for Android Devices (Chromium Engine Hints)
+    if (navigator.userAgentData && navigator.userAgentData.mobile) {
+        try {
+            const hints = await navigator.userAgentData.getHighEntropyValues(['model']);
+            if (hints && hints.model) {
+                return `${browser} on ${hints.model}`;
+            }
+        } catch (e) {
+        }
     }
 
     // 2. ОПРЕДЕЛЯЕМ ОПЕРАЦИОННУЮ СИСТЕМУ И МОДЕЛЬ
@@ -44,7 +44,6 @@ function getDeviceName() {
                 if (debugInfo) {
                     const gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "";
 
-                    // Детальное сопоставление по экрану и видеочипу
                     if (width === 440 && height === 956) model = "iPhone 16 Pro Max";
                     else if (width === 402 && height === 874) model = "iPhone 16 Pro";
                     else if (width === 430 && height === 932) model = gpu.includes("Apple GPU") ? "iPhone 16 Plus / 15 Pro Max" : "iPhone 15 Plus / 14 Pro Max";
@@ -79,16 +78,15 @@ function getDeviceName() {
 
     // --- ANDROID ---
     if (/Android/.test(ua)) {
-        let model = "Android";
+        let model = "Android Device";
         const match = ua.match(/Android\s+[^;]+;\s+([^;)]+)/);
-
-        // ПРОВЕРКА: Проверяем, что регулярное выражение нашло совпадение (match)
-        // и в строке нет лишнего служебного слова "Build"
-        if (match && match[1] && !match[1].includes("Build")) {
-            let m = match[1].trim(); // Берем именно первую подгруппу (название модели)
-            if (m.startsWith("SM-")) m = `Samsung ${m}`;
-            if (m.startsWith("Pixel")) m = `Google ${m}`;
-            model = m;
+        if (match && match[1]) {
+            let m = match[1].trim();
+            if (m.length > 2 && !m.includes("Build")) {
+                if (m.startsWith("SM-")) m = `Samsung ${m}`;
+                if (m.startsWith("Pixel")) m = `Google ${m}`;
+                model = m;
+            }
         }
         return `${browser} on ${model}`;
     }
