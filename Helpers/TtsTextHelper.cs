@@ -6,8 +6,9 @@ namespace WebReader.Helpers;
 public static partial class TtsTextHelper
 {
     private static readonly Regex HtmlRegex = HtmlRegexAttr();
-    private static readonly Regex FootnotesRegex = FootnotesRegexAttr();
-    private static readonly Regex RoundFootnotesRegex = RoundFootnotesRegexAttr();
+
+    // private static readonly Regex FootnotesRegex = FootnotesRegexAttr();
+    // private static readonly Regex RoundFootnotesRegex = RoundFootnotesRegexAttr();
     private static readonly Regex MultiSpaceRegex = MultiSpaceRegexAttr();
     private static readonly Regex SentenceSplitRegex = SentenceSplitRegexAttr();
 
@@ -20,8 +21,8 @@ public static partial class TtsTextHelper
         result = HtmlRegex.Replace(result, " ");
 
         // 2. Удаляем сноски, (12), чтобы робот их не читал вслух
-        result = FootnotesRegex.Replace(result, "");
-        result = RoundFootnotesRegex.Replace(result, "");
+        // result = FootnotesRegex.Replace(result, "");
+        // result = RoundFootnotesRegex.Replace(result, "");
 
         // 3. Форматируем знаки препинания для правильных пауз модели
         result = result
@@ -83,11 +84,11 @@ public static partial class TtsTextHelper
     [GeneratedRegex("<[^>]*>", RegexOptions.Compiled)]
     private static partial Regex HtmlRegexAttr();
 
-    [GeneratedRegex(@"\[[^\]]+\]", RegexOptions.Compiled)]
-    private static partial Regex FootnotesRegexAttr();
-
-    [GeneratedRegex(@"\(\d+\)", RegexOptions.Compiled)]
-    private static partial Regex RoundFootnotesRegexAttr();
+    // [GeneratedRegex(@"\[[^\]]+\]", RegexOptions.Compiled)]
+    // private static partial Regex FootnotesRegexAttr();
+    //
+    // [GeneratedRegex(@"\(\d+\)", RegexOptions.Compiled)]
+    // private static partial Regex RoundFootnotesRegexAttr();
 
     [GeneratedRegex(@"\s+", RegexOptions.Compiled)]
     private static partial Regex MultiSpaceRegexAttr();

@@ -37,11 +37,22 @@ else
 }
 
 @section HeaderMenuItems {
+    @if (Model.PrevPartId.HasValue || Model.NextPartId.HasValue)
+    {
+        <li>
+            <a asp-controller="File" asp-action="GetAllPartsInFile"
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId" class="click-effect"
+               id="nav-parts">
+                Parts
+            </a>
+        </li>
+    }
     @if (Model.PrevPartId.HasValue)
     {
         <li>
             <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value" class="click-effect">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value"
+               class="click-effect" id="nav-previous-part">
                 Previous part
             </a>
         </li>
@@ -50,17 +61,9 @@ else
     {
         <li>
             <a asp-controller="File" asp-action="GetFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value" class="click-effect">
+               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value"
+               class="click-effect" id="nav-next-part">
                 Next part
-            </a>
-        </li>
-    }
-    @if (Model.PrevPartId.HasValue || Model.NextPartId.HasValue)
-    {
-        <li>
-            <a asp-controller="File" asp-action="GetAllPartsInFile"
-               asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.FileId" class="click-effect">
-                Parts
             </a>
         </li>
     }
@@ -172,6 +175,9 @@ else
     <script nonce="@nonce" src="~/js/nav-btns-pass-scroll-to-main.js" asp-append-version="true"></script>
 
     <script nonce="@nonce">
+        const target = @((Model.PrevPartId.HasValue || Model.NextPartId.HasValue).ToString().ToLower()) ? navElements.Parts: navElements.Files
+        moveToLinkNav(target);
+
         const url = @Html.Raw(Json.Serialize($"/api/S3/GetFileRest?bucketId={Model.BucketId}&fileId={Model.FileId}"));
         const decodedString = url.replace(/\\u0026/g, '&')
         const bucketId = '@Model.BucketId';

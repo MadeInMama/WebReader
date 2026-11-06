@@ -84,6 +84,8 @@
             asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/pwa-push.js" asp-append-version="true"></script>
     <script>
+        moveToLinkNav(navElements.Account);
+
         //TODO: request for is current device subscribed to PWA notifications
         async function setupNotificationButtons() {
             document.querySelector("#btn-enable-push > button").addEventListener('click', async () => {

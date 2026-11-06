@@ -50,10 +50,11 @@
             @if (User.Identity is { IsAuthenticated: true })
             {
                 <li>
-                    <a asp-controller="Home" asp-action="Index" class="click-effect">Home</a>
+                    <a asp-controller="Home" asp-action="Index" class="click-effect" id="nav-home">Home</a>
                 </li>
                 <li>
-                    <a asp-controller="File" asp-action="GetAllFilesByBucket" class="click-effect">Files</a>
+                    <a asp-controller="File" asp-action="GetAllFilesByBucket" class="click-effect"
+                       id="nav-files">Files</a>
                 </li>
             }
 
@@ -62,7 +63,7 @@
             @if (User.Identity is { IsAuthenticated: true })
             {
                 <li>
-                    <a asp-controller="File" asp-action="GetReading" class="click-effect">Reading</a>
+                    <a asp-controller="File" asp-action="GetReading" class="click-effect" id="nav-reading">Reading</a>
                 </li>
                 @* <li> *@
                 @*     <form asp-controller="Account" *@
@@ -80,13 +81,14 @@
                 @if (User.GetUserRoles().Contains(RoleType.Admin))
                 {
                     <li>
-                        <a asp-controller="ScheduledTask" asp-action="ScheduledTasks" class="click-effect">Scheduled
+                        <a asp-controller="ScheduledTask" asp-action="ScheduledTasks"
+                           class="click-effect" id="nav-scheduled-tasks">Scheduled
                             Tasks</a>
                     </li>
                 }
 
                 <li>
-                    <a asp-controller="Account" asp-action="Index" class="click-effect">Account</a>
+                    <a asp-controller="Account" asp-action="Index" class="click-effect" id="nav-account">Account</a>
                 </li>
                 // TODO: move inside Account
                 <li>
@@ -127,6 +129,7 @@
 <script nonce="@nonce" src="~/js/custom-axios.js" asp-append-version="true"></script>
 <script nonce="@nonce" src="~/js/custom-fixed-axios.js" asp-append-version="true"></script>
 <script nonce="@nonce" src="~/js/to-local-date-time.js" asp-append-version="true"></script>
+<script nonce="@nonce" src="~/js/move-to-link-nav.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", false)
 <script nonce="@nonce">
     function registerMyServiceWorker() {

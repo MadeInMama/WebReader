@@ -140,6 +140,8 @@
     <script nonce="@nonce" src="~/js/scheduled-task/scheduled-task-form.js" asp-append-version="true"></script>
 
     <script nonce="@nonce">
+        moveToLinkNav(navElements.ScheduledTasks);
+
         const taskConfigDefinitions = @Html.Raw(JsonSerializer.Serialize(Model.Items));
 
         reload();

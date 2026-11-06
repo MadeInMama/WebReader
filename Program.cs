@@ -335,6 +335,7 @@ using (var scope = app.Services.CreateScope())
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(telegramConfig.WebhookUrl!, secretToken: telegramConfig.SecretToken!);
 
+    // var startTime = Stopwatch.GetTimestamp();
     // var ttsService = scope.ServiceProvider.GetRequiredService<TtsService>();
     // var minioService = scope.ServiceProvider.GetRequiredService<MinioService>();
     //
@@ -349,7 +350,7 @@ using (var scope = app.Services.CreateScope())
     //     var doc = XDocument.Load(path);
     //     var ns = doc.Root!.GetDefaultNamespace();
     //
-    //     var counter = 0;
+    //     // var counter = 0;
     //
     //     foreach (var el in doc.Root.Element(ns + "body")!.Descendants())
     //     {
@@ -378,8 +379,22 @@ using (var scope = app.Services.CreateScope())
     //
     //         var res = await ttsService.GenerateSpeechAsync(el.Value, ttsType, ttsId, CancellationToken.None);
     //
-    //         Console.WriteLine($"TTS {ttsId} {(res ? "done" : "error")}");
+    //         var elapsed = Stopwatch.GetElapsedTime(startTime);
+    //
+    //         Console.WriteLine($"TTS: {ttsId} {(res ? "done" : "error")} | TIME: {FormatPrettyTime(elapsed)}");
     //     }
+    // }
+    //
+    // static string FormatPrettyTime(TimeSpan ts)
+    // {
+    //     if (ts.TotalDays >= 1) return $"{ts.TotalDays:F1} days";
+    //     if (ts.TotalHours >= 1) return $"{ts.TotalHours:F1} hours";
+    //     if (ts.TotalMinutes >= 1) return $"{ts.TotalMinutes:F1} minutes";
+    //     if (ts.TotalSeconds >= 1) return $"{ts.TotalSeconds:F2}s";
+    //     if (ts.TotalMilliseconds >= 1) return $"{ts.TotalMilliseconds:F0}ms";
+    //
+    //     // Fallback for sub-millisecond precision
+    //     return $"{ts.TotalMilliseconds * 1000:F0} µs";
     // }
 }
 

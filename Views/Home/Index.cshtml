@@ -59,6 +59,8 @@
 @section Scripts
 {
     <script nonce="@nonce">
+        moveToLinkNav(navElements.Home);
+
         fileCacheService.getAll().then(response => {
             document.querySelector("#file-cache-manager").innerHTML = respToStr(response);
         }).catch(error => {
