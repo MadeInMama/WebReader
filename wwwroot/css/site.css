@@ -123,19 +123,21 @@ body {
 
     grid-column: 1 / 4;
 
-    background-color: var(--background-color);
-
-    z-index: 4;
+    z-index: 9999;
 }
 
 #safe-area-inset-top {
     grid-row: 1;
     height: env(safe-area-inset-top);
+
+    background-color: black;
 }
 
 #safe-area-inset-bottom {
     grid-row: 6;
     height: env(safe-area-inset-bottom);
+
+    background-color: var(--background-color);
 }
 
 header, main, footer {
