@@ -106,7 +106,7 @@ html, body {
     font-size: 14px;
     overflow: hidden;
     overscroll-behavior: none;
-    background-color: var(--background-color);
+    background-color: black;
 }
 
 body {
@@ -115,6 +115,7 @@ body {
     grid-template-columns: auto var(--max-width) auto;
     justify-items: stretch;
     align-items: stretch;
+    background-color: var(--background-color);
 }
 
 #safe-area-inset-top,
@@ -123,7 +124,7 @@ body {
 
     grid-column: 1 / 4;
     height: 100%;
-    
+
     background-color: var(--background-color);
 
     z-index: 9999;
