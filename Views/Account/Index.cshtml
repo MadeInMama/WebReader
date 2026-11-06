@@ -24,6 +24,23 @@
             justify-content: flex-start;
             gap: 0;
         }
+
+        #in-app-notification-container > label {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        #in-app-notification-container > .btn,
+        #in-app-notification-container > .event-output {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        #in-app-notification-container > .event-output {
+            height: 2em;
+            width: 2em;
+            padding: 0;
+        }
     </style>
 }
 
@@ -65,14 +82,13 @@
                 </form>
             }
         }
-        <div id="btn-enable-push" style="display:none;">
+        <div id="in-app-notification-container">
             <label>In-App Notification:</label>
-            <button class="btn">Enable PWA notifications</button>
-        </div>
-
-        <div id="btn-disable-push" style="display:none;">
-            <label>In-App Notification:</label>
-            <button class="btn">Disable PWA notifications</button>
+            <button class="btn" id="btn-enable-push" style="display:none;">Enable PWA notifications</button>
+            <button class="btn" id="btn-disable-push" style="display:none;">Disable PWA notifications</button>
+            <div class="event-output" id="in-app-notification-waiting">
+                <div class="waiting"></div>
+            </div>
         </div>
     </div>
 </details>
@@ -86,37 +102,61 @@
     <script>
         moveToLinkNav(navElements.Account);
 
-        //TODO: request for is current device subscribed to PWA notifications
         async function setupNotificationButtons() {
-            document.querySelector("#btn-enable-push > button").addEventListener('click', async () => {
-                await initPushNotification();
+            let isSubscribed = false;
+
+            const endpoint = await isSubscriptionExistsOnLocal();
+
+            if (endpoint) {
+                const isExistsOnServer = await isSubscriptionExistsOnServer(endpoint);
+
+                if (!isExistsOnServer) {
+                    await unsubscribeUserFromPWANotifications();
+                } else {
+                    isSubscribed = true;
+                }
+            }
+
+            document.querySelector("#btn-enable-push").addEventListener('click', async () => {
                 document.querySelector("#btn-enable-push").style.display = 'none';
-                document.querySelector("#btn-disable-push").removeAttribute('style');
+                document.querySelector('#in-app-notification-waiting').removeAttribute('style');
+
+                await subscribeUserToPWANotifications(() => {
+                    document.querySelector("#btn-disable-push").removeAttribute('style');
+                    document.querySelector('#in-app-notification-waiting').style.display = 'none';
+                }, () => {
+                    document.querySelector("#btn-enable-push").removeAttribute('style');
+                    document.querySelector('#in-app-notification-waiting').style.display = 'none';
+                });
             });
 
-            document.querySelector("#btn-disable-push > button").addEventListener('click', async () => {
-                await unsubscribeUserFromPush();
-                document.querySelector("#btn-enable-push").removeAttribute('style');
+            document.querySelector("#btn-disable-push").addEventListener('click', async () => {
                 document.querySelector("#btn-disable-push").style.display = 'none';
+                document.querySelector('#in-app-notification-waiting').removeAttribute('style');
+
+                await unsubscribeUserFromPWANotifications(() => {
+                    document.querySelector("#btn-enable-push").removeAttribute('style');
+                    document.querySelector('#in-app-notification-waiting').style.display = 'none';
+                }, () => {
+                    document.querySelector("#btn-disable-push").removeAttribute('style');
+                    document.querySelector('#in-app-notification-waiting').style.display = 'none';
+                });
             });
 
-            const btnEnable = document.getElementById('btn-enable-push');
-            const btnDisable = document.getElementById('btn-disable-push');
-
-            const registration = await navigator.serviceWorker.ready;
-
-            const subscription = await registration.pushManager.getSubscription();
-
-            const isSubscribed = subscription !== null && Notification.permission === 'granted';
+            const btnEnable = document.querySelector('#btn-enable-push');
+            const btnDisable = document.querySelector('#btn-disable-push');
+            const divWaiting = document.querySelector('#in-app-notification-waiting');
 
             if (btnEnable) {
                 if (!isSubscribed) {
+                    divWaiting.style.display = 'none';
                     btnEnable.removeAttribute('style');
                 }
             }
 
             if (btnDisable) {
                 if (isSubscribed) {
+                    divWaiting.style.display = 'none';
                     btnDisable.removeAttribute('style');
                 }
             }

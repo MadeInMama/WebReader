@@ -8,7 +8,7 @@ namespace WebReader.Repositories;
 
 public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket>
 {
-    public async Task<Bucket?> FirstOrDefaultAsync(Expression<Func<Bucket, bool>> predicate,
+    public Task<Bucket?> FirstOrDefaultAsync(Expression<Func<Bucket, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
         bool asNoTracking,
@@ -22,10 +22,10 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<Bucket>> AllAsync(
+    public Task<List<Bucket>> AllAsync(
         Expression<Func<Bucket, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -42,10 +42,10 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(
+    public Task<int> CountAsync(
         Expression<Func<Bucket, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
@@ -60,7 +60,7 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<Bucket> AddAsync(Bucket entity, CancellationToken cancellationToken)
@@ -69,9 +69,9 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 
     public void AttachAll(IEnumerable<Bucket> entities)
@@ -79,7 +79,7 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
         foreach (var entity in entities) context.Buckets.Attach(entity);
     }
 
-    public async Task<IEnumerable<Bucket>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles, Guid userId,
+    public Task<List<Bucket>> GetAllAvailableBucketsAsync(IEnumerable<RoleType> roles, Guid userId,
         CancellationToken cancellationToken, ApplicationDbContext? ctx = null, bool asNoTracking = false)
     {
         var res = (ctx ?? context).Buckets
@@ -88,24 +88,24 @@ public class BucketRepository(ApplicationDbContext context) : IRepository<Bucket
 
         if (asNoTracking) res.AsNoTracking();
 
-        return await res.ToListAsync(cancellationToken);
+        return res.ToListAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0) return 0;
+        if (idsArray.Length == 0) return Task.FromResult(0);
 
-        return await context.Buckets
+        return context.Buckets
             .Where(r => idsArray.Contains(r.Id))
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
+    public Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        if (id == null) return Task.FromResult(0);
 
-        return await DeleteAllAsync([id.Value], cancellationToken);
+        return DeleteAllAsync([id.Value], cancellationToken);
     }
 }

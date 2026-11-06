@@ -11,7 +11,7 @@ public interface IRepository<T> where T : class
         bool asNoTracking = false,
         params Expression<Func<T, object>>[] includes);
 
-    Task<IEnumerable<T>> AllAsync(
+    Task<List<T>> AllAsync(
         Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,

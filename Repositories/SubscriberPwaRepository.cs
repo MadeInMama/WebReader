@@ -7,7 +7,7 @@ namespace WebReader.Repositories;
 
 public class SubscriberPwaRepository(ApplicationDbContext context) : IRepository<SubscriberPwa>
 {
-    public async Task<SubscriberPwa?> FirstOrDefaultAsync(Expression<Func<SubscriberPwa, bool>> predicate,
+    public Task<SubscriberPwa?> FirstOrDefaultAsync(Expression<Func<SubscriberPwa, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -21,10 +21,10 @@ public class SubscriberPwaRepository(ApplicationDbContext context) : IRepository
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<SubscriberPwa>> AllAsync(
+    public Task<List<SubscriberPwa>> AllAsync(
         Expression<Func<SubscriberPwa, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -41,10 +41,10 @@ public class SubscriberPwaRepository(ApplicationDbContext context) : IRepository
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(
+    public Task<int> CountAsync(
         Expression<Func<SubscriberPwa, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
@@ -59,7 +59,7 @@ public class SubscriberPwaRepository(ApplicationDbContext context) : IRepository
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<SubscriberPwa> AddAsync(SubscriberPwa entity, CancellationToken cancellationToken)
@@ -68,45 +68,49 @@ public class SubscriberPwaRepository(ApplicationDbContext context) : IRepository
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0) return 0;
+        if (idsArray.Length == 0) return Task.FromResult(0);
 
-        return await context.SubscriberPwas
+        return context.SubscriberPwas
             .Where(f => idsArray.Contains(f.Id))
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAllByUserIdAsync(Guid? id, CancellationToken cancellationToken)
+    public Task<int> DeleteAllByUserIdAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        if (id == null) return Task.FromResult(0);
 
-        return await context.SubscriberPwas
+        return context.SubscriberPwas
             .Where(f => f.UserId == id)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteByUserIdAndEndpointAsync(Guid? id, string? endpoint,
+    public Task<int> DeleteByUserIdAndEndpointAsync(Guid? id, string? endpoint,
         CancellationToken cancellationToken)
     {
-        if (id == null || endpoint == null) return 0;
+        if (id == null || endpoint == null) return Task.FromResult(0);
 
-        return await context.SubscriberPwas
+        return context.SubscriberPwas
             .Where(f => f.UserId == id && f.Endpoint == endpoint)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
+    public Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        return id == null ? Task.FromResult(0) : DeleteAllAsync([id.Value], cancellationToken);
+    }
 
-        return await DeleteAllAsync([id.Value], cancellationToken);
+    public Task<bool> ExistsAsync(Guid userId, string endpoint, CancellationToken cancellationToken)
+    {
+        return context.SubscriberPwas.AsNoTracking()
+            .AnyAsync(f => f.UserId == userId && f.Endpoint == endpoint, cancellationToken);
     }
 }

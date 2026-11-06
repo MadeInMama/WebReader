@@ -209,11 +209,12 @@ button.btn {
     border-radius: 0.5em;
     text-decoration: none;
     color: var(--foreground-color);
+    height: 2em;
 }
 
 select, input, textarea {
     border-radius: 0.5em;
-    padding: 0.5em 0.5em;
+    padding: 0.25em;
     height: 2em;
     resize: none;
     font-size: 1em;

@@ -7,7 +7,7 @@ namespace WebReader.Repositories;
 
 public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepository<RequestAttemptsLog>
 {
-    public async Task<RequestAttemptsLog?> FirstOrDefaultAsync(Expression<Func<RequestAttemptsLog, bool>> predicate,
+    public Task<RequestAttemptsLog?> FirstOrDefaultAsync(Expression<Func<RequestAttemptsLog, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
         bool asNoTracking,
@@ -21,10 +21,10 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<RequestAttemptsLog>> AllAsync(
+    public Task<List<RequestAttemptsLog>> AllAsync(
         Expression<Func<RequestAttemptsLog, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -41,10 +41,10 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Ip).Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Ip).Skip(skip).Take(take).ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(Expression<Func<RequestAttemptsLog, bool>> predicate,
+    public Task<int> CountAsync(Expression<Func<RequestAttemptsLog, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
         int take = int.MaxValue,
@@ -58,7 +58,7 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Ip).CountAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Ip).CountAsync(cancellationToken);
     }
 
     public async Task<RequestAttemptsLog> AddAsync(RequestAttemptsLog entity, CancellationToken cancellationToken)
@@ -67,9 +67,9 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<bool> IsAllowed(string ip, CancellationToken cancellationToken)
@@ -83,9 +83,9 @@ public class RequestAttemptsLogRepository(ApplicationDbContext context) : IRepos
         return attemptsCountLastHour <= maxAttemptsCountLastHour;
     }
 
-    public async Task<int> DeleteAllOlderThenAsync(DateTimeOffset createdDate, CancellationToken cancellationToken)
+    public Task<int> DeleteAllOlderThenAsync(DateTimeOffset createdDate, CancellationToken cancellationToken)
     {
-        return await context.RequestAttemptsLogs
+        return context.RequestAttemptsLogs
             .Where(f => f.CreatedDate < createdDate)
             .ExecuteDeleteAsync(cancellationToken);
     }

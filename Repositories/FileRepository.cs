@@ -10,7 +10,7 @@ namespace WebReader.Repositories;
 
 public class FileRepository(ApplicationDbContext context) : IRepository<File>
 {
-    public async Task<File?> FirstOrDefaultAsync(Expression<Func<File, bool>> predicate,
+    public Task<File?> FirstOrDefaultAsync(Expression<Func<File, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
         bool asNoTracking,
@@ -24,10 +24,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<File>> AllAsync(
+    public Task<List<File>> AllAsync(
         Expression<Func<File, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -44,10 +44,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(
+    public Task<int> CountAsync(
         Expression<Func<File, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
@@ -62,7 +62,7 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<File> AddAsync(File entity, CancellationToken cancellationToken)
@@ -71,9 +71,9 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 
     public void Attach(File entity)
@@ -86,19 +86,19 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
         foreach (var entity in entities) Attach(entity);
     }
 
-    public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(string bucketName,
+    public Task<List<File>> GetAllAvailableObjectsInBucketAsync(string bucketName,
         IEnumerable<RoleType> roles, CancellationToken cancellationToken)
     {
         var rolesList = roles.ToList();
 
-        return await context.Files
+        return context.Files
             .Where(f => f.Bucket!.Name == bucketName && !f.Bucket.IsHidden &&
                         f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
                         !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any())
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<File>> GetAllAvailableObjectsWithPartsAsync(Guid fileId,
+    public Task<List<File>> GetAllAvailableObjectsWithPartsAsync(Guid fileId,
         CancellationToken cancellationToken)
     {
         var fileEntity = context.Model.FindEntityType(typeof(File))!;
@@ -125,10 +125,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
              ORDER BY fc.Level
              """;
 
-        return await context.Files.FromSqlRaw(sql).ToListAsync(cancellationToken);
+        return context.Files.FromSqlRaw(sql).ToListAsync(cancellationToken);
     }
 
-    public async Task<File> GetHeadedPartedObjectAsync(Guid fileId, CancellationToken cancellationToken)
+    public Task<File> GetHeadedPartedObjectAsync(Guid fileId, CancellationToken cancellationToken)
     {
         var fileEntity = context.Model.FindEntityType(typeof(File))!;
 
@@ -155,22 +155,22 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                    LIMIT 1
                    """;
 
-        return await context.Files.FromSqlRaw(sql).SingleAsync(cancellationToken);
+        return context.Files.FromSqlRaw(sql).SingleAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<File>> GetAllAvailableObjectsInBucketAsync(Guid bucketId,
+    public Task<List<File>> GetAllAvailableObjectsInBucketAsync(Guid bucketId,
         IEnumerable<RoleType> roles, CancellationToken cancellationToken)
     {
         var rolesList = roles.ToList();
 
-        return await context.Files
+        return context.Files
             .Where(f => f.BucketId == bucketId && !f.Bucket.IsHidden &&
                         f.Bucket.AccessRoles.Intersect(rolesList).Any() &&
                         !f.IsHidden && f.AccessRoles.Intersect(rolesList).Any())
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<ExtendedFile>> GetAllAvailableObjectsInBucketTopLevelAsync(Guid bucketId,
+    public Task<List<ExtendedFile>> GetAllAvailableObjectsInBucketTopLevelAsync(Guid bucketId,
         IEnumerable<RoleType> roles, CancellationToken cancellationToken)
     {
         var joinedRoles = string.Join(",", roles.Select(f => (int)f));
@@ -231,10 +231,10 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                             JOIN "{fileEntity.GetTableName()}" f ON f."{fileIdProperty.GetColumnName()}" = stats.root_id;
                    """;
 
-        return await context.Database.SqlQueryRaw<ExtendedFile>(sql).AsNoTracking().ToListAsync(cancellationToken);
+        return context.Database.SqlQueryRaw<ExtendedFile>(sql).AsNoTracking().ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<ExtendedFile>> GetAllAvailableObjectsTopLevelAsync(Guid userId,
+    public Task<List<ExtendedFile>> GetAllAvailableObjectsTopLevelAsync(Guid userId,
         IEnumerable<RoleType> roles, CancellationToken cancellationToken, ApplicationDbContext? ctx = null)
     {
         var joinedRoles = string.Join(",", roles.Select(f => (int)f));
@@ -305,15 +305,15 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                            JOIN "{fileEntity.GetTableName()}" f ON f."{fileIdProperty.GetColumnName()}" = stats.root_id;
                    """;
 
-        return await (ctx ?? context).Database.SqlQueryRaw<ExtendedFile>(sql).AsNoTracking()
+        return (ctx ?? context).Database.SqlQueryRaw<ExtendedFile>(sql).AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0) return 0;
+        if (idsArray.Length == 0) return Task.FromResult(0);
 
         var joinedIds = string.Join(",", idsArray.Select(f => $"'{f.ToString()}'"));
 
@@ -332,13 +332,13 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
                    WHERE "{readingFileIdProperty.GetColumnName()}" IN ({joinedIds});
                    """;
 
-        return await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        return context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
     }
 
-    public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
+    public Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        if (id == null) return Task.FromResult(0);
 
-        return await DeleteAllAsync([id.Value], cancellationToken);
+        return DeleteAllAsync([id.Value], cancellationToken);
     }
 }

@@ -8,7 +8,7 @@ namespace WebReader.Repositories;
 
 public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository<ScheduledTask>
 {
-    public async Task<ScheduledTask?> FirstOrDefaultAsync(Expression<Func<ScheduledTask, bool>> predicate,
+    public Task<ScheduledTask?> FirstOrDefaultAsync(Expression<Func<ScheduledTask, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -22,10 +22,10 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<ScheduledTask>> AllAsync(
+    public Task<List<ScheduledTask>> AllAsync(
         Expression<Func<ScheduledTask, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -42,7 +42,7 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate)
+        return query.Where(predicate)
             .OrderBy(f => f.Status)
             .ThenByDescending(f => f.HaveToStartAt)
             .ThenBy(f => f.Priority)
@@ -51,7 +51,7 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(
+    public Task<int> CountAsync(
         Expression<Func<ScheduledTask, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
@@ -66,7 +66,7 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate)
+        return query.Where(predicate)
             .OrderBy(f => f.Status)
             .ThenByDescending(f => f.HaveToStartAt)
             .ThenBy(f => f.Priority)
@@ -80,14 +80,14 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<ScheduledTask?> GetNextTaskAsync(CancellationToken cancellationToken)
+    public Task<ScheduledTask?> GetNextTaskAsync(CancellationToken cancellationToken)
     {
-        return await context.ScheduledTasks
+        return context.ScheduledTasks
             .Where(f => f.Status == TaskStatus.Pending &&
                         (f.ScheduledTaskConfigId == null || f.ScheduledTaskConfig!.IsActive) &&
                         f.HaveToStartAt < DateTimeOffset.UtcNow) //TODO: delete not active pending tasks
@@ -98,32 +98,32 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<ScheduledTask?> GetLastTaskByConfigIdAsync(Guid configId, CancellationToken cancellationToken)
+    public Task<ScheduledTask?> GetLastTaskByConfigIdAsync(Guid configId, CancellationToken cancellationToken)
     {
-        return await context.ScheduledTasks
+        return context.ScheduledTasks
             .Where(f => f.ScheduledTaskConfigId == configId)
             .OrderByDescending(f => f.HaveToStartAt)
             .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task AddRangeAsync(IEnumerable<ScheduledTask> entities, CancellationToken cancellationToken)
+    public Task AddRangeAsync(IEnumerable<ScheduledTask> entities, CancellationToken cancellationToken)
     {
-        await context.ScheduledTasks.AddRangeAsync(entities, cancellationToken);
+        return context.ScheduledTasks.AddRangeAsync(entities, cancellationToken);
     }
 
-    public async Task<int> DeleteAllOlderThenAsync(DateTimeOffset updatedDate, List<TaskStatus> status,
+    public Task<int> DeleteAllOlderThenAsync(DateTimeOffset updatedDate, List<TaskStatus> status,
         CancellationToken cancellationToken)
     {
-        return await context.ScheduledTasks
+        return context.ScheduledTasks
             .Where(f => f.UpdatedDate < updatedDate && status.Contains(f.Status))
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> SetStatusProgressResultAsync(Guid id, TaskStatus status, decimal? progress, string? result,
+    public Task<int> SetStatusProgressResultAsync(Guid id, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken)
     {
-        return await context.ScheduledTasks
+        return context.ScheduledTasks
             .Where(r => r.Id == id)
             .ExecuteUpdateAsync(f => f
                     .SetProperty(e => e.Status, status)

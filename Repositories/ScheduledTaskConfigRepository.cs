@@ -7,7 +7,7 @@ namespace WebReader.Repositories;
 
 public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepository<ScheduledTaskConfig>
 {
-    public async Task<ScheduledTaskConfig?> FirstOrDefaultAsync(Expression<Func<ScheduledTaskConfig, bool>> predicate,
+    public Task<ScheduledTaskConfig?> FirstOrDefaultAsync(Expression<Func<ScheduledTaskConfig, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -21,10 +21,10 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<ScheduledTaskConfig>> AllAsync(
+    public Task<List<ScheduledTaskConfig>> AllAsync(
         Expression<Func<ScheduledTaskConfig, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -41,14 +41,14 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate)
+        return query.Where(predicate)
             .OrderByDescending(f => f.DefaultPriority)
             .ThenBy(f => f.Type)
             .Skip(skip).Take(take)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(
+    public Task<int> CountAsync(
         Expression<Func<ScheduledTaskConfig, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
@@ -63,7 +63,7 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate)
+        return query.Where(predicate)
             .OrderByDescending(f => f.DefaultPriority)
             .ThenBy(f => f.Type)
             .CountAsync(cancellationToken);
@@ -75,8 +75,8 @@ public class ScheduledTaskConfigRepository(ApplicationDbContext context) : IRepo
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 }

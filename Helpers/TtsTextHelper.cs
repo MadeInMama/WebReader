@@ -37,6 +37,8 @@ public static partial class TtsTextHelper
             .Replace(">", "\"")
             .Replace("“", "\"")
             .Replace("*", "")
+            .Replace("[", "")
+            .Replace("]", "")
             .Replace("_", "");
 
         // 4. Схлопываем лишние пробелы

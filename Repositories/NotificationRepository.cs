@@ -7,7 +7,7 @@ namespace WebReader.Repositories;
 
 public class NotificationRepository(ApplicationDbContext context) : IRepository<Notification>
 {
-    public async Task<Notification?> FirstOrDefaultAsync(
+    public Task<Notification?> FirstOrDefaultAsync(
         Expression<Func<Notification, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
@@ -22,10 +22,10 @@ public class NotificationRepository(ApplicationDbContext context) : IRepository<
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<Notification>> AllAsync(
+    public Task<List<Notification>> AllAsync(
         Expression<Func<Notification, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -42,10 +42,10 @@ public class NotificationRepository(ApplicationDbContext context) : IRepository<
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(
+    public Task<int> CountAsync(
         Expression<Func<Notification, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
@@ -60,7 +60,7 @@ public class NotificationRepository(ApplicationDbContext context) : IRepository<
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<Notification> AddAsync(Notification entity,
@@ -70,33 +70,33 @@ public class NotificationRepository(ApplicationDbContext context) : IRepository<
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0) return 0;
+        if (idsArray.Length == 0) return Task.FromResult(0);
 
-        return await context.Notifications
+        return context.Notifications
             .Where(f => idsArray.Contains(f.Id))
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
+    public Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        if (id == null) return Task.FromResult(0);
 
-        return await DeleteAllAsync([id.Value], cancellationToken);
+        return DeleteAllAsync([id.Value], cancellationToken);
     }
 
-    public async Task<int> DeleteAllSentAndOlderThenAsync(DateTimeOffset createdDate,
+    public Task<int> DeleteAllSentAndOlderThenAsync(DateTimeOffset createdDate,
         CancellationToken cancellationToken)
     {
-        return await context.Notifications
+        return context.Notifications
             .Where(f => f.IsSent && f.SentAt < createdDate)
             .ExecuteDeleteAsync(cancellationToken);
     }

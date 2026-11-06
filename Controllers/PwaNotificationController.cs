@@ -14,31 +14,31 @@ public class PwaNotificationController(SubscriberPwaRepository subscriberPwaRepo
     [HttpPost]
     [AllowAnonymous]
     [IgnoreAntiforgeryToken]
-    public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? subscription,
+    public async Task<IActionResult> Subscribe([FromBody] SubscribeDto? request,
         CancellationToken cancellationToken = default)
     {
-        if (subscription == null ||
-            string.IsNullOrWhiteSpace(subscription.Endpoint) ||
-            subscription.Keys.Count == 0 ||
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.Endpoint) ||
+            request.Keys.Count == 0 ||
             User.Identity?.IsAuthenticated == false) return NoContent();
 
         var existingSubscriber = await subscriberPwaRepository.FirstOrDefaultAsync(
-            f => f.Endpoint == subscription.Endpoint, null, cancellationToken);
+            f => f.Endpoint == request.Endpoint, null, cancellationToken);
 
         if (existingSubscriber == null)
         {
             await subscriberPwaRepository.AddAsync(new SubscriberPwa
             {
-                Endpoint = subscription.Endpoint,
-                Keys = subscription.Keys,
+                Endpoint = request.Endpoint,
+                Keys = request.Keys,
                 UserId = User.GetUserGuid(),
-                DeviceName = subscription.DeviceName ?? "Unknown device"
+                DeviceName = request.DeviceName ?? "Unknown device"
             }, cancellationToken);
         }
         else
         {
-            existingSubscriber.Keys = subscription.Keys;
-            existingSubscriber.DeviceName = subscription.DeviceName ?? "Unknown device";
+            existingSubscriber.Keys = request.Keys;
+            existingSubscriber.DeviceName = request.DeviceName ?? "Unknown device";
         }
 
         await subscriberPwaRepository.SaveChangesAsync(cancellationToken);
@@ -60,5 +60,18 @@ public class PwaNotificationController(SubscriberPwaRepository subscriberPwaRepo
         if (res == 0) return NoContent();
 
         return Accepted();
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> IsSubscribed([FromBody] SubscribeDto request,
+        CancellationToken cancellationToken = default)
+    {
+        if (User.Identity?.IsAuthenticated == false) return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.Endpoint)) return BadRequest();
+
+        return Ok(await subscriberPwaRepository.ExistsAsync(User.GetUserGuid(), request.Endpoint, cancellationToken));
     }
 }

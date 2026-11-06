@@ -7,7 +7,7 @@ namespace WebReader.Repositories;
 
 public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<SubscriberTg>
 {
-    public async Task<SubscriberTg?> FirstOrDefaultAsync(Expression<Func<SubscriberTg, bool>> predicate,
+    public Task<SubscriberTg?> FirstOrDefaultAsync(Expression<Func<SubscriberTg, bool>> predicate,
         ApplicationDbContext? ctx,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -21,10 +21,10 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<SubscriberTg>> AllAsync(
+    public Task<List<SubscriberTg>> AllAsync(
         Expression<Func<SubscriberTg, bool>> predicate,
         CancellationToken cancellationToken,
         bool asNoTracking = false,
@@ -41,10 +41,10 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
         if (asNoTracking)
             query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync(
+    public Task<int> CountAsync(
         Expression<Func<SubscriberTg, bool>> predicate,
         CancellationToken cancellationToken,
         ApplicationDbContext? ctx = null,
@@ -59,7 +59,7 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
 
         query = query.AsNoTracking();
 
-        return await query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
+        return query.Where(predicate).OrderBy(f => f.Id).CountAsync(cancellationToken);
     }
 
     public async Task<SubscriberTg> AddAsync(SubscriberTg entity, CancellationToken cancellationToken)
@@ -68,44 +68,44 @@ public class SubscriberTgRepository(ApplicationDbContext context) : IRepository<
         return res.Entity;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
+    public Task<int> DeleteAllAsync(IEnumerable<Guid>? ids, CancellationToken cancellationToken)
     {
         var idsArray = ids?.ToArray() ?? [];
 
-        if (idsArray.Length == 0) return 0;
+        if (idsArray.Length == 0) return Task.FromResult(0);
 
-        return await context.SubscriberTgs
+        return context.SubscriberTgs
             .Where(f => idsArray.Contains(f.Id))
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAllByUserIdAsync(Guid? id, CancellationToken cancellationToken)
+    public Task<int> DeleteAllByUserIdAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        if (id == null) return Task.FromResult(0);
 
-        return await context.SubscriberTgs
+        return context.SubscriberTgs
             .Where(f => f.UserId == id)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteByChatIdAsync(long? id, CancellationToken cancellationToken)
+    public Task<int> DeleteByChatIdAsync(long? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        if (id == null) return Task.FromResult(0);
 
-        return await context.SubscriberTgs
+        return context.SubscriberTgs
             .Where(f => f.ChatId == id)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
+    public Task<int> DeleteAsync(Guid? id, CancellationToken cancellationToken)
     {
-        if (id == null) return 0;
+        if (id == null) return Task.FromResult(0);
 
-        return await DeleteAllAsync([id.Value], cancellationToken);
+        return DeleteAllAsync([id.Value], cancellationToken);
     }
 }
