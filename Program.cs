@@ -341,7 +341,7 @@ using (var scope = app.Services.CreateScope())
     //
     // var paths = new List<string>
     // {
-    //     @"C:\Users\Пользователь\Downloads\the_egyptian_myths_a_guide_to_the_ancient_gods_and_legends.fb2",
+    //     // @"C:\Users\Пользователь\Downloads\the_egyptian_myths_a_guide_to_the_ancient_gods_and_legends.fb2",
     //     @"C:\Users\Пользователь\Downloads\edith_hamilton_mythology_timeless_tales_of_gods_and_heroes.fb2"
     // };
     //
@@ -370,7 +370,8 @@ using (var scope = app.Services.CreateScope())
     //         if (await minioService.ObjectExistsAsync(StaticNames.TtsBucketName, $"{ttsId}.ogg", CancellationToken.None))
     //         {
     //             Console.WriteLine();
-    //             Console.WriteLine($"TTS {ttsId} skipped");
+    //             Console.WriteLine(
+    //                 $"TTS {ttsId} skipped | TIME: {FormatPrettyTime(Stopwatch.GetElapsedTime(startTime))}");
     //             continue;
     //         }
     //
@@ -379,9 +380,8 @@ using (var scope = app.Services.CreateScope())
     //
     //         var res = await ttsService.GenerateSpeechAsync(el.Value, ttsType, ttsId, CancellationToken.None);
     //
-    //         var elapsed = Stopwatch.GetElapsedTime(startTime);
-    //
-    //         Console.WriteLine($"TTS: {ttsId} {(res ? "done" : "error")} | TIME: {FormatPrettyTime(elapsed)}");
+    //         Console.WriteLine(
+    //             $"TTS: {ttsId} {(res ? "done" : "error")} | TIME: {FormatPrettyTime(Stopwatch.GetElapsedTime(startTime))}");
     //     }
     // }
     //
