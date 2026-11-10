@@ -5,7 +5,9 @@ using NAudio.Wave;
 using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using WebReader.Models;
 
 namespace WebReader.Helpers;
@@ -92,14 +94,14 @@ public static class StaticFunctions
         return res;
     }
 
-    public static bool IsColorMatch(Rgb24 c1, Rgb24 c2, int tolerance = 5)
+    public static bool IsColorMatch(Rgb24 c1, Rgb24 c2, int tolerance = 10)
     {
         return Math.Abs(c1.R - c2.R) <= tolerance &&
                Math.Abs(c1.G - c2.G) <= tolerance &&
                Math.Abs(c1.B - c2.B) <= tolerance;
     }
 
-    public static bool IsColorMatch(Rgb24 c1, Color[] c2, int tolerance = 5)
+    public static bool IsColorMatch(Rgb24 c1, Color[] c2, int tolerance = 10)
     {
         return c2.Any(f =>
         {
@@ -189,5 +191,28 @@ public static class StaticFunctions
         writer?.Flush();
 
         targetStream.Position = 0;
+    }
+
+    public static byte[] GetCropped(Image<Rgb24> image, int left, int top, int trimWidth, int trimHeight)
+    {
+        using var cropped = image.Clone(ctx =>
+        {
+            ctx.Crop(new Rectangle(left, top, trimWidth, trimHeight)).Resize(new Size(trimWidth, trimHeight));
+        });
+
+        using var outputMs = new MemoryStream();
+        try
+        {
+            cropped.Save(outputMs, new JpegEncoder());
+        }
+        catch (Exception)
+        {
+            cropped.Save(outputMs, new PngEncoder());
+        }
+
+        var res = outputMs.ToArray();
+
+        outputMs.Close();
+        return res;
     }
 }

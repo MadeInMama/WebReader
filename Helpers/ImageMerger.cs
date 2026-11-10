@@ -1,41 +1,34 @@
 ﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace WebReader.Helpers;
 
 public static class ImageMerger
 {
-    public static byte[] Merge(List<byte[]> imagesBytes)
+    public static Image<Rgb24> Merge(List<byte[]> imagesBytes)
     {
         if (imagesBytes.Count == 0)
-            return [];
+            return new Image<Rgb24>(1, 1, Color.White);
 
         var loadedImages = imagesBytes.Select(imageBytes => Image.Load<Rgb24>(imageBytes)).ToList();
 
         var maxWidth = loadedImages.Max(img => img.Width);
         var totalHeight = loadedImages.Sum(img => img.Height);
 
-        using var result = new Image<Rgb24>(maxWidth, totalHeight, Color.White);
+        var result = new Image<Rgb24>(maxWidth, totalHeight, Color.White);
 
         var currentY = 0;
 
-        foreach (var image in loadedImages)
+        foreach (var image in loadedImages.Index())
         {
-            for (var y = 0; y < image.Height; y++)
-            for (var x = 0; x < image.Width; x++)
-                result[x, currentY + y] = image[x, y];
+            // Console.WriteLine($"Merge {image.Index + 1}/{loadedImages.Count}");
+            for (var y = 0; y < image.Item.Height; y++)
+            for (var x = 0; x < image.Item.Width; x++)
+                result[x, currentY + y] = image.Item[x, y];
 
-            currentY += image.Height;
+            currentY += image.Item.Height;
         }
 
-        using var outputMs = new MemoryStream();
-        result.Save(outputMs, new PngEncoder());
-
-        var res = outputMs.ToArray();
-
-        outputMs.Close();
-
-        return res;
+        return result;
     }
 }

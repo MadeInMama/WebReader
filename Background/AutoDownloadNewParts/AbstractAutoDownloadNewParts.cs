@@ -3,7 +3,6 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR;
@@ -33,24 +32,6 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     : AbstractBackgroundTasked<T>(taskRepository, scheduledTaskHubContext, logger)
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
-
-    private static readonly RequestHandler SRequestHandler = new(e =>
-    {
-        var resourceType = e.Request.ResourceType;
-
-        return new[]
-        {
-            ResourceType.Image,
-            ResourceType.ImageSet,
-            ResourceType.Img,
-            ResourceType.StyleSheet,
-            ResourceType.Font,
-            ResourceType.Media,
-            ResourceType.WebSocket
-        }.Contains(resourceType)
-            ? e.Request.AbortAsync()
-            : e.Request.ContinueAsync();
-    });
 
     private readonly BrowserFetcher _browserFetcher = new();
 
@@ -146,6 +127,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         {
             BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
             SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         return result;
@@ -304,7 +288,24 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         var res = await browser.NewPageAsync();
         await res.SetRequestInterceptionAsync(true);
 
-        res.Request += SRequestHandler.Handle;
+        res.Request += async (_, e) =>
+        {
+            var resourceType = e.Request.ResourceType;
+
+            if (new[]
+                {
+                    ResourceType.Image,
+                    ResourceType.ImageSet,
+                    ResourceType.Img,
+                    ResourceType.StyleSheet,
+                    ResourceType.Font,
+                    ResourceType.Media,
+                    ResourceType.WebSocket
+                }.Contains(resourceType))
+                await e.Request.AbortAsync();
+            else
+                await e.Request.ContinueAsync();
+        };
 
         await res.SetExtraHttpHeadersAsync(new Dictionary<string, string>
         {
@@ -342,145 +343,146 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
 
         var browser = await GetBrowser(cancellationToken);
-        await using (browser.ConfigureAwait(false))
+
+        var page = await GetNewPage(browser);
+
+        await page.GoToAsync(link,
+            new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
+
+        logger.LogTrace("Waiting for page load with images");
+        await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
+
+        var html = await page.GetContentAsync();
+
+        await CloseBrowser(browser);
+
+        var htmlDocument = await new HtmlParser().ParseDocumentAsync(html, cancellationToken);
+
+        var images = htmlDocument.QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
+            .ToImmutableList();
+
+        var currentPartName = MyRegex().Replace(
+            htmlDocument.QuerySelector(".text-cut")?.TextContent.Split(" – ").Last().Trim() ??
+            dataNum.ToString(), "");
+
+        logger.LogTrace("Found {images} links", images.Count);
+
+        using var memoryStream = new MemoryStream();
+
+        using var coverMemoryStream = new MemoryStream();
+
+        using var httpClient = httpClientFactory.CreateClient("parser-http-client");
+
+        var coverFileName = lastFile?.CoverName;
+
+        using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
-            var page = await GetNewPage(browser);
-            await using (page.ConfigureAwait(false))
+            var imagesBytes = new List<byte[]>();
+
+            foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
             {
-                await page.GoToAsync(link,
-                    new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
+                var src = img.GetAttribute("data-original");
+                if (src.IsNullOrEmptyOrWhitespace())
+                    src = img.GetAttribute("src")!;
 
-                logger.LogTrace("Waiting for page load with images");
-                await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
+                var imageBytes = await httpClient.GetByteArrayAsync(src, cancellationToken);
 
-                var html = await page.GetContentAsync();
-
-                var images = (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
-                    .QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
-                    .ToImmutableList();
-
-                logger.LogTrace("Found {images} links", images.Count);
-
-                var currentPartName = MyRegex().Replace(
-                    string.Concat(images
-                            .SelectMany(img => img.Parent!.ChildNodes!)
-                            .Where(node => node.NodeType == NodeType.Text)
-                            .Select(node => node.TextContent))
-                        .Trim(), "");
-
-                using var memoryStream = new MemoryStream();
-                using var coverMemoryStream = new MemoryStream();
-                using var httpClient = httpClientFactory.CreateClient("parser-http-client");
-
-                var coverFileName = lastFile?.CoverName;
-                byte[]? coverBytes = null;
-
-                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-                {
-                    foreach (var (imgIndex, img) in
-                             images.OrderBy(f => int.Parse(f.GetAttribute("data-page")!)).Index())
-                    {
-                        var src = img.GetAttribute("data-original");
-                        if (string.IsNullOrEmpty(src))
-                            src = img.GetAttribute("src")!;
-
-                        var imageBytes = await httpClient.GetByteArrayAsync(src, cancellationToken);
-
-                        if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
-
-                        if (coverBytes is null)
-                        {
-                            coverBytes = imageBytes;
-                            coverFileName =
-                                $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                        }
-
-                        var imgName = $"{imgIndex}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                        var entry = zipArchive.CreateEntry(imgName, CompressionLevel.SmallestSize);
-                        await using var entryStream = entry.Open();
-                        await entryStream.WriteAsync(imageBytes, cancellationToken);
-                    }
-
-                    SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
-                }
-
-                if (coverBytes is { Length: > 0 }) await coverMemoryStream.WriteAsync(coverBytes, cancellationToken);
-
-                await memoryStream.FlushAsync(cancellationToken);
-                memoryStream.Position = 0;
-
-                await coverMemoryStream.FlushAsync(cancellationToken);
-                coverMemoryStream.Position = 0;
-
-                logger.LogTrace("Save to db {name}", fileName);
-
-                var fileUploadResult = await fileUploadService.UploadFileAsync(
-                    lastFile?.Id,
-                    null,
-                    lastFile?.Bucket ?? defaultBucket,
-                    [.. Enum.GetValues<RoleType>()],
-                    memoryStream,
-                    fileName,
-                    FileCustomName,
-                    "application/zip",
-                    FileType.ZipWithImg,
-                    currentPartName,
-                    uint.Parse(dataNum.ToString()),
-                    coverFileName,
-                    coverMemoryStream,
-                    cancellationToken
-                );
-
-                memoryStream.Close();
-
-                if (fileUploadResult.IsFailed)
-                    return Result.Fail(new Error($"Error saving '{fileName}' to S3"));
-
-                await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-                using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>
-                       {
-                           [StaticJsonNames.NotificationBody] =
-                               $"File '{FileCustomName}' has new part '{currentPartName}'.",
-                           [StaticJsonNames.NotificationBucketId] = fileUploadResult.Value.BucketId.ToString(),
-                           [StaticJsonNames.NotificationFileId] = fileUploadResult.Value.Id.ToString()
-                       }))
-                {
-                    await notificationRepository.AddAsync(new Models.Entities.Notification
-                    {
-                        Message = message,
-                        Type = NotificationType.NewFile
-                    }, cancellationToken);
-
-                    await notificationRepository.SaveChangesAsync(cancellationToken);
-                }
-
-                var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
-
-                if (CheckMaxSizeReached(MaxSize, currentSize, FileCustomName))
-                    return Result.Fail(
-                        $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
-
-                return Result.Ok((false, fileUploadResult.Value))!;
+                imagesBytes.Add(imageBytes);
             }
+
+            var splitImages = ImageSplitter.Split(ImageMerger.Merge(imagesBytes));
+
+            foreach (var el in splitImages.Index())
+            {
+                var imgName =
+                    $"{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+                var entry = zipArchive.CreateEntry(imgName, CompressionLevel.SmallestSize);
+                await using var entryStream = entry.Open();
+                await entryStream.WriteAsync(el.Item, cancellationToken);
+                await entryStream.FlushAsync(cancellationToken);
+                entryStream.Close();
+            }
+
+            var cover = splitImages.First();
+
+            if (cover is { Length: > 0 })
+            {
+                await coverMemoryStream.WriteAsync(cover, cancellationToken);
+                coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+            }
+
+            imagesBytes.Clear();
+            imagesBytes.TrimExcess();
+            imagesBytes = null;
+            splitImages.Clear();
+            splitImages.TrimExcess();
+            splitImages = null;
         }
+
+        await memoryStream.FlushAsync(cancellationToken);
+        memoryStream.Position = 0;
+
+        await coverMemoryStream.FlushAsync(cancellationToken);
+        coverMemoryStream.Position = 0;
+
+        logger.LogTrace("Save to db {name}", fileName);
+
+        var fileUploadResult = await fileUploadService.UploadFileAsync(
+            lastFile?.Id,
+            null,
+            lastFile?.Bucket ?? defaultBucket,
+            [.. Enum.GetValues<RoleType>()],
+            memoryStream,
+            fileName,
+            FileCustomName,
+            "application/zip",
+            FileType.ZipWithImg,
+            currentPartName,
+            uint.Parse(dataNum.ToString()),
+            coverFileName,
+            coverMemoryStream,
+            cancellationToken
+        );
+
+        memoryStream.Close();
+        coverMemoryStream.Close();
+
+        if (fileUploadResult.IsFailed)
+            return Result.Fail(new Error($"Error saving '{fileName}' to S3"));
+
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>
+               {
+                   [StaticJsonNames.NotificationBody] = $"File '{FileCustomName}' has new part '{currentPartName}'.",
+                   [StaticJsonNames.NotificationBucketId] = fileUploadResult.Value.BucketId.ToString(),
+                   [StaticJsonNames.NotificationFileId] = fileUploadResult.Value.Id.ToString()
+               }))
+        {
+            await notificationRepository.AddAsync(new Models.Entities.Notification
+            {
+                Message = message,
+                Type = NotificationType.NewFile
+            }, cancellationToken);
+
+            await notificationRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
+
+        if (CheckMaxSizeReached(MaxSize, currentSize, FileCustomName))
+            return Result.Fail(
+                $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
+
+        BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
+        SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        return Result.Ok((false, fileUploadResult.Value))!;
     }
 
     [GeneratedRegex(@"^\d+\s*-\s*")]
     private static partial Regex MyRegex();
-
-    private sealed class RequestHandler
-    {
-        private readonly Func<RequestEventArgs, Task> _handler;
-
-        public RequestHandler(Func<RequestEventArgs, Task> handler)
-        {
-            _handler = handler;
-        }
-
-        public void Handle(object? sender, RequestEventArgs e)
-        {
-            _handler(e);
-        }
-    }
 }

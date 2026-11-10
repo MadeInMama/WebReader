@@ -38,6 +38,10 @@ public class BackgroundTaskManager(
             return;
         }
 
+        // var endpoint = redis.GetEndPoints()[0];
+        // var server = redis.GetServer(endpoint);
+        // await server.FlushDatabaseAsync();
+
         await Task.WhenAll(
             RunSpreadTasks(cancellationToken),
             RunAsSoonAsPossible(cancellationToken)
@@ -46,7 +50,7 @@ public class BackgroundTaskManager(
 
     private async Task RunSpreadTasks(CancellationToken cancellationToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(10));
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
 
         using var scope = serviceScopeFactory.CreateScope();
 
@@ -189,7 +193,7 @@ public class BackgroundTaskManager(
                     try
                     {
                         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                        linkedCts.CancelAfter(TimeSpan.FromMinutes(10));
+                        linkedCts.CancelAfter(TimeSpan.FromMinutes(30));
                         var combinedToken = linkedCts.Token;
 
                         logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
@@ -244,7 +248,7 @@ public class BackgroundTaskManager(
         string lockKey)
     {
         var database = redis.GetDatabase();
-        var lockTimeout = TimeSpan.FromMinutes(11);
+        var lockTimeout = TimeSpan.FromMinutes(31);
         var lockId = Guid.NewGuid().ToString("N");
         var lockAcquired = await database.LockTakeAsync(lockKey, lockId, lockTimeout);
 

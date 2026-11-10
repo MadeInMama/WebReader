@@ -35,6 +35,15 @@ using MinioConfig = WebReader.Configuration.MinioConfig;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// var full = File.ReadAllBytes(@"C:\Users\Пользователь\Downloads\test.jpeg");
+//
+// var fullImage = Image.Load<Rgb24>(full);
+//
+// var splitted = ImageSplitter.Split(fullImage);
+//
+// foreach (var split in splitted.Index())
+//     File.WriteAllBytes(@$"C:\Users\Пользователь\Downloads\test_{split.Index}.jpeg", split.Item);
+
 //FOR LOCAL TTS
 // builder.Services.AddCors(options =>
 // {
@@ -330,7 +339,18 @@ app.UseWebSockets();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    // await context.ScheduledTasks.ExecuteDeleteAsync();
+    // await context.ScheduledTaskConfigs.ExecuteDeleteAsync();
+    // await context.Notifications.ExecuteDeleteAsync();
+
     context.Database.Migrate();
+
+    // var files = await context.Files.AsNoTracking()
+    // .Where(f => f.CustomName == "Мир после падения" || f.CustomName == "Поднятие уровня в одиночку").ToListAsync();
+
+    // await scope.ServiceProvider.GetRequiredService<FileService>()
+    // .DeleteFilesAsync([.. files.Select(f => f.Id)], CancellationToken.None);
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(telegramConfig.WebhookUrl!, secretToken: telegramConfig.SecretToken!);
