@@ -20,7 +20,7 @@ public static class ImageSplitter
 
             if (y == currEndY || ImageEmptyChecker.IsEmpty(image, 0, y, image.Width, currEndY)) continue;
 
-            // Console.WriteLine($"Split {y}/{image.Height}");
+            Console.WriteLine($"Split {y}/{image.Height}");
 
             result.Add(ImageTrimmer.Trim(image, 0, y, image.Width - 1, currEndY, emptyColors, 5));
 

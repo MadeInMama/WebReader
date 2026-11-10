@@ -21,7 +21,7 @@ public static class ImageMerger
 
         foreach (var image in loadedImages.Index())
         {
-            // Console.WriteLine($"Merge {image.Index + 1}/{loadedImages.Count}");
+            Console.WriteLine($"Merge {image.Index + 1}/{loadedImages.Count}");
             for (var y = 0; y < image.Item.Height; y++)
             for (var x = 0; x < image.Item.Width; x++)
                 result[x, currentY + y] = image.Item[x, y];
