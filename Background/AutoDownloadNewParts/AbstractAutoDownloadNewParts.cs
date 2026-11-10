@@ -368,11 +368,12 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         using var httpClient = httpClientFactory.CreateClient("parser-http-client");
 
-        var isCoverDone = false;
         var coverFileName = lastFile?.CoverName;
 
         using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
+            var imagesBytes = new List<byte[]>();
+
             foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
             {
                 var src = img.GetAttribute("data-original");
@@ -383,33 +384,33 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
                 if (ImageEmptyChecker.IsEmpty(imageBytes)) continue;
 
-                var splitImages = ImageSplitter.SplitImage(StaticFunctions.ConvertByteArrayToJpeg(imageBytes));
-
-                foreach (var el in splitImages.Index())
-                {
-                    var imgName =
-                        $"{img.GetAttribute("data-page")}-{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                    var entry = zipArchive.CreateEntry(imgName, CompressionLevel.SmallestSize);
-                    await using var entryStream = entry.Open();
-                    await entryStream.WriteAsync(el.Item, cancellationToken);
-                    await entryStream.FlushAsync(cancellationToken);
-                    entryStream.Close();
-                }
-
-                if (!isCoverDone)
-                {
-                    var cover = splitImages.PickRandom();
-
-                    if (cover is { Length: > 0 })
-                    {
-                        await coverMemoryStream.WriteAsync(cover, cancellationToken);
-                        coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                        isCoverDone = true;
-                    }
-                }
-
-                SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
+                imagesBytes.Add(imageBytes);
             }
+
+            var fullImage = ImageMerger.Merge(imagesBytes);
+
+            var splitImages = ImageSplitter.Split(fullImage);
+
+            foreach (var el in splitImages.Index())
+            {
+                var imgName =
+                    $"{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+                var entry = zipArchive.CreateEntry(imgName, CompressionLevel.SmallestSize);
+                await using var entryStream = entry.Open();
+                await entryStream.WriteAsync(el.Item, cancellationToken);
+                await entryStream.FlushAsync(cancellationToken);
+                entryStream.Close();
+            }
+
+            var cover = splitImages.First();
+
+            if (cover is { Length: > 0 })
+            {
+                await coverMemoryStream.WriteAsync(cover, cancellationToken);
+                coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+            }
+
+            SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
         }
 
         await memoryStream.FlushAsync(cancellationToken);
@@ -424,7 +425,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             lastFile?.Id,
             null,
             lastFile?.Bucket ?? defaultBucket,
-            Enum.GetValues<RoleType>().ToList(),
+            [.. Enum.GetValues<RoleType>()],
             memoryStream,
             fileName,
             FileCustomName,

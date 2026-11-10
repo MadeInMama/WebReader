@@ -9,7 +9,7 @@ public class FileService(
     ScheduledTaskRepository scheduledTaskRepository,
     ILogger<FileService> logger)
 {
-    public async Task DeleteFileAsync(List<Guid> guids, CancellationToken cancellationToken)
+    public async Task DeleteFilesAsync(List<Guid> guids, CancellationToken cancellationToken)
     {
         logger.LogInformation("Deleting files with ids: ({count}, {guids})", guids.Count, string.Join(", ", guids));
 

@@ -210,7 +210,7 @@ public class BackgroundTaskManager(
                     }
                     catch (Exception e)
                     {
-                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null, e.Message,
+                        await taskRepository.SetStatusProgressResultAsync(task.Id, TaskStatus.Error, null, e.ToString(),
                             cancellationToken);
 
                         using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>

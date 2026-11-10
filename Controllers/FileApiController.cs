@@ -77,7 +77,7 @@ public class FileApiController(
 
         if (!User.GetUserRoles().Contains(RoleType.Admin)) return BadRequest(ModelState);
 
-        await fileService.DeleteFileAsync([request.Id], cancellationToken);
+        await fileService.DeleteFilesAsync([request.Id], cancellationToken);
 
         await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
 

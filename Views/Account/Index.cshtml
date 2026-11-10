@@ -62,7 +62,7 @@
         {
             <form method="post" asp-action="Unlink">
                 <label>Telegram:</label>
-                <button class="btn" type="submit">Unlink</button>
+                <button class="btn click-effect" type="submit">Unlink</button>
             </form>
         }
         else
@@ -71,7 +71,7 @@
             {
                 <div>
                     <label>Telegram:</label>
-                    <a class="btn" href="@Model.LinkUrl" rel="noopener noreferrer">Click to link</a>
+                    <a class="btn click-effect" href="@Model.LinkUrl" rel="noopener noreferrer">Click to link</a>
                 </div>
             }
             else
@@ -84,8 +84,10 @@
         }
         <div id="in-app-notification-container">
             <label>In-App Notification:</label>
-            <button class="btn" id="btn-enable-push" style="display:none;">Enable PWA notifications</button>
-            <button class="btn" id="btn-disable-push" style="display:none;">Disable PWA notifications</button>
+            <button class="btn click-effect" id="btn-enable-push" style="display:none;">Enable PWA notifications
+            </button>
+            <button class="btn click-effect" id="btn-disable-push" style="display:none;">Disable PWA notifications
+            </button>
             <div class="event-output" id="in-app-notification-waiting">
                 <div class="waiting"></div>
             </div>

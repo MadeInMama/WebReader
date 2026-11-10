@@ -1,4 +1,5 @@
 ﻿@using WebReader.Models
+@using TaskStatus = WebReader.Models.TaskStatus
 @model WebReader.Models.Dtos.AllScheduledTasksViewModel
 
 <table>
@@ -21,11 +22,24 @@
         var result = "Empty result";
 
         if (item.Result != null)
-            result = item.Type switch
+        {
+            if (item.Status == TaskStatus.Completed)
             {
-                TaskType.CalcAllBooksSizes => JsonSerializer.Serialize(JsonDocument.Parse(item.Result), options),
-                _ => item.Result
-            };
+                result = item.Type switch
+                {
+                    TaskType.CalcAllBooksSizes => JsonSerializer.Serialize(JsonDocument.Parse(item.Result), options),
+                    _ => item.Result
+                };
+            }
+            else if (item.Status == TaskStatus.Error)
+            {
+                result = JsonSerializer.Serialize(item.Result, options);
+            }
+            else
+            {
+                result = item.Result;
+            }
+        }
 
         var modalContent = $@"
         <div class='task-details'>
@@ -79,7 +93,7 @@
                 </div>
             </td>
             <td class="table-task-result">
-                <div>@(item.Result ?? "Empty result")</div>
+                <div>@result</div>
             </td>
             <td utc="@item.HaveToStartAt.ToString("O")"
                 class="table-task-have-to-start-at to-local-date-time"></td>
