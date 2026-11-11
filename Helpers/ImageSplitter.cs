@@ -5,48 +5,65 @@ namespace WebReader.Helpers;
 
 public static class ImageSplitter
 {
-    public static List<byte[]> Split(Image<Rgb24> image, Color[]? emptyColors = null)
+    public static List<byte[]> Split(Image<Rgb24> image, int minContentHeight = 100, int minEmptyGap = 25)
     {
-        emptyColors ??= [Color.White];
-
-        const int minHeight = 300;
+        ArgumentNullException.ThrowIfNull(image);
 
         var result = new List<byte[]>();
 
-        for (var y = 0; y < image.Height; y++)
+        // Находим первую строку с контентом, пропуская пустоту в самом верху
+        var y = FindNextFilledY(image, 0);
+
+        while (y < image.Height)
         {
-            var currEndY = FindNextEmptyY(image, y + minHeight, emptyColors);
-            currEndY = Math.Max(0, currEndY);
+            // Ищем начало следующей пустой зоны, отступив минимальную высоту контента
+            var searchStart = Math.Min(image.Height, y + minContentHeight);
+            var currEndY = FindEmptyGapY(image, searchStart, minEmptyGap);
 
-            if (y == currEndY || ImageEmptyChecker.IsEmpty(image, 0, y, image.Width, currEndY)) continue;
+            if (currEndY > y && !ImageEmptyChecker.IsEmpty(image, 0, y, image.Width, currEndY))
+            {
+                Console.WriteLine($"Split {y}..{currEndY} / {image.Height}");
 
-            Console.WriteLine($"Split {y}/{image.Height}");
+                // Передаем согласованные границы (min включительно, max не включительно)
+                result.Add(ImageTrimmer.Trim(image, 0, y, image.Width, currEndY, 5));
+            }
 
-            result.Add(ImageTrimmer.Trim(image, 0, y, image.Width - 1, currEndY, emptyColors, 5));
-
-            y = FindNextFilledY(image, currEndY + 1, emptyColors);
+            // Перепрыгиваем найденный пустой коридор и ищем следующий блок контента
+            y = FindNextFilledY(image, currEndY + minEmptyGap);
         }
-
-        image.Dispose();
 
         return result;
     }
 
-    private static int FindNextFilledY(Image<Rgb24> image, int startY, Color[] emptyColors)
+    private static int FindNextFilledY(Image<Rgb24> image, int startY)
     {
-        for (var y = startY; y < image.Height; y++)
-            if (!ImageEmptyChecker.IsRowEmpty(image, y, emptyColors))
+        for (var y = Math.Max(0, startY); y < image.Height; y++)
+            if (!ImageEmptyChecker.IsRowEmpty(image, y))
                 return y;
 
-        return image.Height - 1;
+        return image.Height;
     }
 
-    private static int FindNextEmptyY(Image<Rgb24> image, int startY, Color[] emptyColors)
+    /// <summary>
+    ///     Ищет Y-координату, начиная с которой идет минимум <paramref name="minGap" /> пустых строк подряд.
+    /// </summary>
+    private static int FindEmptyGapY(Image<Rgb24> image, int startY, int minGap)
     {
-        for (var y = startY; y < image.Height; y++)
-            if (ImageEmptyChecker.IsRowEmpty(image, y, emptyColors))
-                return y;
+        var consecutiveEmpty = 0;
 
-        return image.Height - 1;
+        for (var y = Math.Max(0, startY); y < image.Height; y++)
+            if (ImageEmptyChecker.IsRowEmpty(image, y))
+            {
+                consecutiveEmpty++;
+                if (consecutiveEmpty >= minGap)
+                    // Возвращаем начало пустого коридора
+                    return y - minGap + 1;
+            }
+            else
+            {
+                consecutiveEmpty = 0;
+            }
+
+        return image.Height;
     }
 }

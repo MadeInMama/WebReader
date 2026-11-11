@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -11,8 +12,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.IdentityModel.Tokens;
 using Minio;
+using Polly;
 using StackExchange.Redis;
 using Telegram.Bot;
 using WebReader.Background;
@@ -28,6 +31,7 @@ using WebReader.Models;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
+using WebReader.Services.Http;
 using WebReader.Services.Notification;
 using WebReader.Services.Tts;
 using Yarp.ReverseProxy.Model;
@@ -254,11 +258,48 @@ builder.Services.AddStackExchangeRedisCache(options => { options.Configuration =
 
 builder.Services.AddHostedService<BackgroundTaskManager>();
 
-builder.Services.AddHttpClient();
-
 builder.Services.Configure<TtsConfig>(builder.Configuration.GetSection(nameof(TtsConfig)));
 var ttsConfig = new TtsConfig();
 builder.Configuration.GetRequiredSection(nameof(TtsConfig)).Bind(ttsConfig);
+
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<ReadMangaClubClient>(client =>
+    {
+        client.DefaultRequestHeaders.Add("User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        client.DefaultRequestHeaders.Add("Accept",
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+        client.DefaultRequestHeaders.Add("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+    })
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+        UseCookies = true,
+        AllowAutoRedirect = true,
+        MaxAutomaticRedirections = 5
+    })
+    .AddResilienceHandler("custom-pipeline", (resilienceBuilder, context) =>
+    {
+        var logger = context.ServiceProvider.GetRequiredService<ILogger<ReadMangaClubClient>>();
+
+        resilienceBuilder.AddRetry(new HttpRetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,
+            Delay = TimeSpan.FromSeconds(2),
+            BackoffType = DelayBackoffType.Exponential,
+            OnRetry = args =>
+            {
+                logger.LogWarning(
+                    "Request to {url} failed. Retry attempt #{attempt}. Waiting {delay}s before next try. Reason: {reason}",
+                    args.Outcome.Result?.RequestMessage?.RequestUri?.ToString() ?? "Unknown URL",
+                    args.AttemptNumber + 1,
+                    args.RetryDelay.TotalSeconds,
+                    args.Outcome.Exception?.Message ?? args.Outcome.Result?.StatusCode.ToString() ?? "Unknown error");
+
+                return ValueTask.CompletedTask;
+            }
+        });
+    });
 builder.Services.AddHttpClient<XttsTtsClient>(client =>
 {
     client.BaseAddress = new Uri(ttsConfig.XttsUrl!);
@@ -347,7 +388,8 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 
     // var files = await context.Files.AsNoTracking()
-    // .Where(f => f.CustomName == "Мир после падения" || f.CustomName == "Поднятие уровня в одиночку").ToListAsync();
+    // .Where(f => f.CustomName == "Мир после падения" || f.CustomName == "Поднятие уровня в одиночку" ||
+    // f.CurrentPartNumber > 309).ToListAsync();
 
     // await scope.ServiceProvider.GetRequiredService<FileService>()
     // .DeleteFilesAsync([.. files.Select(f => f.Id)], CancellationToken.None);

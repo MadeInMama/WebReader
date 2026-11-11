@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using NAudio.Wave;
-using PuppeteerSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
@@ -14,6 +13,9 @@ namespace WebReader.Helpers;
 
 public static class StaticFunctions
 {
+    private static readonly JpegEncoder DefaultJpegEncoder = new() { Quality = 90 };
+    private static readonly PngEncoder DefaultPngEncoder = new();
+
     public static List<RoleType> GetUserRoles(this ClaimsPrincipal user)
     {
         return
@@ -58,27 +60,6 @@ public static class StaticFunctions
     {
         var code = (int)statusCode;
         return code is >= 200 and < 300;
-    }
-
-    public static void CustomUninstall<T>(this BrowserFetcher bf, SupportedBrowser sb, Platform p, string buildId,
-        ILogger<T> logger)
-    {
-        BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
-
-        var dir = new DirectoryInfo(GetInstallationDir());
-        if (dir.Exists) dir.Delete(true);
-
-        return;
-
-        string GetInstallationDir()
-        {
-            return Path.Combine(GetBrowserRoot(), $"{p}-{buildId}");
-        }
-
-        string GetBrowserRoot()
-        {
-            return Path.Combine(bf.CacheDir, sb.ToString());
-        }
     }
 
     public static byte[] ConvertByteArrayToJpeg(byte[] sourceImageBytes)
@@ -195,24 +176,26 @@ public static class StaticFunctions
 
     public static byte[] GetCropped(Image<Rgb24> image, int left, int top, int trimWidth, int trimHeight)
     {
-        using var cropped = image.Clone(ctx =>
-        {
-            ctx.Crop(new Rectangle(left, top, trimWidth, trimHeight)).Resize(new Size(trimWidth, trimHeight));
-        });
+        ArgumentNullException.ThrowIfNull(image);
 
+        if (trimWidth <= 0 || trimHeight <= 0)
+            return [];
+
+        // Убрали лишний .Resize() — оставляем только быстрый .Crop()
+        using var cropped = image.Clone(ctx => ctx.Crop(new Rectangle(left, top, trimWidth, trimHeight)));
         using var outputMs = new MemoryStream();
+
         try
         {
-            cropped.Save(outputMs, new JpegEncoder());
+            cropped.Save(outputMs, DefaultJpegEncoder);
         }
         catch (Exception)
         {
-            cropped.Save(outputMs, new PngEncoder());
+            // Очищаем поток от недописанных байтов JPEG перед сохранением в PNG
+            outputMs.SetLength(0);
+            cropped.Save(outputMs, DefaultPngEncoder);
         }
 
-        var res = outputMs.ToArray();
-
-        outputMs.Close();
-        return res;
+        return outputMs.ToArray();
     }
 }

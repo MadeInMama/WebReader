@@ -245,12 +245,12 @@ footer {
     }
 }
 
-@media (width < 1000px) {
+@media (width < 800px) {
     :root {
         --max-width: 100%;
     }
 
     html, body {
-        font-size: 18px;
+        font-size: 16px;
     }
 }

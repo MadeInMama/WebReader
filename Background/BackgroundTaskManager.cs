@@ -38,9 +38,7 @@ public class BackgroundTaskManager(
             return;
         }
 
-        // var endpoint = redis.GetEndPoints()[0];
-        // var server = redis.GetServer(endpoint);
-        // await server.FlushDatabaseAsync();
+        await redis.GetServer(redis.GetEndPoints()[0]).FlushDatabaseAsync();
 
         await Task.WhenAll(
             RunSpreadTasks(cancellationToken),

@@ -1,13 +1,11 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AngleSharp.Html.Parser;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using PuppeteerSharp;
 using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
@@ -15,6 +13,7 @@ using WebReader.Models.Entities;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
+using WebReader.Services.Http;
 using File = WebReader.Models.Entities.File;
 using TaskStatus = WebReader.Models.TaskStatus;
 
@@ -24,16 +23,14 @@ namespace WebReader.Background.AutoDownloadNewParts;
 public abstract partial class AbstractAutoDownloadNewParts<T>(
     IDbContextFactory<ApplicationDbContext> contextFactory,
     FileUploadService fileUploadService,
-    IHttpClientFactory httpClientFactory,
     ILogger<T> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository,
-    NotificationRepository notificationRepository)
+    NotificationRepository notificationRepository,
+    ReadMangaClubClient readMangaClubClient)
     : AbstractBackgroundTasked<T>(taskRepository, scheduledTaskHubContext, logger)
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
-
-    private readonly BrowserFetcher _browserFetcher = new();
 
     protected abstract string FileCustomName { get; }
     protected abstract string Url { get; }
@@ -55,23 +52,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 return Result.Fail(
                     $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
 
-            var browser = await GetBrowser(cancellationToken);
-            string html;
-            await using (browser.ConfigureAwait(false))
-            {
-                var page = await GetNewPage(browser);
-                await using (page.ConfigureAwait(false))
-                {
-                    logger.LogTrace("Go to {url}", Url);
-                    await page.GoToAsync(Url,
-                        new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
-
-                    logger.LogTrace("Waiting for page load");
-                    await page.WaitForSelectorAsync(".chapters", new WaitForSelectorOptions { Timeout = 30000 });
-
-                    html = await page.GetContentAsync();
-                }
-            }
+            var html = await readMangaClubClient.GetPageHtmlAsync(Url, cancellationToken);
 
             var links = await GetAllFilesLinks(html, ".chapters > table .item-title > a", cancellationToken);
 
@@ -102,30 +83,13 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             if (result.IsSuccess)
                 result = Result.Ok($"Downloaded count: {links.Count}");
-
-            // UninstallBrowsers();
-        }
-        catch (TimeoutException e)
-        {
-            result = Result.Fail($"Timeout has been reached: {e.Message}");
-
-            // UninstallBrowsers();
-        }
-        catch (NavigationException e)
-        {
-            result = Result.Fail($"Navigation error has been reached: {e.Message}");
-
-            // UninstallBrowsers();
         }
         catch (HttpRequestException e)
         {
             result = Result.Fail($"HttpRequest error has been reached: {e.Message}");
-
-            // UninstallBrowsers();
         }
         finally
         {
-            BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
             SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -140,12 +104,28 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     {
         return (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
             .QuerySelectorAll(selector)
-            .Where(f => f.GetAttribute("href") != null)
-            .ToDictionary(f => f.GetAttribute("href")!, f => f)
-            .Where(f => !f.Key.IsNullOrEmptyOrWhitespace())
-            .Where(f => int.TryParse(f.Key.Split("/").Last(), out _))
-            .OrderBy(f => int.Parse(f.Key.Split("/").Last()))
-            .Select(f => f.Key)
+            .Select(el => el.GetAttribute("href"))
+            .Where(href => !string.IsNullOrWhiteSpace(href))
+            .Distinct()
+            .Select(href =>
+            {
+                var fullUri = new Uri(new Uri(Url), href!);
+                var segments = fullUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+                var hasChapter = int.TryParse(segments.LastOrDefault(), out var chapterNum);
+
+                var volSegment = segments.Length >= 2 ? segments[^2] : null;
+                int.TryParse(volSegment?.Replace("vol", "", StringComparison.OrdinalIgnoreCase), out var volumeNum);
+
+                return new
+                {
+                    Url = fullUri.ToString(), HasChapter = hasChapter, Volume = volumeNum, Chapter = chapterNum
+                };
+            })
+            .Where(x => x.HasChapter)
+            .OrderBy(x => x.Volume)
+            .ThenBy(x => x.Chapter)
+            .Select(x => x.Url)
             .ToImmutableList();
     }
 
@@ -204,123 +184,63 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         return true;
     }
 
-    protected virtual async Task<IBrowser> GetBrowser(CancellationToken cancellationToken)
+    private ImmutableList<string> ParseChapterImagesFromScript(string html)
     {
-        var browserFetcher = new BrowserFetcher();
+        if (string.IsNullOrWhiteSpace(html))
+            return ImmutableList<string>.Empty;
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        var match = Regex.Match(html, @"rm_h\.readerInit\s*\(\s*\d+\s*,\s*(\[\[.*?\]\])", RegexOptions.Singleline);
+
+        if (!match.Success)
+            match = Regex.Match(html, @"(\[\[\s*['""]https?://.*?['""]\s*,.*?\.(?:jpg|jpeg|png|webp).*?\]\])",
+                RegexOptions.Singleline);
+
+        if (!match.Success)
+            return ImmutableList<string>.Empty;
+
+        var jsonArray = match.Groups[1].Value.Replace('\'', '"');
+
+        try
         {
-            logger.LogTrace("Detected Windows");
-            browserFetcher.Browser = SupportedBrowser.Chrome;
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            logger.LogTrace("Detected Linux");
-            browserFetcher.Browser = SupportedBrowser.Chromium;
-        }
+            using var doc = JsonDocument.Parse(jsonArray);
+            var urls = ImmutableList.CreateBuilder<string>();
 
-        logger.LogTrace("Detected installed browsers: {join}",
-            string.Join(", ", browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
-
-        //UninstallBrowsers();
-
-        if (!browserFetcher.GetInstalledBrowsers().Any())
-        {
-            logger.LogTrace("Download Browser");
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                await browserFetcher.DownloadAsync(BrowserTag.Stable);
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                await browserFetcher.DownloadAsync(BrowserTag.Latest);
-
-            logger.LogTrace("Detected installed browsers: {join}",
-                string.Join(", ", browserFetcher.GetInstalledBrowsers().Select(f => f.GetExecutablePath())));
-        }
-
-        var browserTask = Puppeteer.LaunchAsync(new LaunchOptions
-        {
-            Headless = true,
-            Args =
-            [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--lang=en-US",
-                "--disable-image-loading",
-                "--disable-notifications",
-                "--use-gl=swiftshader",
-                "--enable-low-end-device-mode",
-                "--enable-features=InfiniteTabsFreezing",
-                "--disable-dev-shm-usage", // Overcome /dev/shm space limitations (critical for Docker/low RAM)
-                "--disable-background-networking", // Disable background services
-                "--disable-default-apps",
-                "--disable-extensions",
-                "--disable-sync",
-                "--disable-translate",
-                "--hide-scrollbars",
-                "--metrics-recording-only",
-                "--mute-audio",
-                "--no-first-run",
-                "--safebrowsing-disable-auto-update",
-                "--memory-pressure-off", // Tells Chrome to ignore memory pressure signals
-                "--no-zygote",
-                "--disable-background-timer-throttling",
-                "--disable-backgrounding-occluded-windows",
-                "--disable-software-rasterizer"
-            ],
-            ExecutablePath =
-                browserFetcher.GetExecutablePath(browserFetcher.GetInstalledBrowsers().First().BuildId)
-        });
-
-        var browser = await browserTask.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken);
-
-        return browser;
-    }
-
-    protected virtual void UninstallBrowsers()
-    {
-        foreach (var el in _browserFetcher.GetInstalledBrowsers())
-            _browserFetcher.CustomUninstall(el.Browser, el.Platform, el.BuildId, logger);
-    }
-
-    protected virtual async Task<IPage> GetNewPage(IBrowser browser)
-    {
-        var res = await browser.NewPageAsync();
-        await res.SetRequestInterceptionAsync(true);
-
-        res.Request += async (_, e) =>
-        {
-            var resourceType = e.Request.ResourceType;
-
-            if (new[]
+            foreach (var item in doc.RootElement.EnumerateArray())
+                if (item.GetArrayLength() >= 3)
                 {
-                    ResourceType.Image,
-                    ResourceType.ImageSet,
-                    ResourceType.Img,
-                    ResourceType.StyleSheet,
-                    ResourceType.Font,
-                    ResourceType.Media,
-                    ResourceType.WebSocket
-                }.Contains(resourceType))
-                await e.Request.AbortAsync();
-            else
-                await e.Request.ContinueAsync();
-        };
+                    var server = item[0].GetString() ?? "";
+                    var prefix = item[1].GetString() ?? "";
+                    var path = item[2].GetString() ?? "";
 
-        await res.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+                    var rawUrl = $"{server}{prefix}{path}";
+
+                    if (Uri.TryCreate(rawUrl, UriKind.Absolute, out var validUri))
+                    {
+                        var cleanUrl = validUri.GetLeftPart(UriPartial.Path);
+                        urls.Add(cleanUrl);
+                    }
+                }
+
+            return urls
+                .OrderBy(ExtractPageNumber)
+                .ThenBy(url => url)
+                .ToImmutableList();
+        }
+        catch
         {
-            { "Accept-Language", "ru-RU,ru;q=0.9" },
-            { "Referer", "https://readmanga.ru/" }
-        });
-
-        return res;
+            return ImmutableList<string>.Empty;
+        }
     }
 
-    protected virtual async Task CloseBrowser(IBrowser browser)
+    private static int ExtractPageNumber(string url)
     {
-        await browser.CloseAsync();
-        await browser.DisposeAsync();
-        BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
+        var fileName = Path.GetFileNameWithoutExtension(url);
+
+        var numberMatch = Regex.Match(fileName, @"\d+");
+
+        return numberMatch.Success && int.TryParse(numberMatch.Value, out var pageNumber)
+            ? pageNumber
+            : int.MaxValue;
     }
 
     protected virtual async Task<Result<(bool isSkipped, File? file)>> ParseAndSaveFile(
@@ -342,24 +262,11 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         var fileName =
             $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
 
-        var browser = await GetBrowser(cancellationToken);
-
-        var page = await GetNewPage(browser);
-
-        await page.GoToAsync(link,
-            new NavigationOptions { WaitUntil = [WaitUntilNavigation.DOMContentLoaded], Timeout = 30000 });
-
-        logger.LogTrace("Waiting for page load with images");
-        await page.WaitForSelectorAsync("#fotocontext", new WaitForSelectorOptions { Timeout = 30000 });
-
-        var html = await page.GetContentAsync();
-
-        await CloseBrowser(browser);
+        var html = await readMangaClubClient.GetChapterHtmlAsync(link, cancellationToken);
 
         var htmlDocument = await new HtmlParser().ParseDocumentAsync(html, cancellationToken);
 
-        var images = htmlDocument.QuerySelectorAll("#fotocontext > .manga-img-placeholder > img")
-            .ToImmutableList();
+        var images = ParseChapterImagesFromScript(html);
 
         var currentPartName = MyRegex().Replace(
             htmlDocument.QuerySelector(".text-cut")?.TextContent.Split(" – ").Last().Trim() ??
@@ -371,21 +278,15 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         using var coverMemoryStream = new MemoryStream();
 
-        using var httpClient = httpClientFactory.CreateClient("parser-http-client");
-
         var coverFileName = lastFile?.CoverName;
 
         using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
             var imagesBytes = new List<byte[]>();
 
-            foreach (var img in images.OrderBy(f => int.Parse(f.GetAttribute("data-page"))))
+            foreach (var img in images)
             {
-                var src = img.GetAttribute("data-original");
-                if (src.IsNullOrEmptyOrWhitespace())
-                    src = img.GetAttribute("src")!;
-
-                var imageBytes = await httpClient.GetByteArrayAsync(src, cancellationToken);
+                var imageBytes = await readMangaClubClient.GetImageByteArrayAsync(img, cancellationToken);
 
                 imagesBytes.Add(imageBytes);
             }
@@ -474,7 +375,6 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             return Result.Fail(
                 $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
 
-        BrowserProcessKiller.PrepareCleanBrowserEnvironment(logger);
         SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
         GC.Collect();
         GC.WaitForPendingFinalizers();
