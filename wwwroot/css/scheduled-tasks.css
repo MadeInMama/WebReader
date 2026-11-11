@@ -114,12 +114,8 @@ th > h3 {
     text-wrap-mode: nowrap;
 }
 
-th.table-task-type-number {
-    width: 3em;
-}
-
 th.table-task-type-name {
-    width: 25em;
+    width: 26em;
 }
 
 th.table-task-status {
@@ -127,11 +123,11 @@ th.table-task-status {
 }
 
 th.table-task-progress {
-    width: 5.5em;
+    width: 3.5em;
 }
 
 th.table-task-have-to-start-at {
-    width: 7em;
+    width: 6em;
 }
 
 td.table-task-progress > div {
@@ -160,7 +156,7 @@ td.table-task-progress > div > .progress-bar-inner-text {
 }
 
 td.table-task-type-name > div,
-td.table-task-result > div {
+td.table-task-result > pre {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -197,20 +193,6 @@ pre {
 
 .task-details-prop-value:not(:last-child) {
     padding-bottom: 0.5em;
-}
-
-@media (width < 1000px) {
-    th.table-task-result,
-    td.table-task-result {
-        display: none;
-    }
-}
-
-@media (width < 915px) {
-    th.table-task-type-number,
-    td.table-task-type-number {
-        display: none;
-    }
 }
 
 @media (width < 855px) {
@@ -275,10 +257,14 @@ pre {
     .task-details-prop-value {
         grid-column: 2;
     }
+
+    th.table-task-result,
+    td.table-task-result {
+        display: none;
+    }
 }
 
-
-@media (width < 600px) {
+@media (width < 500px) {
     th.table-task-type-name {
         width: 6em;
     }

@@ -84,11 +84,15 @@ details > div {
     padding: 0.5em;
     text-align: center;
     line-height: 2em;
-    background: linear-gradient(to bottom, var(--background-color) 0%, rgba(0, 0, 0, 0) 50%, var(--background-color) 100%);
+    background: var(--background-color-with-transparency);
 
     text-decoration: none;
 
     z-index: 1;
+}
+
+.item-line:hover > a, .item-line:hover > .additional-info {
+    opacity: 0;
 }
 
 .item-line > a > span:first-child {
@@ -133,22 +137,7 @@ details > div {
     font-size: 1.25em;
 }
 
-@media (width < 1000px) {
-}
-
-@media (width < 800px) {
-}
-
-@media (width < 700px) {
-}
-
-@media (width < 612px) {
-    details > div {
-        font-size: 0.9em;
-    }
-}
-
-@media (width < 553px) {
+@media (width < 530px) {
     details > div {
         grid-template-columns: 1fr 1fr;
     }
@@ -156,7 +145,6 @@ details > div {
 
 @media (width < 406px) {
     details > div {
-        font-size: 0.8em;
     }
 }
 

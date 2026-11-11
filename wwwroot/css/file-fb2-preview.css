@@ -230,9 +230,3 @@ h2 > p > .tts-btn::after {
     bottom: -0.6em;
     left: 0;
 }
-
-@media (width < 1000px) and (width > 800px) {
-    .fb2-canvas-container {
-        max-width: calc(var(--max-width) - 6em);
-    }
-}

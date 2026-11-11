@@ -1,14 +1,15 @@
-﻿@using WebReader.Models
+﻿@using System.Text.Encodings.Web
+@using System.Text.RegularExpressions
+@using WebReader.Models
 @using TaskStatus = WebReader.Models.TaskStatus
 @model WebReader.Models.Dtos.AllScheduledTasksViewModel
 
 <table>
     <thead>
     <tr>
-        <th class="table-task-type-number"><h3>#</h3></th>
         <th class="table-task-type-name"><h3>Type</h3></th>
         <th class="table-task-status"><h3>Status</h3></th>
-        <th class="table-task-progress"><h3>Progress</h3></th>
+        <th class="table-task-progress"><h3>%</h3></th>
         <th class="table-task-result"><h3>Result</h3></th>
         <th class="table-task-have-to-start-at"><h3>Start At</h3></th>
     </tr>
@@ -16,7 +17,11 @@
     <tbody>
     @foreach (var item in Model.Items)
     {
-        var options = new JsonSerializerOptions { WriteIndented = true };
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
         var settings = JsonSerializer.Serialize(item.Settings, options);
 
         var result = "Empty result";
@@ -41,11 +46,13 @@
             }
         }
 
+        result = result.Trim('\"');
+
         var modalContent = $@"
         <div class='task-details'>
             <span class='task-details-header'>Details:</span>
             <span class='task-details-prop-name'>Id:</span>
-            <span class='task-details-prop-value'> {item.Id}</span>
+            <span class='task-details-prop-value'>{item.Id}</span>
 
             <span class='task-details-prop-name'>Created:</span>
             <span class='task-details-prop-value to-local-date-time' utc='{item.CreatedDate:O}'></span>
@@ -57,31 +64,32 @@
             <span class='task-details-prop-value to-local-date-time' utc='{item.UpdatedDate:O}'></span>
 
             <span class='task-details-prop-name'>Type:</span>
-            <span class='task-details-prop-value'> {item.Type}</span>
+            <span class='task-details-prop-value'>{item.Type}</span>
 
             <span class='task-details-prop-name'>Cron:</span>
-            <span class='task-details-prop-value'> {item.Cron}</span>
+            <span class='task-details-prop-value'>{item.Cron}</span>
 
             <span class='task-details-prop-name'>Status:</span>
-            <span class='task-details-prop-value'> {item.Status}</span>
+            <span class='task-details-prop-value'>{item.Status}</span>
 
             <span class='task-details-prop-name'>Priority:</span>
-            <span class='task-details-prop-value'> {item.Priority}</span>
+            <span class='task-details-prop-value'>{item.Priority}</span>
 
             <span class='task-details-prop-name'>Progress:</span>
-            <span class='task-details-prop-value'> {(int)(item.Progress * 100)}%</span>
+            <span class='task-details-prop-value'>{(int)(item.Progress * 100)}%</span>
 
             <span class='task-details-prop-name'>Settings:</span>
-            <span class='task-details-prop-value'> <pre>{settings}</pre></span>
+            <span class='task-details-prop-value'><pre>{settings}</pre></span>
 
             <span class='task-details-prop-name'>Result:</span>
-            <span class='task-details-prop-value'> <pre>{result}</pre></span>
+            <span class='task-details-prop-value'><pre>{result}</pre></span>
         </div>";
 
         <tr onclick="openModalClicked(`@modalContent`)">
-            <td class="table-task-type-number">@($"{(int)item.Type}")</td>
             <td class="table-task-type-name">
-                <div>@item.Type</div>
+                <div>
+                    @item.Type@($"({(int)item.Type})")
+                </div>
             </td>
             <td class="table-task-status">@item.Status</td>
             <td class="table-task-progress">
@@ -93,7 +101,7 @@
                 </div>
             </td>
             <td class="table-task-result">
-                <div>@result</div>
+                <pre>@(Regex.Replace(result.Replace("\n", ""), @"\s+", " "))</pre>
             </td>
             <td utc="@item.HaveToStartAt.ToString("O")"
                 class="table-task-have-to-start-at to-local-date-time"></td>

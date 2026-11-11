@@ -245,7 +245,7 @@ footer {
     }
 }
 
-@media (width < 800px) {
+@media (width < 840px) {
     :root {
         --max-width: 100%;
     }
