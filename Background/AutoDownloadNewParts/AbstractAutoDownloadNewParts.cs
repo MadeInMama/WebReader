@@ -253,11 +253,11 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
         {
-            logger.LogTrace("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
+            logger.LogInformation("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
             return Result.Ok((true, lastFile));
         }
 
-        logger.LogTrace("Go to {link}", link);
+        logger.LogInformation("Go to {link}", link);
 
         var fileName =
             $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
@@ -291,7 +291,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 imagesBytes.Add(imageBytes);
             }
 
-            var splitImages = ImageSplitter.Split(ImageMerger.Merge(imagesBytes));
+            var splitImages = ImageSplitter.Split(ImageMerger.Merge(imagesBytes, logger), logger);
 
             foreach (var el in splitImages.Index())
             {

@@ -6,7 +6,7 @@ namespace WebReader.Helpers;
 
 public static class ImageMerger
 {
-    public static Image<Rgb24> Merge(List<byte[]> imagesBytes)
+    public static Image<Rgb24> Merge<T>(List<byte[]> imagesBytes, ILogger<T> logger)
     {
         if (imagesBytes.Count == 0)
             return new Image<Rgb24>(1, 1, Color.White);
@@ -27,7 +27,7 @@ public static class ImageMerger
         // 2. Загружаем, отрисовываем и сразу освобождаем память (using) по одной картинке
         for (var i = 0; i < imagesBytes.Count; i++)
         {
-            Console.WriteLine($"Merge {i + 1}/{imagesBytes.Count}");
+            logger.LogInformation("Merge {i}/{imagesBytesCount}", i + 1, imagesBytes.Count);
 
             using var img = Image.Load<Rgb24>(imagesBytes[i]);
 

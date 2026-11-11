@@ -5,7 +5,8 @@ namespace WebReader.Helpers;
 
 public static class ImageSplitter
 {
-    public static List<byte[]> Split(Image<Rgb24> image, int minContentHeight = 100, int minEmptyGap = 25)
+    public static List<byte[]> Split<T>(Image<Rgb24> image, ILogger<T> logger, int minContentHeight = 100,
+        int minEmptyGap = 25)
     {
         ArgumentNullException.ThrowIfNull(image);
 
@@ -22,7 +23,7 @@ public static class ImageSplitter
 
             if (currEndY > y && !ImageEmptyChecker.IsEmpty(image, 0, y, image.Width, currEndY))
             {
-                Console.WriteLine($"Split {y}..{currEndY} / {image.Height}");
+                logger.LogInformation("Split {y}..{currEndY} / {height}", y, currEndY, image.Height);
 
                 // Передаем согласованные границы (min включительно, max не включительно)
                 result.Add(ImageTrimmer.Trim(image, 0, y, image.Width, currEndY, 5));
