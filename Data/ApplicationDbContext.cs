@@ -147,7 +147,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsOmniscientReader,
                     DefaultPriority = sbyte.MinValue + 12,
-                    Cron = TaskCron.EveryDay,
+                    Cron = TaskCron.EveryHour,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
@@ -158,7 +158,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsSoloLeveling,
                     DefaultPriority = sbyte.MinValue + 10,
-                    Cron = TaskCron.EveryDay,
+                    Cron = TaskCron.EveryHour,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
@@ -169,7 +169,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
                     DefaultPriority = sbyte.MinValue + 8,
-                    Cron = TaskCron.EveryDay,
+                    Cron = TaskCron.EveryHour,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });

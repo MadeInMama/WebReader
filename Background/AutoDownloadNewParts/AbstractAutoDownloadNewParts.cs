@@ -56,7 +56,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             var links = await GetAllFilesLinks(html, ".chapters > table .item-title > a", cancellationToken);
 
-            logger.LogTrace("Found {links} links", links.Count);
+            logger.LogTrace("Found '{links}' links", links.Count);
 
             var defaultBucket = await GetDefaultBucket(context, cancellationToken);
 
@@ -68,7 +68,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
                 if (res.IsFailed)
                 {
-                    logger.LogTrace("{msg}", res.ToString());
+                    logger.LogTrace("'{msg}'", res.ToString());
 
                     result = Result.Fail(string.Join(", ", res.Reasons.Select(f => f.Message)));
 
@@ -169,14 +169,14 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     {
         if (maxSize >= currentSize)
         {
-            logger.LogTrace("Current '{fileCustomName}' size {currentSize} of {maxSize}",
+            logger.LogTrace("Current '{fileCustomName}' size '{currentSize}' of '{maxSize}'",
                 fileCustomName,
                 GlobalFunctions.FormatSize(currentSize),
                 GlobalFunctions.FormatSize(maxSize));
             return false;
         }
 
-        logger.LogTrace("Max size {maxSize} of '{fileCustomName}' has been reached {currentSize}",
+        logger.LogTrace("Max size '{maxSize}' of '{fileCustomName}' has been reached '{currentSize}'",
             GlobalFunctions.FormatSize(maxSize),
             fileCustomName,
             GlobalFunctions.FormatSize(currentSize));
@@ -253,11 +253,11 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
         {
-            logger.LogInformation("Skipping {fileCustomName} {dataNum}", FileCustomName, dataNum);
+            logger.LogInformation("Skipping '{fileCustomName}' '{dataNum}'", FileCustomName, dataNum);
             return Result.Ok((true, lastFile));
         }
 
-        logger.LogInformation("Go to {link}", link);
+        logger.LogInformation("Go to '{link}'", link);
 
         var fileName =
             $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
@@ -272,7 +272,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             htmlDocument.QuerySelector(".text-cut")?.TextContent.Split(" – ").Last().Trim() ??
             dataNum.ToString(), "");
 
-        logger.LogTrace("Found {images} links", images.Count);
+        logger.LogTrace("Found '{images}' links", images.Count);
 
         using var memoryStream = new MemoryStream();
 
@@ -326,7 +326,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         await coverMemoryStream.FlushAsync(cancellationToken);
         coverMemoryStream.Position = 0;
 
-        logger.LogTrace("Save to db {name}", fileName);
+        logger.LogTrace("Save to db '{name}'", fileName);
 
         var fileUploadResult = await fileUploadService.UploadFileAsync(
             lastFile?.Id,
