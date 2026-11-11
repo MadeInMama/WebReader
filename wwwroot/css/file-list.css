@@ -53,7 +53,7 @@ details > div {
 .item-line {
     display: grid;
     grid-template-columns: 100%;
-    grid-template-rows: auto 3em;
+    grid-template-rows: auto 4em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
     border-radius: 0.75em;
     overflow: hidden;
@@ -88,18 +88,30 @@ details > div {
 
     text-decoration: none;
 
+    transition: background var(--animation-time) ease-in-out;
+
     z-index: 1;
 }
 
-.item-line:hover > a, .item-line:hover > .additional-info {
-    opacity: 0;
+.item-line > a > span {
+    transition: color var(--animation-time) ease-in-out;
+}
+
+.item-line:hover > a > span {
+    color: #00000000;
+}
+
+.item-line:hover > a {
+    background: none;
+}
+
+.item-line:hover > .additional-info,
+.item-line:hover > .event-output {
+    background-color: var(--background-color-with-transparency);
 }
 
 .item-line > a > span:first-child {
     font-weight: 700;
-}
-
-.item-line > .btn-download-file {
 }
 
 .in-progress-empty {
@@ -119,7 +131,8 @@ details > div {
     display: flex;
     justify-content: space-between;
     z-index: 1;
-    padding: 0 1em 1em 1em;
+    padding: 1em;
+    transition: background-color var(--animation-time) ease-in-out;
 }
 
 .event-output > *:only-child,
@@ -129,7 +142,6 @@ details > div {
 
 .event-output {
     opacity: 1;
-    transition: none;
 }
 
 .text-info {

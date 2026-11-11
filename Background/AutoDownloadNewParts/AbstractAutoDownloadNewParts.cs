@@ -56,6 +56,10 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             var links = await GetAllFilesLinks(html, ".chapters > table .item-title > a", cancellationToken);
 
+            var coverLinks = await GetAllCoversLinks(html,
+                ".cr-hero > .cr-hero-container > .cr-hero-poster-wrapper> .main-carousel > .main-carousel__content .cr-hero-poster__img",
+                cancellationToken);
+
             logger.LogTrace("Found '{links}' links", links.Count);
 
             var defaultBucket = await GetDefaultBucket(context, cancellationToken);
@@ -64,7 +68,8 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
             foreach (var link in links.Index())
             {
-                var res = await ParseAndSaveFile(link.Item, defaultBucket, lastFile, cancellationToken);
+                var res = await ParseAndSaveFile(link.Item, defaultBucket, lastFile, coverLinks.PickRandom(),
+                    cancellationToken);
 
                 if (res.IsFailed)
                 {
@@ -104,12 +109,12 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     {
         return (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
             .QuerySelectorAll(selector)
-            .Select(el => el.GetAttribute("href"))
-            .Where(href => !string.IsNullOrWhiteSpace(href))
+            .Select(f => f.GetAttribute("href"))
+            .Where(f => !string.IsNullOrWhiteSpace(f))
             .Distinct()
-            .Select(href =>
+            .Select(f =>
             {
-                var fullUri = new Uri(new Uri(Url), href!);
+                var fullUri = new Uri(new Uri(Url), f!);
                 var segments = fullUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
                 var hasChapter = int.TryParse(segments.LastOrDefault(), out var chapterNum);
@@ -122,10 +127,21 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                     Url = fullUri.ToString(), HasChapter = hasChapter, Volume = volumeNum, Chapter = chapterNum
                 };
             })
-            .Where(x => x.HasChapter)
-            .OrderBy(x => x.Volume)
-            .ThenBy(x => x.Chapter)
-            .Select(x => x.Url)
+            .Where(f => f.HasChapter)
+            .OrderBy(f => f.Volume)
+            .ThenBy(f => f.Chapter)
+            .Select(f => f.Url)
+            .ToImmutableList();
+    }
+
+    protected virtual async Task<ImmutableList<string>> GetAllCoversLinks(string html,
+        string selector, CancellationToken cancellationToken)
+    {
+        return (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
+            .QuerySelectorAll(selector)
+            .Select(f => f.GetAttribute("src") ?? f.GetAttribute("data-src")!)
+            .Where(f => !string.IsNullOrWhiteSpace(f))
+            .Distinct()
             .ToImmutableList();
     }
 
@@ -243,10 +259,10 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             : int.MaxValue;
     }
 
-    protected virtual async Task<Result<(bool isSkipped, File? file)>> ParseAndSaveFile(
-        string link,
+    protected virtual async Task<Result<(bool isSkipped, File? file)>> ParseAndSaveFile(string link,
         Bucket defaultBucket,
         File? lastFile,
+        string? coverLink,
         CancellationToken cancellationToken)
     {
         var dataNum = link.Split("/").Last() == "0" ? 0 : int.Parse(link.Split("/").Last());
@@ -269,8 +285,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         var images = ParseChapterImagesFromScript(html);
 
         var currentPartName = MyRegex().Replace(
-            htmlDocument.QuerySelector(".text-cut")?.TextContent.Split(" – ").Last().Trim() ??
-            dataNum.ToString(), "");
+            htmlDocument.QuerySelector(".text-cut")?.TextContent.Trim() ?? dataNum.ToString(), "");
 
         logger.LogTrace("Found '{images}' links", images.Count);
 
@@ -278,7 +293,11 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
 
         using var coverMemoryStream = new MemoryStream();
 
-        var coverFileName = lastFile?.CoverName;
+        var coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
+
+        if (coverLink != null)
+            await coverMemoryStream.WriteAsync(
+                await readMangaClubClient.GetImageByteArrayAsync(coverLink, cancellationToken), cancellationToken);
 
         using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
@@ -304,13 +323,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 entryStream.Close();
             }
 
-            var cover = splitImages.First();
-
-            if (cover is { Length: > 0 })
-            {
-                await coverMemoryStream.WriteAsync(cover, cancellationToken);
-                coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-            }
+            if (coverLink == null) await coverMemoryStream.WriteAsync(splitImages.First(), cancellationToken);
 
             imagesBytes.Clear();
             imagesBytes.TrimExcess();
