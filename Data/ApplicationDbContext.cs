@@ -88,7 +88,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.RemoveBucketsThatNotExistsInDb,
                     DefaultPriority = sbyte.MinValue + 24,
                     Cron = TaskCron.EveryHour,
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -98,7 +98,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.MakeUnavailableBucketsThatNotExistsInS3,
                     DefaultPriority = sbyte.MinValue + 22,
                     Cron = TaskCron.EveryHour,
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -128,7 +128,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.UpdateBucketData,
                     DefaultPriority = sbyte.MinValue + 16,
                     Cron = TaskCron.EveryHour,
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -138,7 +138,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.UpdateFilesData,
                     DefaultPriority = sbyte.MinValue + 14,
                     Cron = TaskCron.EveryHour,
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -182,7 +182,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     DefaultPriority = sbyte.MinValue + 6,
                     Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 72}"),
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -193,7 +193,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     DefaultPriority = sbyte.MinValue + 4,
                     Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 720}"),
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -204,7 +204,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     DefaultPriority = sbyte.MinValue + 2,
                     Cron = TaskCron.EveryDay,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 24}"),
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -215,7 +215,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     DefaultPriority = sbyte.MinValue,
                     Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 4320}"),
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -226,7 +226,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     DefaultPriority = sbyte.MinValue,
                     Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 4320}"),
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -236,7 +236,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.CalcAllBooksSizes,
                     DefaultPriority = sbyte.MinValue,
                     Cron = TaskCron.Manually,
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -246,7 +246,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.ClearUserTgLinks,
                     DefaultPriority = sbyte.MinValue + 26,
                     Cron = TaskCron.EveryHour,
-                    IsActive = false
+                    IsActive = true
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
@@ -256,7 +256,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.SendNotifications,
                     DefaultPriority = sbyte.MinValue + 28,
                     Cron = TaskCron.Every15Mins,
-                    IsActive = false
+                    IsActive = true
                 });
 
             context.SaveChanges();
