@@ -85,12 +85,23 @@ public class ScheduledTaskRepository(ApplicationDbContext context) : IRepository
         return context.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<ScheduledTask?> GetNextTaskAsync(CancellationToken cancellationToken)
+    public async Task<ScheduledTask?> GetNextTaskAsync(CancellationToken cancellationToken)
     {
-        return context.ScheduledTasks
-            .Where(f => f.Status == TaskStatus.Pending &&
+        var lastInProgressTask = await context.ScheduledTasks
+            .Where(f => f.Status == TaskStatus.InProgress &&
                         (f.ScheduledTaskConfigId == null || f.ScheduledTaskConfig!.IsActive) &&
-                        f.HaveToStartAt < DateTimeOffset.UtcNow) //TODO: delete not active pending tasks
+                        f.HaveToStartAt < DateTimeOffset.UtcNow)
+            .OrderByDescending(f => f.Priority)
+            .ThenBy(f => f.HaveToStartAt)
+            .ThenBy(f => f.Type)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return await context.ScheduledTasks
+            .Where(f => f.Status == TaskStatus.Pending &&
+                        (lastInProgressTask == null || f.Type != lastInProgressTask.Type) &&
+                        (f.ScheduledTaskConfigId == null || f.ScheduledTaskConfig!.IsActive) &&
+                        f.HaveToStartAt < DateTimeOffset.UtcNow)
             .OrderByDescending(f => f.Priority)
             .ThenBy(f => f.HaveToStartAt)
             .ThenBy(f => f.Type)

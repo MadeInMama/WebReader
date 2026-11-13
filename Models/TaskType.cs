@@ -11,6 +11,8 @@ public enum TaskType
 
     AutoDownloadNewPartsOmniscientReader,
     AutoDownloadNewPartsSoloLeveling,
+    AutoDownloadNewPartsSoloLevelingHunterOrigin,
+    AutoDownloadNewPartsSoloLevelingRagnarok,
     AutoDownloadNewPartsWorldAfterDestruction,
 
     DeleteOldCompletedTasks,

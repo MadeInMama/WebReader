@@ -81,6 +81,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.SaveChanges();
             }
 
+            context.Set<ScheduledTask>().ExecuteDelete();
+            context.Set<ScheduledTaskConfig>().ExecuteDelete();
+
             if (!context.Set<ScheduledTaskConfig>()
                     .Any(f => f.Type == TaskType.RemoveBucketsThatNotExistsInDb))
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
@@ -146,8 +149,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.AutoDownloadNewPartsOmniscientReader,
-                    DefaultPriority = sbyte.MinValue + 12,
-                    Cron = TaskCron.EveryHour,
+                    DefaultPriority = sbyte.MinValue + 10,
+                    Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
@@ -158,7 +161,29 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 {
                     Type = TaskType.AutoDownloadNewPartsSoloLeveling,
                     DefaultPriority = sbyte.MinValue + 10,
-                    Cron = TaskCron.EveryHour,
+                    Cron = TaskCron.EveryWeek,
+                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
+                    IsActive = true
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.AutoDownloadNewPartsSoloLevelingHunterOrigin))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.AutoDownloadNewPartsSoloLevelingHunterOrigin,
+                    DefaultPriority = sbyte.MinValue + 10,
+                    Cron = TaskCron.EveryWeek,
+                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
+                    IsActive = true
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.AutoDownloadNewPartsSoloLevelingRagnarok))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.AutoDownloadNewPartsSoloLevelingRagnarok,
+                    DefaultPriority = sbyte.MinValue + 10,
+                    Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });
@@ -168,8 +193,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {
                     Type = TaskType.AutoDownloadNewPartsWorldAfterDestruction,
-                    DefaultPriority = sbyte.MinValue + 8,
-                    Cron = TaskCron.EveryHour,
+                    DefaultPriority = sbyte.MinValue + 10,
+                    Cron = TaskCron.EveryWeek,
                     DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
                     IsActive = true
                 });

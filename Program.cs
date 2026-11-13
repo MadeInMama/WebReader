@@ -145,6 +145,10 @@ builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsOmnisc
     TaskType.AutoDownloadNewPartsOmniscientReader);
 builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsSoloLeveling>(
     TaskType.AutoDownloadNewPartsSoloLeveling);
+builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsSoloLevelingHunterOrigin>(
+    TaskType.AutoDownloadNewPartsSoloLevelingHunterOrigin);
+builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsSoloLevelingRagnarok>(
+    TaskType.AutoDownloadNewPartsSoloLevelingRagnarok);
 builder.Services.AddKeyedTransient<IBackgroundTasked, AutoDownloadNewPartsWorldAfterDestruction>(
     TaskType.AutoDownloadNewPartsWorldAfterDestruction);
 
