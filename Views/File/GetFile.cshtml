@@ -171,7 +171,6 @@ else
         default:
             throw new ArgumentOutOfRangeException();
     }
-    <script nonce="@nonce" src="~/js/settings.js" asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/nav-btns-pass-scroll-to-main.js" asp-append-version="true"></script>
 
     <script nonce="@nonce">
@@ -198,10 +197,6 @@ else
                                _ => throw new ArgumentOutOfRangeException()
                            });
         let maxPage = 1;
-
-        setSettings(
-            document.querySelector(".settings-container"),
-            JSON.parse('@Html.Raw(Model.Settings.RootElement)'));
     </script>
 
     @switch (Model.Type)

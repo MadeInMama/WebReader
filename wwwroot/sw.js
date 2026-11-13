@@ -62,7 +62,6 @@ const CORE_ASSETS = [
     '/js/modal-info-with-custom-html.js',
     '/js/move-to-link-nav.js',
     '/js/nav-btns-pass-scroll-to-main.js',
-    '/js/settings.js',
     '/js/site.js',
     '/js/to-local-date-time.js',
     '/js/window-height-setter.js',

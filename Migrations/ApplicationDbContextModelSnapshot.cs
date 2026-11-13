@@ -152,10 +152,6 @@ namespace WebReader.Migrations
                     b.Property<Guid?>("NextPartId")
                         .HasColumnType("uuid");
 
-                    b.Property<JsonDocument>("Settings")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<decimal?>("Size")
                         .HasColumnType("numeric(20,0)");
 

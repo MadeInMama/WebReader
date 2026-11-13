@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
 
 namespace WebReader.Models.Entities;
 
@@ -18,6 +17,5 @@ public class File : BaseEntity
     public File? NextPart { get; set; }
     [MaxLength(256)] public string? CurrentPartName { get; set; }
     public uint? CurrentPartNumber { get; set; }
-    public JsonDocument Settings { get; set; } = JsonDocument.Parse("{}");
     [MaxLength(256)] public string? CoverName { get; set; }
 }

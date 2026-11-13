@@ -402,7 +402,6 @@ public class FileControllerService(
                     f.BucketId == bucketId &&
                     f.NextPartId == file.Id &&
                     f.AccessRoles.Intersect(roles).Any(), null, cancellationToken, true))?.Id,
-                Settings = file.Settings,
                 Type = file.Type
             };
         }
