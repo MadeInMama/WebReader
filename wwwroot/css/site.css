@@ -111,7 +111,7 @@ html, body {
 
 body {
     display: grid;
-    grid-template-rows: env(safe-area-inset-top) auto 1fr auto 2px env(safe-area-inset-bottom);
+    grid-template-rows: env(safe-area-inset-top) auto 1fr auto 3px env(safe-area-inset-bottom);
     grid-template-columns: auto var(--max-width) auto;
     justify-items: stretch;
     align-items: stretch;
@@ -125,7 +125,7 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 99999;
-    background: rgba(0, 0, 0, 0.001);
+    background: rgba(0, 0, 0, 0.01);
     transform: translateZ(0);
 }
 
