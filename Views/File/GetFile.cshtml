@@ -112,6 +112,10 @@ else
         {
             { "with-wrapper", true }
         })
+        @if (FileType.Fb2 == Model.Type)
+        {
+            @await Html.PartialAsync("_AudioController")
+        }
         @await Html.PartialAsync("_PreviewPageControl", Model, new ViewDataDictionary(ViewData)
         {
             { "with-wrapper", true },
@@ -124,10 +128,6 @@ else
             { "render-css-and-js", false }
         })
     </div>
-    @if (FileType.Fb2 == Model.Type)
-    {
-        @await Html.PartialAsync("_AudioController")
-    }
 </div>
 
 @section Footer

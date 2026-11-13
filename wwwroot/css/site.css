@@ -125,7 +125,7 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 99999;
-    background: rgba(0, 0, 0, 0.01);
+    background: rgba(0, 0, 0, 0.001);
     transform: translateZ(0);
 }
 

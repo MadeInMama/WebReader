@@ -103,6 +103,16 @@ footer > .controls-end {
     justify-content: flex-end;
 }
 
+.tools-container.fullscreen-on > .tools-container-horizontal > .audio-controller {
+    grid-template-columns: min-content min-content min-content;
+    width: 10.5em;
+    margin: 0 auto 0 0;
+}
+
+.tools-container.fullscreen-on > .tools-container-horizontal > .audio-controller > .audio-progress-bar {
+    display: none !important;
+}
+
 .tools-container > .tools-container-horizontal:not(:has(>:not([disabled]))) {
     display: none;
     transition: display var(--animation-time) allow-discrete,
