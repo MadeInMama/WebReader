@@ -81,8 +81,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 context.SaveChanges();
             }
 
-            context.Set<ScheduledTask>().ExecuteDelete();
-            context.Set<ScheduledTaskConfig>().ExecuteDelete();
+            // context.Set<ScheduledTask>().ExecuteDelete();
+            // context.Set<ScheduledTaskConfig>().ExecuteDelete();
 
             if (!context.Set<ScheduledTaskConfig>()
                     .Any(f => f.Type == TaskType.RemoveBucketsThatNotExistsInDb))
