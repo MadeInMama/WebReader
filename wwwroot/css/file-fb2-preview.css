@@ -15,8 +15,8 @@
 .fb2-image-container > details > img {
     width: 100%;
     object-fit: cover;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0.5em auto;
+    border-radius: 0.5em;
     display: block;
 }
 
