@@ -122,7 +122,8 @@ details > div {
 .upload-btn-container {
     display: flex;
     justify-content: center;
-    margin-top: 1em;
+    width: fit-content;
+    margin: 1em auto;
 }
 
 .event-output, .additional-info {
@@ -149,25 +150,75 @@ details > div {
     font-size: 1.25em;
 }
 
-@media (width < 530px) {
+@media (width < 512px) {
     details > div {
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
     }
-}
 
-@media (width < 406px) {
-    details > div {
-    }
-}
-
-@media (width < 330px) {
-    details > div {
-        font-size: 1em;
-        grid-template-columns: 1fr;
+    .item-line {
+        grid-template-columns: 6em auto 3em;
+        grid-template-rows: 8em;
     }
 
     .item-line > .lazy-image-wrapper,
     .item-line > a {
-        aspect-ratio: 3/4;
+        aspect-ratio: unset;
+        grid-row: 1;
+    }
+
+    .item-line > a {
+        grid-column: 1 / 3;
+        line-height: 1.4em;
+        padding-left: 6.5em;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        height: 100%;
+        background: unset;
+        grid-row: 1;
+    }
+
+    .item-line:hover > a {
+        background: unset;
+    }
+
+    .item-line > a > span {
+        overflow-y: clip;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+    }
+
+    .item-line > a > span:first-child {
+        font-weight: 300;
+    }
+
+    .item-line:hover > a > span {
+        color: unset;
+    }
+
+    .item-line:hover > .additional-info,
+    .item-line > .additional-info,
+    .item-line:hover > .event-output,
+    .item-line > .event-output {
+        background-color: unset;
+    }
+
+    .item-line:hover > .lazy-image-wrapper > .lazy-image {
+        transform: unset;
+    }
+
+    .event-output, .additional-info {
+        flex-direction: column;
+        padding: 0.5em;
+        grid-column: 3;
+        gap: 0.5em;
+        grid-row: 1;
+    }
+
+    .additional-info > .text-info {
+        width: 1.6em;
+        text-align: center;
     }
 }
