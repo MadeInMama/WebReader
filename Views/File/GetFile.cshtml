@@ -142,7 +142,7 @@ else
         @await Html.PartialAsync("_PreviewPageControl", Model, new ViewDataDictionary(ViewData)
         {
             { "with-wrapper", false },
-            { "with-buttons", true },
+            { "with-buttons", false },
             { "small-preview-page", false }
         })
     </div>
@@ -192,8 +192,8 @@ else
         let currentScale = @(Model.Type switch
                            {
                                FileType.Pdf => Model.Scale ?? -1,
-                               FileType.ZipWithImg => Model.Scale ?? 0,
-                               FileType.Fb2 => Model.Scale ?? 100,
+                               FileType.ZipWithImg => Model.Scale ?? -1,
+                               FileType.Fb2 => Model.Scale ?? 125,
                                _ => throw new ArgumentOutOfRangeException()
                            });
         let maxPage = 1;

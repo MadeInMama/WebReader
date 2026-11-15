@@ -15,7 +15,14 @@
     }
     else
     {
-        <select disabled class="preview-page disabled-with-anim click-effect"></select>
+        @if ((bool?)ViewData["with-buttons"] ?? false)
+        {
+            <select disabled class="preview-page disabled-with-anim click-effect"></select>
+        }
+        else
+        {
+            <select disabled class="preview-page disabled-with-anim click-effect" style="grid-column: 2;"></select>
+        }
     }
 
     @if ((bool?)ViewData["with-buttons"] ?? false)

@@ -90,37 +90,50 @@ function renderPage() {
     currentAudioTtsId = null;
     currentAudioUrl = null;
     updateSliderFill(0);
-    document.querySelector('.audio-progress-bar').disabled = true;
-    document.querySelector(".audio-controller > button").disabled = true;
-    document.querySelector(".audio-controller").setAttribute('disabled', '');
 
-    document.querySelector(".audio-controller > button").classList.remove('audio-play-btn');
-    document.querySelector(".audio-controller > button").classList.remove('audio-pause-btn');
-    document.querySelector(".audio-controller > button").classList.add('audio-loading-btn');
-    document.querySelector(".audio-controller > button").classList.remove('audio-error-btn');
+    let audioProgressBar = document.querySelector('.audio-progress-bar');
+    if (audioProgressBar) {
+        audioProgressBar.disabled = true;
+
+        audioProgressBar.oninput = (e) => {
+            if (!currentAudio.duration) {
+                e.preventDefault();
+                return;
+            }
+            currentAudio.currentTime = (e.target.value / 100) * currentAudio.duration;
+            updateSliderFill(e.target.value);
+            document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = e.target.value + '%';
+        };
+    }
+
+    document.querySelector(".audio-controller")?.setAttribute('disabled', '');
+
+    let audioControllerButton = document.querySelector(".audio-controller > button");
+    if (audioControllerButton) {
+        audioControllerButton.disabled = true;
+        audioControllerButton.classList.remove('audio-play-btn');
+        audioControllerButton.classList.remove('audio-pause-btn');
+        audioControllerButton.classList.add('audio-loading-btn');
+        audioControllerButton.classList.remove('audio-error-btn');
+    }
 
     document.querySelector('.fb2-canvas-container').innerHTML = pages[currentPage - 1];
 
-    document.querySelector('.audio-speed-select').onchange = (e) => {
-        if (currentAudio) {
-            currentAudio.playbackRate = parseFloat(e.target.value);
-        }
-    };
-
-    document.querySelector('.audio-progress-bar').oninput = (e) => {
-        if (!currentAudio.duration) {
-            e.preventDefault();
-            return;
-        }
-        currentAudio.currentTime = (e.target.value / 100) * currentAudio.duration;
-        updateSliderFill(e.target.value);
-        document.querySelector(`p[tts-id='${currentAudioTtsId}']`).style.backgroundSize = e.target.value + '%';
-    };
+    let audioSpeedSelect = document.querySelector('.audio-speed-select');
+    if (audioSpeedSelect) {
+        audioSpeedSelect.onchange = (e) => {
+            if (currentAudio) {
+                currentAudio.playbackRate = parseFloat(e.target.value);
+            }
+        };
+    }
 
     Array.from(document.getElementsByClassName("tts-btn")).forEach(f => {
         f.onclick = async (event) => {
             if (isTtsLogicPlay) return;
             isTtsLogicPlay = true;
+
+            //TODO: вынести сюда получение всех элементов для удобного обрачения ?. ниже
 
             try {
                 if (event.target.classList.contains('tts-loading') || event.target.classList.contains('tts-error')) {
@@ -135,7 +148,6 @@ function renderPage() {
                 if (event.target.classList.contains('tts-pause') && currentAudio != null) {
                     cancelAnimationFrame(animationFrameId);
                     currentAudio.pause();
-                    // currentAudio.currentTime = Math.max(0, currentAudio.currentTime - 2);
                     setTtsControlBtnActiveClass(event.target, 'tts-play');
                     document.querySelector('.audio-progress-bar').disabled = false;
                     document.querySelector(".audio-controller > button").disabled = false;

@@ -113,7 +113,8 @@ footer > .controls-end {
     display: none !important;
 }
 
-.tools-container > .tools-container-horizontal:not(:has(>:not([disabled]))) {
+.tools-container > .tools-container-horizontal:not(:has(>div:not([disabled]))),
+.tools-container > .tools-container-horizontal:not(:has(>button:not([disabled]))) {
     display: none;
     transition: display var(--animation-time) allow-discrete,
     opacity var(--animation-time) ease-in-out;
@@ -198,11 +199,31 @@ footer > .controls-end {
 @media (width < 800px) {
     .big-page-nav > .prev-page-controller,
     .big-page-nav > .next-page-controller {
-        width: 50vw;
+        left: env(safe-area-inset-left);
+        right: env(safe-area-inset-right);
+        width: unset;
+        height: calc(var(--pwa-height) / 2);
+        justify-content: center;
+        opacity: 0.5;
     }
 
-    .big-page-nav > .prev-page-controller > .prev-page,
+    .big-page-nav > .prev-page-controller {
+        align-items: start;
+    }
+
+    .big-page-nav > .prev-page-controller > .prev-page {
+        margin-top: 5em;
+    }
+
+    .big-page-nav > .next-page-controller {
+        align-items: end;
+    }
+
     .big-page-nav > .next-page-controller > .next-page {
-        opacity: 0;
+        margin-bottom: 5em;
+    }
+
+    .big-page-nav > .next-page-controller {
+        top: calc(var(--pwa-height) / 2);
     }
 }

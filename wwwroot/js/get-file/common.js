@@ -120,10 +120,12 @@ function SetPage(page, send = true) {
 
     SetScale(currentScale, false);
 
-    mainElement.scrollTo({
-        top: scrollToTop ? 0 : mainElement.scrollHeight,
-        behavior: 'smooth'
-    });
+    //TODO: check ios fix not scrolling
+    setTimeout(() =>
+        mainElement.scrollTo({
+            top: scrollToTop ? 0 : mainElement.scrollHeight,
+            behavior: 'smooth'
+        }), 50);
 
     if (send) SendCurrPage();
     else {
