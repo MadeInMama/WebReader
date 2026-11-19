@@ -1,8 +1,17 @@
-﻿@using System.Text.Encodings.Web
+﻿@using System.Net
+@using System.Text.Encodings.Web
 @using System.Text.RegularExpressions
 @using WebReader.Models
 @using TaskStatus = WebReader.Models.TaskStatus
 @model WebReader.Models.Dtos.AllScheduledTasksViewModel
+
+@{
+    var options = new JsonSerializerOptions
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+}
 
 <table>
     <thead>
@@ -17,28 +26,14 @@
     <tbody>
     @foreach (var item in Model.Items)
     {
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
         var settings = JsonSerializer.Serialize(item.Settings, options);
-
         var result = "Empty result";
 
         if (item.Result != null)
         {
-            if (item.Status == TaskStatus.Completed)
+            if (item.Status == TaskStatus.Completed && item.Type == TaskType.CalcAllBooksSizes)
             {
-                result = item.Type switch
-                {
-                    TaskType.CalcAllBooksSizes => JsonSerializer.Serialize(JsonDocument.Parse(item.Result), options),
-                    _ => item.Result
-                };
-            }
-            else if (item.Status == TaskStatus.Error)
-            {
-                result = JsonSerializer.Serialize(item.Result, options);
+                result = JsonSerializer.Serialize(JsonDocument.Parse(item.Result), options);
             }
             else
             {
@@ -48,44 +43,49 @@
 
         result = result.Trim('\"');
 
+        var encodedSettings = WebUtility.HtmlEncode(settings);
+        var encodedResult = WebUtility.HtmlEncode(result);
+
         var modalContent = $@"
-        <div class='task-details'>
-            <span class='task-details-header'>Details:</span>
-            <span class='task-details-prop-name'>Id:</span>
-            <span class='task-details-prop-value'>{item.Id}</span>
+                            <div class='task-details'>
+                                <span class='task-details-header'>Details:</span>
+                                <span class='task-details-prop-name'>Id:</span>
+                                <span class='task-details-prop-value'>{item.Id}</span>
 
-            <span class='task-details-prop-name'>Created:</span>
-            <span class='task-details-prop-value to-local-date-time' utc='{item.CreatedDate:O}'></span>
+                                <span class='task-details-prop-name'>Created:</span>
+                                <span class='task-details-prop-value to-local-date-time' utc='{item.CreatedDate:O}'></span>
 
-            <span class='task-details-prop-name'>HaveToStartAt:</span>
-            <span class='task-details-prop-value to-local-date-time' utc='{item.HaveToStartAt:O}'></span>
+                                <span class='task-details-prop-name'>HaveToStartAt:</span>
+                                <span class='task-details-prop-value to-local-date-time' utc='{item.HaveToStartAt:O}'></span>
 
-            <span class='task-details-prop-name'>Updated:</span>
-            <span class='task-details-prop-value to-local-date-time' utc='{item.UpdatedDate:O}'></span>
+                                <span class='task-details-prop-name'>Updated:</span>
+                                <span class='task-details-prop-value to-local-date-time' utc='{item.UpdatedDate:O}'></span>
 
-            <span class='task-details-prop-name'>Type:</span>
-            <span class='task-details-prop-value'>{item.Type}</span>
+                                <span class='task-details-prop-name'>Type:</span>
+                                <span class='task-details-prop-value'>{item.Type}</span>
 
-            <span class='task-details-prop-name'>Cron:</span>
-            <span class='task-details-prop-value'>{item.Cron}</span>
+                                <span class='task-details-prop-name'>Cron:</span>
+                                <span class='task-details-prop-value'>{item.Cron}</span>
 
-            <span class='task-details-prop-name'>Status:</span>
-            <span class='task-details-prop-value'>{item.Status}</span>
+                                <span class='task-details-prop-name'>Status:</span>
+                                <span class='task-details-prop-value'>{item.Status}</span>
 
-            <span class='task-details-prop-name'>Priority:</span>
-            <span class='task-details-prop-value'>{item.Priority}</span>
+                                <span class='task-details-prop-name'>Priority:</span>
+                                <span class='task-details-prop-value'>{item.Priority}</span>
 
-            <span class='task-details-prop-name'>Progress:</span>
-            <span class='task-details-prop-value'>{(int)(item.Progress * 100)}%</span>
+                                <span class='task-details-prop-name'>Progress:</span>
+                                <span class='task-details-prop-value'>{(int)(item.Progress * 100)}%</span>
 
-            <span class='task-details-prop-name'>Settings:</span>
-            <span class='task-details-prop-value'><pre>{settings}</pre></span>
+                                <span class='task-details-prop-name'>Settings:</span>
+                                <span class='task-details-prop-value'><pre>{encodedSettings}</pre></span>
 
-            <span class='task-details-prop-name'>Result:</span>
-            <span class='task-details-prop-value'><pre>{result}</pre></span>
-        </div>";
+                                <span class='task-details-prop-name'>Result:</span>
+                                <span class='task-details-prop-value'><pre>{encodedResult}</pre></span>
+                            </div>";
 
-        <tr onclick="openModalClicked(`@modalContent`)">
+        var jsModalArg = JsonSerializer.Serialize(modalContent);
+
+        <tr onclick='openModalClicked(@Html.Raw(jsModalArg))'>
             <td class="table-task-type-name">
                 <div>
                     @item.Type@($"({(int)item.Type})")
@@ -101,7 +101,7 @@
                 </div>
             </td>
             <td class="table-task-result">
-                <pre>@(Regex.Replace(result.Replace("\n", ""), @"\s+", " "))</pre>
+                <pre>@(Regex.Replace(result, @"\s+", " "))</pre>
             </td>
             <td utc="@item.HaveToStartAt.ToString("O")"
                 class="table-task-have-to-start-at to-local-date-time"></td>

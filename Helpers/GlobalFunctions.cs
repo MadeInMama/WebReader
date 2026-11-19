@@ -49,6 +49,8 @@ public static class GlobalFunctions
         [
             TaskType.AutoDownloadNewPartsOmniscientReader,
             TaskType.AutoDownloadNewPartsSoloLeveling,
+            TaskType.AutoDownloadNewPartsSoloLevelingHunterOrigin,
+            TaskType.AutoDownloadNewPartsSoloLevelingRagnarok,
             TaskType.AutoDownloadNewPartsWorldAfterDestruction
         ];
     }
