@@ -1,7 +1,7 @@
 services:
   webreader:
     image: webreader
-    scale: 2
+    scale: 1
     expose:
       - "80"
     build:
@@ -23,7 +23,8 @@ services:
     image: nginx:alpine
     ports:
       - "${PORT_1_1:-80}:${PORT_1_2:-80}"
-      - "${PORT_2_1-443}:${PORT_2_2:-443}"
+      - "${PORT_2_1:-443}:${PORT_2_2:-443}/tcp"
+      - "${PORT_3_1:-443}:${PORT_3_2:-443}/udp"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ${CHAIN}:/etc/nginx/ssl/fullchain.pem:ro
@@ -52,7 +53,7 @@ services:
     env_file:
       - ../.env_pg
     ports:
-      - "${DB_PORT_1_1}:${DB_PORT_1_2}"
+      - "${DB_PORT_1_1:-81}:${DB_PORT_1_2:-5432}"
     restart: always
     networks:
       - webreader_network
@@ -60,8 +61,8 @@ services:
   minio:
     image: minio/minio:latest
     ports:
-      - "${MINIO_PORT_1_1}:${MINIO_PORT_1_2}"
-      - "${MINIO_PORT_2_1}:${MINIO_PORT_2_2}"
+      - "${MINIO_PORT_1_1:-82}:${MINIO_PORT_1_2:-9000}"
+      - "${MINIO_PORT_2_1:-83}:${MINIO_PORT_2_2:-9001}"
     env_file:
       - ../.env_s3
     command: server /data --console-address ":9001"
