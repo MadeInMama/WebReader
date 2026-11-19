@@ -25,6 +25,8 @@ services:
       - "${PORT_1_1:-80}:${PORT_1_2:-80}"
       - "${PORT_2_1:-443}:${PORT_2_2:-443}/tcp"
       - "${PORT_3_1:-443}:${PORT_3_2:-443}/udp"
+    env_file:
+      - ../.env
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ${CHAIN}:/etc/nginx/ssl/fullchain.pem:ro
