@@ -6,7 +6,7 @@ function openModalClicked(html) {
 
     modal.style.left = '50%';
 
-    modalContent.innerHTML = '<button id="close-custom-modal-btn" class="close"></button>';
+    modalContent.innerHTML = '<button id="close-custom-modal-btn" class="close click-effect"></button>';
 
     modalContent.innerHTML += html;
 

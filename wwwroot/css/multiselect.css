@@ -1,0 +1,156 @@
+﻿.ms-dropdown {
+    position: relative;
+    min-width: 12em;
+    color: var(--foreground-color);
+}
+
+/* Кнопка открытия (в стиле select на ваших скриншотах) */
+.ms-toggle {
+    width: 100%;
+    padding: 0.45em 0.75em;
+    background-color: var(--input-background);
+    color: var(--foreground-color);
+    border: none;
+    border-radius: 0.5em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75em;
+    cursor: pointer;
+    text-align: left;
+    transition: filter var(--animation-time, 150ms) ease-in-out,
+    background-color var(--animation-time, 150ms) ease-in-out;
+}
+
+.ms-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 14em;
+}
+
+/* Аккуратная галочка справа как у нативного select (Count / Type) */
+.ms-arrow {
+    width: 0.45em;
+    height: 0.45em;
+    border-right: 2px solid var(--foreground-color);
+    border-bottom: 2px solid var(--foreground-color);
+    transform: rotate(45deg) translateY(-15%);
+    transition: transform var(--animation-time, 150ms) ease-in-out;
+    flex-shrink: 0;
+}
+
+.ms-dropdown.open .ms-arrow {
+    transform: rotate(-135deg) translateY(-15%);
+}
+
+/* Выпадающее окно со стеклянным эффектом (backdrop-blur) */
+.ms-menu {
+    display: none;
+    position: fixed;
+    min-width: min-content;
+    max-width: calc(100vw - 1em);
+    max-height: 26em;
+    overflow-y: auto;
+    background-color: var(--background-backdrop-color);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border-radius: 0.5em;
+    box-shadow: 0 0 1em var(--drop-shadow-color);
+    z-index: 9999;
+    padding: 0.5em;
+}
+
+.ms-dropdown.open .ms-menu {
+    display: block;
+}
+
+/* Верхняя панель со сбросом */
+.ms-actions {
+    padding-bottom: 0.5em;
+    margin-bottom: 0.5em;
+    border-bottom: 1px solid var(--input-background);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ms-clear {
+    background-color: var(--input-background) !important;
+}
+
+/* Заголовок группы (S3, Download, Delete) */
+.ms-group {
+    padding: 0.5em;
+    font-size: 0.8em;
+    color: var(--foreground-color);
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.ms-actions + .ms-group {
+    padding-top: 0;
+}
+
+/* Строка элемента списка */
+.ms-dropdown .ms-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    cursor: pointer;
+    pointer-events: auto !important;
+}
+
+.ms-dropdown .ms-item:not(:last-child) {
+    margin-bottom: 0.25em;
+}
+
+/* Скрываем нативный input, оставляя его доступным */
+.ms-dropdown .ms-item input[type="checkbox"] {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    pointer-events: none;
+}
+
+/* Кастомный квадратик чекбокса в стиле #asc-direction-visual */
+.ms-checkbox-visual {
+    position: relative;
+    width: 1.25em;
+    height: 1.25em;
+    border-radius: 0.4em;
+    background-color: var(--input-background);
+    flex-shrink: 0;
+    transition: background-color var(--animation-time) ease-in-out;
+}
+
+/* Подсветка квадратика при наведении на строку */
+.ms-dropdown .ms-item:hover .ms-checkbox-visual {
+    border-color: var(--foreground-color);
+}
+
+/* Галочка внутри чекбокса */
+.ms-checkbox-visual::after {
+    content: '';
+    position: absolute;
+    left: 0.38em;
+    top: 0.15em;
+    width: 0.32em;
+    height: 0.62em;
+    border-right: 0.15em solid var(--foreground-color);
+    border-bottom: 0.15em solid var(--foreground-color);
+    transform: rotate(45deg) scale(0);
+    transition: transform var(--animation-time, 150ms) ease-in-out;
+}
+
+/* Состояние Checked */
+.ms-dropdown .ms-item input[type="checkbox"]:checked + .ms-checkbox-visual {
+    background-color: var(--foreground-color-waiting-progress);
+    border-color: var(--foreground-color-waiting-progress);
+}
+
+.ms-dropdown .ms-item input[type="checkbox"]:checked + .ms-checkbox-visual::after {
+    transform: rotate(45deg) scale(1);
+}

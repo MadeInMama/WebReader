@@ -5,16 +5,16 @@ const settingsInput = document.getElementById('create-task-settings');
 const submitBtn = document.getElementById('create-task-submit-btn');
 
 const filterValues = {
-    "Type": null,
-    "Status": null,
-    "Cron": null,
+    "Type": [],
+    "Status": [],
+    "Cron": [],
 };
 
 window.reload = function reload() {
     const filteredValues = Object.fromEntries(
         Object.entries(filterValues)
-            .filter(([_, val]) => val !== null && val !== undefined && val !== 'All')
-            .map(([key, value]) => [key, String(value)])
+            .filter(([_, val]) => val !== null && val !== undefined && val !== 'All' && val !== [])
+            .map(([key, value]) => [key, value])
     );
 
     requestQueue.enqueue({

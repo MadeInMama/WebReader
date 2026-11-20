@@ -1,10 +1,19 @@
 ﻿@using WebReader.Models
+@using WebReader.Models.Ui
 @using TaskStatus = WebReader.Models.TaskStatus
 @model WebReader.Models.Dtos.AllScheduledTaskConfigsViewModel
 @inject IHttpContextAccessor HttpContextAccessor
 @{
     var nonce = HttpContextAccessor.HttpContext?.Items["ScriptNonce"]?.ToString();
     ViewData["Title"] = "Scheduled Tasks";
+
+    List<MultiSelectOption> typeOptions =
+    [
+        .. GetS3Types().OrderBy(f => f).Select(x => new MultiSelectOption { Group = "S3", Value = ((int)x).ToString(), Text = $"{x}({(int)x})" }),
+        .. GetDownloadTypes().OrderBy(f => f).Select(x => new MultiSelectOption { Group = "Download", Value = ((int)x).ToString(), Text = $"{x}({(int)x})" }),
+        .. GetDeleteTypes().OrderBy(f => f).Select(x => new MultiSelectOption { Group = "Delete", Value = ((int)x).ToString(), Text = $"{x}({(int)x})" }),
+        .. GetOtherTypes().OrderBy(f => f).Select(x => new MultiSelectOption { Group = "Other", Value = ((int)x).ToString(), Text = $"{x}({(int)x})" })
+    ];
 }
 
 @section Style
@@ -86,47 +95,34 @@
 
 @section Footer
 {
-    <select id="task-filter-types" class="click-effect">
-        <option value="All">All Types</option>
-        <optgroup label="S3">
-            @foreach (var item in GetS3Types().OrderBy(f => f).ToList())
-            {
-                <option value="@((int)item)">@($"{item}({(int)item})")</option>
-            }
-        </optgroup>
-        <optgroup label="Download">
-            @foreach (var item in GetDownloadTypes().OrderBy(f => f).ToList())
-            {
-                <option value="@((int)item)">@($"{item}({(int)item})")</option>
-            }
-        </optgroup>
-        <optgroup label="Delete">
-            @foreach (var item in GetDeleteTypes().OrderBy(f => f).ToList())
-            {
-                <option value="@((int)item)">@($"{item}({(int)item})")</option>
-            }
-        </optgroup>
-        <optgroup label="Other">
-            @foreach (var item in GetOtherTypes().OrderBy(f => f).ToList())
-            {
-                <option value="@((int)item)">@($"{item}({(int)item})")</option>
-            }
-        </optgroup>
-    </select>
-    <select id="task-filter-statuses" class="click-effect">
-        <option value="All">All Statuses</option>
-        @foreach (var item in Enum.GetValues<TaskStatus>().OrderBy(f => f).ToList())
+    @await Html.PartialAsync("_MultiSelect", typeOptions, new ViewDataDictionary(ViewData)
+    {
+        { "id", "task-filter-types" },
+        { "default-text", "Types" },
+        { "open-up", true }
+    })
+
+    @await Html.PartialAsync("_MultiSelect",
+        Enum.GetValues<TaskStatus>()
+            .OrderBy(f => f)
+            .Select(x => new MultiSelectOption { Value = ((int)x).ToString(), Text = $"{x}({(int)x})" }),
+        new ViewDataDictionary(ViewData)
         {
-            <option value="@((int)item)">@($"{item}({(int)item})")</option>
-        }
-    </select>
-    <select id="task-filter-crons" class="click-effect">
-        <option value="All">All Crons</option>
-        @foreach (var item in Enum.GetValues<TaskCron>().OrderBy(f => f).ToList())
+            { "id", "task-filter-statuses" },
+            { "default-text", "Statuses" },
+            { "open-up", true }
+        })
+
+    @await Html.PartialAsync("_MultiSelect",
+        Enum.GetValues<TaskCron>()
+            .OrderBy(f => f)
+            .Select(x => new MultiSelectOption { Value = ((int)x).ToString(), Text = $"{x}({(int)x})" })
+        , new ViewDataDictionary(ViewData)
         {
-            <option value="@((int)item)">@($"{item}({(int)item})")</option>
-        }
-    </select>
+            { "id", "task-filter-crons" },
+            { "default-text", "Crons" },
+            { "open-up", true }
+        })
 }
 
 @section Scripts

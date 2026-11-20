@@ -206,7 +206,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     Type = TaskType.DeleteOldCompletedTasks,
                     DefaultPriority = sbyte.MinValue + 6,
                     Cron = TaskCron.EveryDay,
-                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 72}"),
+                    DefaultSettings = JsonDocument.Parse("{\"older_then_in_hours\": 24}"),
                     IsActive = true
                 });
 

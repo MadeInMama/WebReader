@@ -1,0 +1,62 @@
+﻿@model IEnumerable<WebReader.Models.Ui.MultiSelectOption>
+
+@{
+    var id = ViewData["id"]?.ToString() ?? $"ms-{Guid.NewGuid():N}";
+    var defaultText = ViewData["default-text"]?.ToString() ?? "Select...";
+    var inputName = ViewData["name"]?.ToString();
+    var openUp = ViewData["open-up"] as bool? ?? true;
+    var withReset = ViewData["with-reset"] as bool? ?? true;
+
+    var items = Model?.ToList() ?? [];
+    var groups = items.GroupBy(x => x.Group).ToList();
+
+    var selectedItems = items.Where(x => x.Selected).ToList();
+    var initialText = selectedItems.Count switch
+    {
+        0 => defaultText,
+        1 => selectedItems[0].Text,
+        _ => $"{defaultText} ({selectedItems.Count})"
+    };
+
+    var nonce = Context.Items["ScriptNonce"]?.ToString();
+}
+
+<link rel="stylesheet" href="~/css/multiselect.css" asp-append-version="true"/>
+
+<div class="ms-dropdown @(openUp ? "ms-up" : "ms-down")" id="@id" data-default="@defaultText">
+    <button type="button" class="ms-toggle click-effect">
+        <span class="ms-text">@initialText</span>
+        <span class="ms-arrow"></span>
+    </button>
+
+    <div class="ms-menu">
+        @if (withReset)
+        {
+            <div class="ms-actions">
+                <button type="button" class="ms-clear btn click-effect">Reset (All)</button>
+            </div>
+        }
+
+        @foreach (var group in groups)
+        {
+            if (!string.IsNullOrEmpty(group.Key))
+            {
+                <div class="ms-group">@group.Key</div>
+            }
+
+            foreach (var item in group)
+            {
+                <label class="ms-item @(string.IsNullOrEmpty(group.Key) ? "ms-no-group" : "")">
+                    <input type="checkbox"
+                           value="@item.Value"
+                           @(string.IsNullOrEmpty(inputName) ? "" : $"name=\"{inputName}\"")
+                           @(item.Selected ? "checked" : "")/>
+                    <span class="ms-checkbox-visual"></span>
+                    <span class="ms-item-label">@item.Text</span>
+                </label>
+            }
+        }
+    </div>
+</div>
+
+<script nonce="@nonce" src="~/js/multiselect.js" asp-append-version="true"></script>

@@ -2,18 +2,29 @@
     cursor: pointer;
     touch-action: manipulation;
     transition: display var(--animation-time) allow-discrete,
-    opacity var(--animation-time) ease-in-out;
+    opacity var(--animation-time) ease-in-out,
+    filter var(--animation-time) ease-in-out;
+}
+
+.click-effect:not([disabled]):hover {
+    filter: brightness(1.1);
+    transition: display var(--animation-time) allow-discrete,
+    opacity var(--animation-time) ease-in-out,
+    filter var(--animation-time) ease-in-out;
 }
 
 .click-effect:not([disabled]):active {
     opacity: 0.5;
+    filter: brightness(1);
     transition: display var(--animation-time) allow-discrete,
-    opacity var(--animation-time) ease-in-out;
+    opacity var(--animation-time) ease-in-out,
+    filter var(--animation-time) ease-in-out;
 }
 
 .disabled-with-anim.click-effect {
     transition: display var(--animation-time) allow-discrete,
-    opacity var(--animation-time) ease-in-out;
+    opacity var(--animation-time) ease-in-out,
+    filter var(--animation-time) ease-in-out;
 
     @starting-style {
         opacity: 0;
@@ -30,8 +41,17 @@
     }
 }
 
+.disabled-with-anim.click-effect:hover {
+    filter: brightness(1.1);
+    transition: display var(--animation-time) allow-discrete,
+    opacity var(--animation-time) ease-in-out,
+    filter var(--animation-time) ease-in-out;
+}
+
 .disabled-with-anim.click-effect:active {
     opacity: 0.5;
+    filter: brightness(1);
     transition: display var(--animation-time) allow-discrete,
-    opacity var(--animation-time) ease-in-out;
+    opacity var(--animation-time) ease-in-out,
+    filter var(--animation-time) ease-in-out;
 }

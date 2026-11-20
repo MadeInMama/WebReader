@@ -48,13 +48,29 @@ public class ScheduledTaskController(
         request.Values.TryGetValue("Status", out var statusStr);
         request.Values.TryGetValue("Cron", out var cronStr);
 
-        _ = StaticFunctions.TryParseNullable(typeStr, out TaskType? type);
-        _ = StaticFunctions.TryParseNullable(statusStr, out TaskStatus? status);
-        _ = StaticFunctions.TryParseNullable(cronStr, out TaskCron? cron);
+        List<TaskType> types = [];
+        List<TaskStatus> statuses = [];
+        List<TaskCron> crons = [];
 
-        var res = await taskRepository.AllAsync(f => (type == null || f.Type == type) &&
-                                                     (status == null || f.Status == status) &&
-                                                     (cron == null || f.Cron == cron),
+        typeStr?.ForEach(f =>
+        {
+            if (StaticFunctions.TryParseNullable(f, out TaskType? type) && type.HasValue)
+                types.Add(type.Value);
+        });
+        statusStr?.ForEach(f =>
+        {
+            if (StaticFunctions.TryParseNullable(f, out TaskStatus? status) && status.HasValue)
+                statuses.Add(status.Value);
+        });
+        cronStr?.ForEach(f =>
+        {
+            if (StaticFunctions.TryParseNullable(f, out TaskCron? cron) && cron.HasValue)
+                crons.Add(cron.Value);
+        });
+
+        var res = await taskRepository.AllAsync(f => (types.Count == 0 || types.Contains(f.Type)) &&
+                                                     (statuses.Count == 0 || statuses.Contains(f.Status)) &&
+                                                     (crons.Count == 0 || crons.Contains(f.Cron)),
             cancellationToken, true);
 
         return PartialView("_ScheduledTasksPartial", new AllScheduledTasksViewModel
