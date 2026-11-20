@@ -75,14 +75,14 @@ public static class StaticFunctions
         return res;
     }
 
-    public static bool IsColorMatch(Rgb24 c1, Rgb24 c2, int tolerance = 10)
+    public static bool IsColorMatch(Rgb24 c1, Rgb24 c2, int tolerance = 20)
     {
         return Math.Abs(c1.R - c2.R) <= tolerance &&
                Math.Abs(c1.G - c2.G) <= tolerance &&
                Math.Abs(c1.B - c2.B) <= tolerance;
     }
 
-    public static bool IsColorMatch(Rgb24 c1, Color[] c2, int tolerance = 10)
+    public static bool IsColorMatch(Rgb24 c1, Color[] c2, int tolerance = 20)
     {
         return c2.Any(f =>
         {

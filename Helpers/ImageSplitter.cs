@@ -5,32 +5,35 @@ namespace WebReader.Helpers;
 
 public static class ImageSplitter
 {
-    public static List<byte[]> Split<T>(Image<Rgb24> image, ILogger<T> logger, int minContentHeight = 100,
-        int minEmptyGap = 25)
+    public static List<byte[]> Split<T>(List<Image<Rgb24>> images, ILogger<T> logger, int minContentHeight = 50,
+        int minEmptyGap = 100, int minBytesSize = 3000)
     {
-        ArgumentNullException.ThrowIfNull(image);
-
         var result = new List<byte[]>();
 
-        // Находим первую строку с контентом, пропуская пустоту в самом верху
-        var y = FindNextFilledY(image, 0);
-
-        while (y < image.Height)
+        foreach (var image in images)
         {
-            // Ищем начало следующей пустой зоны, отступив минимальную высоту контента
-            var searchStart = Math.Min(image.Height, y + minContentHeight);
-            var currEndY = FindEmptyGapY(image, searchStart, minEmptyGap);
+            var y = FindNextFilledY(image, 0);
 
-            if (currEndY > y && !ImageEmptyChecker.IsEmpty(image, 0, y, image.Width, currEndY))
+            while (y < image.Height)
             {
-                logger.LogInformation("Split {y}..{currEndY} / {height}", y, currEndY, image.Height);
+                var searchStart = Math.Min(image.Height, y + minContentHeight);
+                var currEndY = FindEmptyGapY(image, searchStart, minEmptyGap);
 
-                // Передаем согласованные границы (min включительно, max не включительно)
-                result.Add(ImageTrimmer.Trim(image, 0, y, image.Width, currEndY, 5));
+                if (currEndY > y)
+                {
+                    var trimmedBytes = ImageTrimmer.Trim(image, 0, y, image.Width, currEndY, 5);
+
+                    if (trimmedBytes.Length >= minBytesSize)
+                    {
+                        logger.LogInformation("Split {y}..{currEndY} / {height} ({bytes} bytes)", y, currEndY,
+                            image.Height,
+                            trimmedBytes.Length);
+                        result.Add(trimmedBytes);
+                    }
+                }
+
+                y = FindNextFilledY(image, currEndY + minEmptyGap);
             }
-
-            // Перепрыгиваем найденный пустой коридор и ищем следующий блок контента
-            y = FindNextFilledY(image, currEndY + minEmptyGap);
         }
 
         return result;

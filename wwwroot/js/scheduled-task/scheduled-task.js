@@ -10,8 +10,6 @@ const filterValues = {
     "Cron": null,
 };
 
-const scheduledTasksFixedRequestQueue = new FixedRequestQueue(3, 1000);
-
 window.reload = function reload() {
     const filteredValues = Object.fromEntries(
         Object.entries(filterValues)
@@ -19,35 +17,33 @@ window.reload = function reload() {
             .map(([key, value]) => [key, String(value)])
     );
 
-    scheduledTasksFixedRequestQueue.push(() => {
-        return requestQueue.enqueue({
-            method: 'POST',
-            url: '/ScheduledTask/ScheduledTasksPartial',
-            data: {Values: filteredValues},
-            options: {
-                headers: {
-                    'RequestVerificationToken': GetAntiForgeryToken()
-                },
-                withCredentials: true
+    requestQueue.enqueue({
+        method: 'POST',
+        url: '/ScheduledTask/ScheduledTasksPartial',
+        data: {Values: filteredValues},
+        options: {
+            headers: {
+                'RequestVerificationToken': GetAntiForgeryToken()
             },
-            beforeSend: () => {
-            },
-            setProgress: (val) => {
-            }
-        })
-            .then(async response => {
-                const data = await response.data;
-                document.getElementById('scheduled_tasks_partial').innerHTML = data
-                    .trim()
-                    .replaceAll('\n', '')
-                    .replaceAll('\r', '');
+            withCredentials: true
+        },
+        beforeSend: () => {
+        },
+        setProgress: (val) => {
+        }
+    })
+        .then(async response => {
+            const data = await response.data;
+            document.getElementById('scheduled_tasks_partial').innerHTML = data
+                .trim()
+                .replaceAll('\n', '')
+                .replaceAll('\r', '');
 
-                convertUtcToLocal();
-            })
-            .catch(error => {
-                console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
-            });
-    });
+            convertUtcToLocal();
+        })
+        .catch(error => {
+            console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
+        });
 }
 
 function setDefaultDateTime() {

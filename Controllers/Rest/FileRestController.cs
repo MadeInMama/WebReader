@@ -46,7 +46,7 @@ public class FileRestController(
         if (jwtData.IsFailed) return Unauthorized(jwtData.ToString());
 
         var res = await fileControllerService.GetAllFilesInBucket(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            orderBy, cancellationToken);
+            orderBy, true, cancellationToken);
 
         if (res.IsFailed) return BadRequest(res.ToString());
 
@@ -69,7 +69,7 @@ public class FileRestController(
         if (jwtData.IsFailed) return Unauthorized(jwtData.ToString());
 
         var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            fileId, orderBy, cancellationToken);
+            fileId, orderBy, true, cancellationToken);
 
         if (res.IsFailed) return BadRequest(res.ToString());
 

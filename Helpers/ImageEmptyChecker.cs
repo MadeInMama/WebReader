@@ -84,7 +84,7 @@ public static class ImageEmptyChecker
         return (double)nonMatchCount * 100 / totalCount < percentEmptiness;
     }
 
-    public static Rgb24 GetAverageAreaColor(Image<Rgb24> image, int startX, int startY, int endX, int endY)
+    private static Rgb24 GetAverageAreaColor(Image<Rgb24> image, int startX, int startY, int endX, int endY)
     {
         ArgumentNullException.ThrowIfNull(image);
 
@@ -116,11 +116,10 @@ public static class ImageEmptyChecker
         return new Rgb24(
             (byte)(totalR / count),
             (byte)(totalG / count),
-            (byte)(totalB / count)
-        );
+            (byte)(totalB / count));
     }
 
-    public static Rgb24 GetAverageRowColor(Image<Rgb24> image, int y)
+    private static Rgb24 GetAverageRowColor(Image<Rgb24> image, int y)
     {
         ArgumentNullException.ThrowIfNull(image);
 
@@ -144,11 +143,10 @@ public static class ImageEmptyChecker
         return new Rgb24(
             (byte)(totalR / image.Width),
             (byte)(totalG / image.Width),
-            (byte)(totalB / image.Width)
-        );
+            (byte)(totalB / image.Width));
     }
 
-    public static Rgb24 GetAverageColumnColor(Image<Rgb24> image, int x, int minY, int maxY)
+    private static Rgb24 GetAverageColumnColor(Image<Rgb24> image, int x, int minY, int maxY)
     {
         ArgumentNullException.ThrowIfNull(image);
 
@@ -177,7 +175,6 @@ public static class ImageEmptyChecker
         return new Rgb24(
             (byte)(totalR / count),
             (byte)(totalG / count),
-            (byte)(totalB / count)
-        );
+            (byte)(totalB / count));
     }
 }

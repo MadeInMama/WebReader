@@ -310,7 +310,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 imagesBytes.Add(imageBytes);
             }
 
-            var splitImages = ImageSplitter.Split(ImageMerger.Merge(imagesBytes, logger), logger);
+            var splitImages = ImageSplitter.Split(ImageMerger.MergeByWidth(imagesBytes, logger), logger);
 
             foreach (var el in splitImages.Index())
             {

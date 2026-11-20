@@ -32,11 +32,9 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetAllFilesByBucket(string? orderBy,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllFilesByBucket(string orderBy = "FileName",
+        CancellationToken cancellationToken = default)
     {
-        if (orderBy == null) orderBy = "FileName";
-
         var res = await fileControllerService.GetAllFilesByBucket(User.GetUserGuid(), User.GetUserRoles(), orderBy,
             cancellationToken);
 
@@ -47,10 +45,10 @@ public class FileController(
 
     [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName",
-        CancellationToken cancellationToken = default)
+        bool ascDirection = true, CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllFilesInBucket(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            orderBy, cancellationToken);
+            orderBy, ascDirection, cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
@@ -58,11 +56,11 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "FileName",
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "CurrentPartName",
+        bool ascDirection = false, CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            fileId, orderBy, cancellationToken);
+            fileId, orderBy, ascDirection, cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 

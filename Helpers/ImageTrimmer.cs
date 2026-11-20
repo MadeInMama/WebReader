@@ -9,7 +9,6 @@ public static class ImageTrimmer
     {
         ArgumentNullException.ThrowIfNull(image);
 
-        // Нормализуем входные границы (min включительно, max не включительно)
         minX = Math.Clamp(minX, 0, image.Width);
         maxX = Math.Clamp(maxX, 0, image.Width);
         minY = Math.Clamp(minY, 0, image.Height);
@@ -18,22 +17,18 @@ public static class ImageTrimmer
         if (maxX <= minX || maxY <= minY)
             return [];
 
-        // Находим реальные границы контента (индексы пикселей включительно)
         var contentTop = FindTopRow(image, minY, maxY);
         var contentBottom = FindBottomRow(image, minY, maxY);
 
-        // Если вся область пустая
         if (contentTop > contentBottom)
             return [];
 
-        // Передаем contentBottom + 1, так как IsColumnEmpty работает до maxY не включительно
         var contentLeft = FindLeftCol(image, minX, maxX, contentTop, contentBottom + 1);
         var contentRight = FindRightCol(image, minX, maxX, contentTop, contentBottom + 1);
 
         if (contentLeft > contentRight)
             return [];
 
-        // Применяем безопасный отступ (offset) со всех 4 сторон
         var top = Math.Max(0, contentTop - offset);
         var bottom = Math.Min(image.Height - 1, contentBottom + offset);
         var left = Math.Max(0, contentLeft);

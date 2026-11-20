@@ -141,7 +141,7 @@ public class FileControllerService(
     }
 
     public async Task<Result<AllFilesInBucketViewModel>> GetAllFilesInBucket(Guid userGuid, List<RoleType> roles,
-        Guid bucketId, string orderBy, CancellationToken cancellationToken)
+        Guid bucketId, string orderBy, bool ascDirection, CancellationToken cancellationToken)
     {
         try
         {
@@ -183,7 +183,11 @@ public class FileControllerService(
                                 TotalCount = file.TotalCount,
                                 TotalSize = file.TotalSize
                             };
-                        }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
+                        });
+
+                    res = ascDirection
+                        ? res.OrderBy(f => prop?.GetValue(f, null) ?? f.FileName)
+                        : res.OrderByDescending(f => prop?.GetValue(f, null) ?? f.FileName);
 
                     return new AllFilesInBucketViewModel
                     {
@@ -205,7 +209,7 @@ public class FileControllerService(
     }
 
     public async Task<Result<AllFilesInBucketViewModel>> GetAllPartsInFile(Guid userGuid, List<RoleType> roles,
-        Guid bucketId, Guid fileId, string orderBy, CancellationToken cancellationToken)
+        Guid bucketId, Guid fileId, string orderBy, bool ascDirection, CancellationToken cancellationToken)
     {
         try
         {
@@ -263,7 +267,11 @@ public class FileControllerService(
                             IsDone = reading?.IsDone ?? false,
                             CurrentPartName = f.CurrentPartName
                         };
-                    }).OrderBy(f => prop?.GetValue(f, null) ?? f.FileName);
+                    });
+
+                    res = ascDirection
+                        ? res.OrderBy(f => prop?.GetValue(f, null) ?? f.FileName)
+                        : res.OrderByDescending(f => prop?.GetValue(f, null) ?? f.FileName);
 
                     return new AllFilesInBucketViewModel
                     {
