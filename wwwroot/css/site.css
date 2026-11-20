@@ -20,6 +20,7 @@
     --success-foreground-color: #047857;
     --error-foreground-color: #B91C1C;
     --drop-shadow-color: #111111;
+    --input-background: #3a3a3a;
     --canvas-invert: 0.867;
     --animation-time: 150ms;
 }
@@ -36,6 +37,7 @@
         --success-foreground-color: #10B981;
         --error-foreground-color: #EF4444;
         --drop-shadow-color: #aaaaaa;
+        --input-background: #fcfcfc;
         --canvas-invert: 0.067;
         color-scheme: light;
     }
@@ -188,6 +190,7 @@ footer {
     border-radius: 0.75em 0.75em 0 0;
     gap: 0.5em;
     grid-row: 4;
+    min-height: 3em;
 }
 
 .special-info-big {

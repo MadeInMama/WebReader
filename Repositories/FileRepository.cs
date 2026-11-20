@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using WebReader.Data;
 using WebReader.Models;
 using WebReader.Models.Entities;
@@ -98,64 +99,83 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
             .ToListAsync(cancellationToken);
     }
 
-    public Task<List<File>> GetAllAvailableObjectsWithPartsAsync(Guid fileId,
-        CancellationToken cancellationToken)
+    public Task<List<File>> GetAllAvailableObjectsWithPartsAsync(Guid fileId, CancellationToken cancellationToken,
+        int offset = 0, int limit = int.MaxValue)
     {
         var fileEntity = context.Model.FindEntityType(typeof(File))!;
+        var tableName = fileEntity.GetTableName();
+        var idCol = fileEntity.FindProperty(nameof(File.Id))!.GetColumnName();
+        var nextPartIdCol = fileEntity.FindProperty(nameof(File.NextPartId))!.GetColumnName();
 
-        var fileIdProperty = fileEntity.FindProperty(nameof(File.Id))!;
-        var fileNextPartIdProperty = fileEntity.FindProperty(nameof(File.NextPartId))!;
+        var maxDepth = offset + limit;
 
-        var sql =
-            $"""
-             WITH RECURSIVE file_chain AS (
-                 SELECT "{fileIdProperty.GetColumnName()}","{fileNextPartIdProperty.GetColumnName()}", 0 AS Level
-                 FROM "{fileEntity.GetTableName()}"
-                 WHERE "{fileIdProperty.GetColumnName()}" = '{fileId}'
+        var sql = $"""
+                   WITH RECURSIVE file_chain AS (
+                       SELECT "{idCol}", "{nextPartIdCol}", 0 AS Level
+                       FROM "{tableName}"
+                       WHERE "{idCol}" = @fileId
 
-                 UNION ALL
+                       UNION ALL
 
-                 SELECT f."{fileIdProperty.GetColumnName()}", f."{fileNextPartIdProperty.GetColumnName()}", fc.Level + 1
-                 FROM "{fileEntity.GetTableName()}" f
-                     INNER JOIN file_chain fc ON f."{fileIdProperty.GetColumnName()}" = fc."{fileNextPartIdProperty.GetColumnName()}"
-             )
-             SELECT f.*
-             FROM "{fileEntity.GetTableName()}" f
-                      INNER JOIN file_chain AS fc ON f."{fileIdProperty.GetColumnName()}" = fc."{fileIdProperty.GetColumnName()}"
-             ORDER BY fc.Level
-             """;
+                       SELECT f."{idCol}", f."{nextPartIdCol}", fc.Level + 1
+                       FROM "{tableName}" f
+                       INNER JOIN file_chain fc ON f."{idCol}" = fc."{nextPartIdCol}"
+                       WHERE fc.Level < @maxDepth
+                   )
+                   SELECT f.*
+                   FROM "{tableName}" f
+                   INNER JOIN file_chain fc ON f."{idCol}" = fc."{idCol}"
+                   ORDER BY fc.Level
+                   LIMIT @limit OFFSET @offset
+                   """;
 
-        return context.Files.FromSqlRaw(sql).ToListAsync(cancellationToken);
+        var parameters = new object[]
+        {
+            new NpgsqlParameter("fileId", fileId),
+            new NpgsqlParameter("maxDepth", maxDepth),
+            new NpgsqlParameter("limit", limit),
+            new NpgsqlParameter("offset", offset)
+        };
+
+        return context.Files
+            .FromSqlRaw(sql, parameters)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
     public Task<File> GetHeadedPartedObjectAsync(Guid fileId, CancellationToken cancellationToken)
     {
         var fileEntity = context.Model.FindEntityType(typeof(File))!;
-
-        var fileIdProperty = fileEntity.FindProperty(nameof(File.Id))!;
-        var fileNextPartIdProperty = fileEntity.FindProperty(nameof(File.NextPartId))!;
+        var tableName = fileEntity.GetTableName();
+        var idCol = fileEntity.FindProperty(nameof(File.Id))!.GetColumnName();
+        var nextPartIdCol = fileEntity.FindProperty(nameof(File.NextPartId))!.GetColumnName();
 
         var sql = $"""
                    WITH RECURSIVE find_head AS (
-                       SELECT "{fileIdProperty.GetColumnName()}","{fileNextPartIdProperty.GetColumnName()}",1 AS depth
-                       FROM "{fileEntity.GetTableName()}"
-                       WHERE "{fileIdProperty.GetColumnName()}" = '{fileId}'
+                       SELECT "{idCol}", "{nextPartIdCol}", 1 AS depth
+                       FROM "{tableName}"
+                       WHERE "{idCol}" = @fileId
 
                        UNION ALL
 
-                       SELECT f."{fileIdProperty.GetColumnName()}",f."{fileNextPartIdProperty.GetColumnName()}", fh.depth + 1
-                       FROM "{fileEntity.GetTableName()}" f
-                                INNER JOIN find_head fh ON f."{fileNextPartIdProperty.GetColumnName()}" = fh."Id"
+                       SELECT f."{idCol}", f."{nextPartIdCol}", fh.depth + 1
+                       FROM "{tableName}" f
+                       INNER JOIN find_head fh ON f."{nextPartIdCol}" = fh."{idCol}"
                        WHERE fh.depth < 100000
                    )
                    SELECT f.*
-                   FROM "{fileEntity.GetTableName()}" f
-                            INNER JOIN find_head AS fh ON f."{fileIdProperty.GetColumnName()}" = fh."{fileIdProperty.GetColumnName()}"
+                   FROM "{tableName}" f
+                   INNER JOIN find_head fh ON f."{idCol}" = fh."{idCol}"
                    ORDER BY fh.depth DESC
                    LIMIT 1
                    """;
 
-        return context.Files.FromSqlRaw(sql).SingleAsync(cancellationToken);
+        var param = new NpgsqlParameter("fileId", fileId);
+
+        return context.Files
+            .FromSqlRaw(sql, param)
+            .AsNoTracking()
+            .SingleAsync(cancellationToken);
     }
 
     public Task<List<File>> GetAllAvailableObjectsInBucketAsync(Guid bucketId,
@@ -170,68 +190,92 @@ public class FileRepository(ApplicationDbContext context) : IRepository<File>
             .ToListAsync(cancellationToken);
     }
 
-    public Task<List<ExtendedFile>> GetAllAvailableObjectsInBucketTopLevelAsync(Guid bucketId,
-        IEnumerable<RoleType> roles, CancellationToken cancellationToken)
+    public Task<List<ExtendedFile>> GetAllAvailableObjectsInBucketTopLevelAsync(
+        Guid bucketId,
+        IEnumerable<RoleType> roles,
+        CancellationToken cancellationToken)
     {
-        var joinedRoles = string.Join(",", roles.Select(f => (int)f));
+        var roleIds = roles.Select(f => (int)f).Distinct().ToArray();
+
+        if (roleIds.Length == 0) return Task.FromResult(new List<ExtendedFile>());
 
         var bucketEntity = context.Model.FindEntityType(typeof(Bucket))!;
         var fileEntity = context.Model.FindEntityType(typeof(File))!;
 
-        var bucketIdProperty = bucketEntity.FindProperty(nameof(Bucket.Id))!;
-        var bucketAccessRolesProperty = bucketEntity.FindProperty(nameof(Bucket.AccessRoles))!;
+        var bucketTable = bucketEntity.GetTableName();
+        var bucketIdCol = bucketEntity.FindProperty(nameof(Bucket.Id))!.GetColumnName();
+        var bucketRolesCol = bucketEntity.FindProperty(nameof(Bucket.AccessRoles))!.GetColumnName();
 
-        var fileIdProperty = fileEntity.FindProperty(nameof(File.Id))!;
-        var fileBucketIdProperty = fileEntity.FindProperty(nameof(File.BucketId))!;
-        var fileAccessRolesProperty = fileEntity.FindProperty(nameof(File.AccessRoles))!;
-        var fileNextPartIdProperty = fileEntity.FindProperty(nameof(File.NextPartId))!;
-        var fileSizeProperty = fileEntity.FindProperty(nameof(File.Size))!;
+        var fileTable = fileEntity.GetTableName();
+        var fileIdCol = fileEntity.FindProperty(nameof(File.Id))!.GetColumnName();
+        var fileBucketIdCol = fileEntity.FindProperty(nameof(File.BucketId))!.GetColumnName();
+        var fileRolesCol = fileEntity.FindProperty(nameof(File.AccessRoles))!.GetColumnName();
+        var fileNextPartIdCol = fileEntity.FindProperty(nameof(File.NextPartId))!.GetColumnName();
+        var fileSizeCol = fileEntity.FindProperty(nameof(File.Size))!.GetColumnName();
 
         var sql = $"""
-                   WITH RECURSIVE file_chain AS (
+                   WITH RECURSIVE valid_bucket AS (
+                       SELECT 1
+                       FROM "{bucketTable}"
+                       WHERE "{bucketIdCol}" = @bucketId 
+                         AND "{bucketRolesCol}" && @roles
+                   ),
+                   file_chain AS (
                        SELECT
-                           f."{fileIdProperty.GetColumnName()}" AS root_id,
-                           f."{fileIdProperty.GetColumnName()}",
-                           f."{fileNextPartIdProperty.GetColumnName()}",
-                           f."{fileSizeProperty.GetColumnName()}"
-                       FROM "{fileEntity.GetTableName()}" f
-                           JOIN "{bucketEntity.GetTableName()}" AS b
-                           ON b."{bucketIdProperty.GetColumnName()}" = f."{fileBucketIdProperty.GetColumnName()}"
-                       WHERE b."{bucketIdProperty.GetColumnName()}" = '{bucketId}' AND
-                             b."{bucketAccessRolesProperty.GetColumnName()}" && ARRAY[{joinedRoles}] AND
-                             f."{fileAccessRolesProperty.GetColumnName()}" && ARRAY[{joinedRoles}] AND
-                           NOT EXISTS (
-                           SELECT 1 FROM "{fileEntity.GetTableName()}" AS child
-                           WHERE child."{fileNextPartIdProperty.GetColumnName()}" = f."{fileIdProperty.GetColumnName()}"
-                       )
+                           f."{fileIdCol}" AS root_id,
+                           f."{fileIdCol}",
+                           f."{fileNextPartIdCol}",
+                           f."{fileSizeCol}",
+                           1 AS depth
+                       FROM "{fileTable}" f
+                       CROSS JOIN valid_bucket
+                       WHERE f."{fileBucketIdCol}" = @bucketId
+                         AND f."{fileRolesCol}" && @roles
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM "{fileTable}" child
+                             WHERE child."{fileNextPartIdCol}" = f."{fileIdCol}"
+                         )
 
                        UNION ALL
 
                        SELECT
                            current_file.root_id,
-                           next_file."{fileIdProperty.GetColumnName()}",
-                           next_file."{fileNextPartIdProperty.GetColumnName()}",
-                           next_file."{fileSizeProperty.GetColumnName()}"
-                       FROM "{fileEntity.GetTableName()}" AS next_file
-                                JOIN file_chain AS current_file
-                                ON next_file."{fileIdProperty.GetColumnName()}" = current_file."{fileNextPartIdProperty.GetColumnName()}"
+                           next_file."{fileIdCol}",
+                           next_file."{fileNextPartIdCol}",
+                           next_file."{fileSizeCol}",
+                           current_file.depth + 1
+                       FROM "{fileTable}" next_file
+                       INNER JOIN file_chain current_file
+                           ON next_file."{fileIdCol}" = current_file."{fileNextPartIdCol}"
+                       WHERE current_file.depth < 10000
+                         AND next_file."{fileRolesCol}" && @roles
                    )
                    SELECT
                        f.*,
                        stats.total_count AS "TotalCount",
                        stats.total_size AS "TotalSize"
                    FROM (
-                            SELECT
-                                root_id,
-                                COUNT(*) AS total_count,
-                                SUM(COALESCE("{fileSizeProperty.GetColumnName()}", 0)) AS total_size
-                            FROM file_chain
-                            GROUP BY root_id
-                        ) stats
-                            JOIN "{fileEntity.GetTableName()}" f ON f."{fileIdProperty.GetColumnName()}" = stats.root_id;
+                       SELECT
+                           root_id,
+                           COUNT(*) AS total_count,
+                           SUM(COALESCE("{fileSizeCol}", 0)) AS total_size
+                       FROM file_chain
+                       GROUP BY root_id
+                   ) stats
+                   INNER JOIN "{fileTable}" f ON f."{fileIdCol}" = stats.root_id;
                    """;
 
-        return context.Database.SqlQueryRaw<ExtendedFile>(sql).AsNoTracking().ToListAsync(cancellationToken);
+        var parameters = new object[]
+        {
+            new NpgsqlParameter("bucketId", bucketId),
+            new NpgsqlParameter("roles", roleIds)
+        };
+
+        return context.Database
+            .SqlQueryRaw<ExtendedFile>(sql, parameters)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
     public Task<List<ExtendedFile>> GetAllAvailableObjectsTopLevelAsync(Guid userId,

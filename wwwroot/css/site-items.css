@@ -211,11 +211,17 @@ button.btn {
     height: 2em;
 }
 
+label {
+    cursor: default;
+    pointer-events: none;
+}
+
 select, input, textarea {
     border-radius: 0.5em;
     height: 2em;
     resize: none;
     font-size: 1em;
+    background-color: var(--input-background);
 }
 
 select {

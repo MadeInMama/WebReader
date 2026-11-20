@@ -6,8 +6,7 @@
     ViewData["Title"] = "FILES";
 }
 
-@section Style
-{
+@section Style {
     <link rel="stylesheet" href="~/css/file-list.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/lazy-image.css" asp-append-version="true"/>
 }
@@ -78,28 +77,106 @@
     </div>
 }
 
-@section Scripts
-{
+@section Footer {
+    <div>
+        <label for="asc-direction">Direction:</label>
+        <input id="asc-direction" name="ascDirection" type="checkbox" checked="@Model.AscDirection" disabled/>
+        <label for="asc-direction" id="asc-direction-visual" class="click-effect"></label>
+    </div>
+
+    <div>
+        <label for="page-count">Count:</label>
+        <select asp-for="PageCount" id="page-count" name="pageCount" class="click-effect" disabled>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="2147483647">MAX</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="page-index">Index:</label>
+        <select asp-for="PageIndex" id="page-index" name="pageIndex" class="click-effect" disabled>
+            @for (var i = 0; i < (int)Math.Ceiling((double)Model.TotalCount / Model.PageCount); i++)
+            {
+                <option value="@i">@i</option>
+            }
+        </select>
+    </div>
+
+    <div>
+        <label for="order-by">Order By:</label>
+        <select asp-for="OrderBy" id="order-by" name="orderBy" class="click-effect" disabled>
+            <option value="CurrentPartName">CurrentPartName</option>
+            <option value="IsDone">IsDone</option>
+        </select>
+    </div>
+}
+
+@section Scripts {
     <script nonce="@nonce" src="~/js/libs/axios.min.js" asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/cache/file-download.js" asp-append-version="true"></script>
     <script nonce="@nonce">
         moveToLinkNav(navElements.Files);
 
-        window.addEventListener("load", () => {
-            Array.from(document.querySelectorAll(".download-file")).forEach(el => {
-                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId, el.dataset.fileName);
-            });
-        });
-
         const url = '/api/FileApi/DeleteFile';
         const lineSelector = '.item-line';
+        const reloadOnDelete = true;
+
+        const ascDirection = document.querySelector("#asc-direction");
+        const pageCount = document.querySelector("#page-count");
+        const pageIndex = document.querySelector("#page-index");
+        const orderBy = document.querySelector("#order-by");
+
+        const allControls = Array.from([ascDirection, pageCount, pageIndex, orderBy]);
+        let isControlClickAllowed = false;
+
+        function reloadWithFilter() {
+            allControls.forEach(el => el.disabled = true);
+
+            const url = new URL(window.location.href);
+
+            allControls.forEach((control) => {
+                const value = control.type === "checkbox" ? control.checked : control.value;
+
+                if (value !== "" && value !== null) {
+                    url.searchParams.set(control.name, value);
+                } else {
+                    url.searchParams.delete(control.name);
+                }
+            });
+
+            window.location.assign(url.toString());
+        }
+
+        allControls.forEach(el => {
+            el.onchange = () => {
+                if (isControlClickAllowed) {
+                    isControlClickAllowed = false;
+                    reloadWithFilter();
+                }
+            }
+        });
     </script>
     <script nonce="@nonce" src="~/js/empty-row-control.js" asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/delete-row.js" asp-append-version="true"></script>
     <script nonce="@nonce" src="~/js/lazy-image-observer.js" asp-append-version="true"></script>
-
     <script nonce="@nonce">
         CheckOnEmpty();
         convertUtcToLocal();
+
+        window.addEventListener("load", () => {
+            Array.from(document.querySelectorAll(".download-file")).forEach(el => {
+                new FileDownloadButton(el, el.dataset.bucketId, el.dataset.fileId, el.dataset.fileName);
+            });
+
+            setTimeout(() => {
+                isControlClickAllowed = true;
+                allControls.forEach(el => el.disabled = false);
+            }, 200);
+        });
     </script>
 }

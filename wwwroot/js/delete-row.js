@@ -33,6 +33,9 @@ async function Delete(id, name) {
             setTimeout(() => {
                 document.getElementById(`RL_${id}`).remove();
                 CheckOnEmpty();
+
+                if (reloadOnDelete) reloadWithFilter();
+
                 document.querySelectorAll(".delete-row-btn").forEach(el => el.disabled = false);
             }, 1000);
         })

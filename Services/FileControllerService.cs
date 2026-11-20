@@ -185,16 +185,22 @@ public class FileControllerService(
                             };
                         });
 
-                    res = ascDirection
-                        ? res.OrderBy(f => prop?.GetValue(f, null) ?? f.FileName)
-                        : res.OrderByDescending(f => prop?.GetValue(f, null) ?? f.FileName);
+                    var orderedRes = ascDirection
+                        ? res.OrderBy(f => prop?.GetValue(f, null) ?? f.FileName).ToList()
+                        : res.OrderByDescending(f => prop?.GetValue(f, null) ?? f.FileName).ToList();
 
                     return new AllFilesInBucketViewModel
                     {
                         Id = bucket.Id,
                         BucketName = bucket.CustomName ?? bucket.Name,
                         IsBelongsToUser = bucket.UserId == userGuid,
-                        Items = res
+                        Items = orderedRes,
+
+                        TotalCount = int.MaxValue,
+                        AscDirection = ascDirection,
+                        OrderBy = orderBy,
+                        PageCount = orderedRes.Count,
+                        PageIndex = 0
                     };
                 },
                 logger,
@@ -209,7 +215,8 @@ public class FileControllerService(
     }
 
     public async Task<Result<AllFilesInBucketViewModel>> GetAllPartsInFile(Guid userGuid, List<RoleType> roles,
-        Guid bucketId, Guid fileId, string orderBy, bool ascDirection, CancellationToken cancellationToken)
+        Guid bucketId, Guid fileId, string orderBy, bool ascDirection, int pageCount, int pageIndex,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -269,16 +276,24 @@ public class FileControllerService(
                         };
                     });
 
-                    res = ascDirection
-                        ? res.OrderBy(f => prop?.GetValue(f, null) ?? f.FileName)
-                        : res.OrderByDescending(f => prop?.GetValue(f, null) ?? f.FileName);
+                    var orderedRes = ascDirection
+                        ? res.OrderBy(f => prop?.GetValue(f, null) ?? f.FileName).ToList()
+                        : res.OrderByDescending(f => prop?.GetValue(f, null) ?? f.FileName).ToList();
+
+                    var orderedPagedRes = orderedRes.Skip(pageCount * pageIndex).Take(pageCount);
 
                     return new AllFilesInBucketViewModel
                     {
                         Id = bucket.Result.Id,
                         BucketName = bucket.Result.CustomName ?? bucket.Result.Name,
                         IsBelongsToUser = bucket.Result.UserId == userGuid,
-                        Items = res
+                        Items = orderedPagedRes,
+
+                        TotalCount = orderedRes.Count,
+                        AscDirection = ascDirection,
+                        OrderBy = orderBy,
+                        PageCount = pageCount,
+                        PageIndex = pageIndex
                     };
                 },
                 logger,

@@ -44,6 +44,7 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
+    [Obsolete]
     public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName",
         bool ascDirection = true, CancellationToken cancellationToken = default)
     {
@@ -57,10 +58,11 @@ public class FileController(
 
     [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "CurrentPartName",
-        bool ascDirection = false, CancellationToken cancellationToken = default)
+        bool ascDirection = true, int pageCount = 4, int pageIndex = 0,
+        CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,
-            fileId, orderBy, ascDirection, cancellationToken);
+            fileId, orderBy, ascDirection, pageCount, pageIndex, cancellationToken);
 
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
