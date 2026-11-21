@@ -57,7 +57,7 @@ public class FileController(
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
-    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "CurrentPartName",
+    public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "IsDone",
         bool ascDirection = true, int pageCount = 4, int pageIndex = 0,
         CancellationToken cancellationToken = default)
     {

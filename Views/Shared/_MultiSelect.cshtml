@@ -8,9 +8,9 @@
     var withReset = ViewData["with-reset"] as bool? ?? true;
 
     var items = Model?.ToList() ?? [];
-    var groups = items.GroupBy(x => x.Group).ToList();
+    var groups = items.GroupBy(f => f.Group).ToList();
 
-    var selectedItems = items.Where(x => x.Selected).ToList();
+    var selectedItems = items.Where(f => f.Selected).ToList();
     var initialText = selectedItems.Count switch
     {
         0 => defaultText,
@@ -50,7 +50,7 @@
                     <input type="checkbox"
                            value="@item.Value"
                            @(string.IsNullOrEmpty(inputName) ? "" : $"name=\"{inputName}\"")
-                           @(item.Selected ? "checked" : "")/>
+                           @(item.Selected ? "checked" : "")>
                     <span class="ms-checkbox-visual"></span>
                     <span class="ms-item-label">@item.Text</span>
                 </label>

@@ -15,6 +15,7 @@ namespace WebReader.Controllers;
 [Route("api/[controller]/[action]")]
 public class FileApiController(
     UserReadingRepository readingRepository,
+    FileRepository fileRepository,
     FileService fileService,
     HybridCache cache) : Controller
 {
@@ -76,6 +77,10 @@ public class FileApiController(
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         if (!User.GetUserRoles().Contains(RoleType.Admin)) return BadRequest(ModelState);
+
+        var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == request.Id, null, cancellationToken, true);
+
+        if (file == null) return NotFound(ModelState);
 
         await fileService.DeleteFilesAsync([request.Id], cancellationToken);
 

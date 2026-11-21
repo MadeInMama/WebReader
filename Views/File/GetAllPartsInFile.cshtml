@@ -152,6 +152,34 @@
             window.location.assign(url.toString());
         }
 
+        function reloadWithFilterAfterDelete(deletedFileId) {
+            allControls.forEach(el => el.disabled = true);
+
+            const url = new URL(window.location.href);
+
+            let files = Array.from(document.querySelectorAll("[data-file-id]"));
+
+            if (files.length > 1) {
+                let file = files.filter(f => f.dataset.fileId !== deletedFileId);
+                url.searchParams.set("fileId", file[0].dataset.fileId);
+            } else {
+                window.location.assign("/File/GetAllFilesByBucket");
+                return;
+            }
+
+            allControls.forEach((control) => {
+                const value = control.type === "checkbox" ? control.checked : control.value;
+
+                if (value !== "" && value !== null) {
+                    url.searchParams.set(control.name, value);
+                } else {
+                    url.searchParams.delete(control.name);
+                }
+            });
+
+            window.location.assign(url.toString());
+        }
+
         allControls.forEach(el => {
             el.onchange = () => {
                 if (isControlClickAllowed) {
@@ -176,7 +204,7 @@
             setTimeout(() => {
                 isControlClickAllowed = true;
                 allControls.forEach(el => el.disabled = false);
-            }, 200);
+            }, 300);
         });
     </script>
 }

@@ -31,12 +31,12 @@ async function Delete(id, name) {
             fileCacheService.delete(id);
 
             setTimeout(() => {
-                document.getElementById(`RL_${id}`).remove();
+                if (!reloadOnDelete) document.getElementById(`RL_${id}`).remove();
+
                 CheckOnEmpty();
 
-                if (reloadOnDelete) reloadWithFilter();
-
-                document.querySelectorAll(".delete-row-btn").forEach(el => el.disabled = false);
+                if (reloadOnDelete) reloadWithFilterAfterDelete(id);
+                else document.querySelectorAll(".delete-row-btn").forEach(el => el.disabled = false);
             }, 1000);
         })
         .catch(_ => {
