@@ -1,19 +1,15 @@
 ﻿using System.Collections.Immutable;
-using System.IO.Compression;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using AngleSharp.Html.Parser;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using WebReader.Data;
 using WebReader.Helpers;
-using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
 using WebReader.Services;
-using WebReader.Services.Http;
 using File = WebReader.Models.Entities.File;
 using TaskStatus = WebReader.Models.TaskStatus;
 
@@ -26,15 +22,19 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
     ILogger<T> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository,
-    NotificationRepository notificationRepository,
-    ReadMangaClubClient readMangaClubClient)
+    NotificationRepository notificationRepository)
     : AbstractBackgroundTasked<T>(taskRepository, scheduledTaskHubContext, logger)
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
 
     protected abstract string FileCustomName { get; }
     protected abstract string Url { get; }
+    protected abstract string AllFilesLinksSelector { get; }
+    protected abstract string CoverImagesSelector { get; }
     protected virtual ulong MaxSize { get; set; }
+
+    protected abstract Task<ImmutableList<string>> GetAllFilesLinks(CancellationToken cancellationToken);
+    protected abstract Task<ImmutableList<string>> GetAllCoversLinks(CancellationToken cancellationToken);
 
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
@@ -52,13 +52,9 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
                 return Result.Fail(
                     $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
 
-            var html = await readMangaClubClient.GetPageHtmlAsync(Url, cancellationToken);
+            var links = await GetAllFilesLinks(cancellationToken);
 
-            var links = await GetAllFilesLinks(html, ".chapters > table .item-title > a", cancellationToken);
-
-            var coverLinks = await GetAllCoversLinks(html,
-                ".cr-hero > .cr-hero-container > .cr-hero-poster-wrapper> .main-carousel > .main-carousel__content .cr-hero-poster__img",
-                cancellationToken);
+            var coverLinks = await GetAllCoversLinks(cancellationToken);
 
             logger.LogTrace("Found '{links}' links", links.Count);
 
@@ -104,51 +100,10 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         return result;
     }
 
-    protected virtual async Task<ImmutableList<string>> GetAllFilesLinks(string html,
-        string selector, CancellationToken cancellationToken)
-    {
-        return (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
-            .QuerySelectorAll(selector)
-            .Select(f => f.GetAttribute("href"))
-            .Where(f => !string.IsNullOrWhiteSpace(f))
-            .Distinct()
-            .Select(f =>
-            {
-                var fullUri = new Uri(new Uri(Url), f!);
-                var segments = fullUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-                var hasChapter = int.TryParse(segments.LastOrDefault(), out var chapterNum);
-
-                var volSegment = segments.Length >= 2 ? segments[^2] : null;
-                int.TryParse(volSegment?.Replace("vol", "", StringComparison.OrdinalIgnoreCase), out var volumeNum);
-
-                return new
-                {
-                    Url = fullUri.ToString(), HasChapter = hasChapter, Volume = volumeNum, Chapter = chapterNum
-                };
-            })
-            .Where(f => f.HasChapter)
-            .OrderBy(f => f.Volume)
-            .ThenBy(f => f.Chapter)
-            .Select(f => f.Url)
-            .ToImmutableList();
-    }
-
-    protected virtual async Task<ImmutableList<string>> GetAllCoversLinks(string html,
-        string selector, CancellationToken cancellationToken)
-    {
-        return (await new HtmlParser().ParseDocumentAsync(html, cancellationToken))
-            .QuerySelectorAll(selector)
-            .Select(f => f.GetAttribute("src") ?? f.GetAttribute("data-src")!)
-            .Where(f => !string.IsNullOrWhiteSpace(f))
-            .Distinct()
-            .ToImmutableList();
-    }
-
     protected virtual async Task<Bucket> GetDefaultBucket(ApplicationDbContext context,
         CancellationToken cancellationToken)
     {
-        return await context.Buckets.FirstAsync(b => b.Name == "mybucket", cancellationToken);
+        return await context.Buckets.AsNoTracking().FirstAsync(b => b.Name == "mybucket", cancellationToken);
     }
 
     protected virtual async Task<File?> GetLastStoredFile(ApplicationDbContext context,
@@ -200,7 +155,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         return true;
     }
 
-    private ImmutableList<string> ParseChapterImagesFromScript(string html)
+    protected ImmutableList<string> ParseChapterImagesFromScript(string html)
     {
         if (string.IsNullOrWhiteSpace(html))
             return ImmutableList<string>.Empty;
@@ -248,7 +203,7 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         }
     }
 
-    private static int ExtractPageNumber(string url)
+    protected static int ExtractPageNumber(string url)
     {
         var fileName = Path.GetFileNameWithoutExtension(url);
 
@@ -259,143 +214,12 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
             : int.MaxValue;
     }
 
-    protected virtual async Task<Result<(bool isSkipped, File? file)>> ParseAndSaveFile(string link,
+    protected abstract Task<Result<(bool isSkipped, File? file)>> ParseAndSaveFile(string link,
         Bucket defaultBucket,
         File? lastFile,
         string? coverLink,
-        CancellationToken cancellationToken)
-    {
-        var dataNum = link.Split("/").Last() == "0" ? 0 : int.Parse(link.Split("/").Last());
-
-        if ((lastFile?.CurrentPartNumber ?? -1u) >= dataNum)
-        {
-            logger.LogInformation("Skipping '{fileCustomName}' '{dataNum}'", FileCustomName, dataNum);
-            return Result.Ok((true, lastFile));
-        }
-
-        logger.LogInformation("Go to '{link}'", link);
-
-        var fileName =
-            $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
-
-        var html = await readMangaClubClient.GetChapterHtmlAsync(link, cancellationToken);
-
-        var htmlDocument = await new HtmlParser().ParseDocumentAsync(html, cancellationToken);
-
-        var images = ParseChapterImagesFromScript(html);
-
-        var currentPartName = MyRegex().Replace(
-            htmlDocument.QuerySelector(".text-cut")?.TextContent.Trim() ?? dataNum.ToString(), "");
-
-        logger.LogTrace("Found '{images}' links", images.Count);
-
-        using var memoryStream = new MemoryStream();
-
-        using var coverMemoryStream = new MemoryStream();
-
-        var coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-
-        if (coverLink != null)
-            await coverMemoryStream.WriteAsync(
-                await readMangaClubClient.GetImageByteArrayAsync(coverLink, cancellationToken), cancellationToken);
-
-        using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-        {
-            var imagesBytes = new List<byte[]>();
-
-            foreach (var img in images)
-            {
-                var imageBytes = await readMangaClubClient.GetImageByteArrayAsync(img, cancellationToken);
-
-                imagesBytes.Add(imageBytes);
-            }
-
-            var splitImages = ImageSplitter.Split(ImageMerger.MergeByWidth(imagesBytes, logger), logger);
-
-            foreach (var el in splitImages.Index())
-            {
-                var imgName =
-                    $"{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
-                var entry = zipArchive.CreateEntry(imgName, CompressionLevel.SmallestSize);
-                await using var entryStream = entry.Open();
-                await entryStream.WriteAsync(el.Item, cancellationToken);
-                await entryStream.FlushAsync(cancellationToken);
-                entryStream.Close();
-            }
-
-            if (coverLink == null) await coverMemoryStream.WriteAsync(splitImages.First(), cancellationToken);
-
-            imagesBytes.Clear();
-            imagesBytes.TrimExcess();
-            imagesBytes = null;
-            splitImages.Clear();
-            splitImages.TrimExcess();
-            splitImages = null;
-        }
-
-        await memoryStream.FlushAsync(cancellationToken);
-        memoryStream.Position = 0;
-
-        await coverMemoryStream.FlushAsync(cancellationToken);
-        coverMemoryStream.Position = 0;
-
-        logger.LogTrace("Save to db '{name}'", fileName);
-
-        var fileUploadResult = await fileUploadService.UploadFileAsync(
-            lastFile?.Id,
-            null,
-            lastFile?.Bucket ?? defaultBucket,
-            [.. Enum.GetValues<RoleType>()],
-            memoryStream,
-            fileName,
-            FileCustomName,
-            "application/zip",
-            FileType.ZipWithImg,
-            currentPartName,
-            uint.Parse(dataNum.ToString()),
-            coverFileName,
-            coverMemoryStream,
-            cancellationToken
-        );
-
-        memoryStream.Close();
-        coverMemoryStream.Close();
-
-        if (fileUploadResult.IsFailed)
-            return Result.Fail(new Error($"Error saving '{fileName}' to S3"));
-
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        using (var message = JsonSerializer.SerializeToDocument(new Dictionary<string, string>
-               {
-                   [StaticJsonNames.NotificationBody] = $"File '{FileCustomName}' has new part '{currentPartName}'.",
-                   [StaticJsonNames.NotificationBucketId] = fileUploadResult.Value.BucketId.ToString(),
-                   [StaticJsonNames.NotificationFileId] = fileUploadResult.Value.Id.ToString()
-               }))
-        {
-            await notificationRepository.AddAsync(new Models.Entities.Notification
-            {
-                Message = message,
-                Type = NotificationType.NewFile
-            }, cancellationToken);
-
-            await notificationRepository.SaveChangesAsync(cancellationToken);
-        }
-
-        var currentSize = await CurrentSize(context, FileCustomName, cancellationToken);
-
-        if (CheckMaxSizeReached(MaxSize, currentSize, FileCustomName))
-            return Result.Fail(
-                $"Max size {GlobalFunctions.FormatSize(MaxSize)} of '{FileCustomName}' has been reached {GlobalFunctions.FormatSize(currentSize)}");
-
-        SixLabors.ImageSharp.Configuration.Default.MemoryAllocator.ReleaseRetainedResources();
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-
-        return Result.Ok((false, fileUploadResult.Value))!;
-    }
+        CancellationToken cancellationToken);
 
     [GeneratedRegex(@"^\d+\s*-\s*")]
-    private static partial Regex MyRegex();
+    protected static partial Regex MyRegex();
 }

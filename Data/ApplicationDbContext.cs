@@ -200,6 +200,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 });
 
             if (!context.Set<ScheduledTaskConfig>()
+                    .Any(f => f.Type == TaskType.AutoDownloadNewPartsOnePunchMan))
+                context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
+                {
+                    Type = TaskType.AutoDownloadNewPartsOnePunchMan,
+                    DefaultPriority = sbyte.MinValue + 10,
+                    Cron = TaskCron.EveryWeek,
+                    DefaultSettings = JsonDocument.Parse("{\"max_size\": 500}"),
+                    IsActive = true
+                });
+
+            if (!context.Set<ScheduledTaskConfig>()
                     .Any(f => f.Type == TaskType.DeleteOldCompletedTasks))
                 context.Set<ScheduledTaskConfig>().Add(new ScheduledTaskConfig
                 {

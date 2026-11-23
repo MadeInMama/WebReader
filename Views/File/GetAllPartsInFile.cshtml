@@ -32,7 +32,7 @@
                         <img class="lazy-image"
                              src=""
                              data-src="@Url.Action("GetCover", "Cover", new { bucketId = Model.Id, fileId = item.Id })"
-                             alt="Book Cover for @item.CurrentPartName"
+                             alt="Book Cover for (@item.CurrentPartNumber) @item.CurrentPartName"
                              loading="lazy"/>
                         <div class="lazy-image-loader"></div>
                     </div>
@@ -40,7 +40,8 @@
                     <a asp-controller="File" asp-action="GetFile"
                        asp-route-bucketId="@Model.Id"
                        asp-route-fileId="@item.Id" class="click-effect">
-                        <span class="left main-info-span importance-0">@item.CurrentPartName</span>
+                        <span
+                            class="left main-info-span importance-0">(@item.CurrentPartNumber) @item.CurrentPartName</span>
                     </a>
 
                     <div class="event-output">
@@ -50,12 +51,12 @@
                         }
                         <button class="download-file click-effect"
                                 data-file-id="@item.Id" data-bucket-id="@Model.Id"
-                                data-file-name='@item.FileName @item.CurrentPartName'></button>
+                                data-file-name='@item.FileName (@item.CurrentPartNumber) @item.CurrentPartName'></button>
                         @if (User.GetUserRoles().Contains(RoleType.Admin))
                         {
                             <button class="remove click-effect delete-row-btn"
                                     data-id="@item.Id"
-                                    data-name="@item.FileName @item.CurrentPartName"></button>
+                                    data-name="@item.FileName (@item.CurrentPartNumber) @item.CurrentPartName"></button>
                         }
                     </div>
                 </div>

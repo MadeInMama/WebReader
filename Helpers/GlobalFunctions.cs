@@ -51,7 +51,8 @@ public static class GlobalFunctions
             TaskType.AutoDownloadNewPartsSoloLeveling,
             TaskType.AutoDownloadNewPartsSoloLevelingHunterOrigin,
             TaskType.AutoDownloadNewPartsSoloLevelingRagnarok,
-            TaskType.AutoDownloadNewPartsWorldAfterDestruction
+            TaskType.AutoDownloadNewPartsWorldAfterDestruction,
+            TaskType.AutoDownloadNewPartsOnePunchMan
         ];
     }
 

@@ -14,6 +14,7 @@ public enum TaskType
     AutoDownloadNewPartsSoloLevelingHunterOrigin,
     AutoDownloadNewPartsSoloLevelingRagnarok,
     AutoDownloadNewPartsWorldAfterDestruction,
+    AutoDownloadNewPartsOnePunchMan,
 
     DeleteOldCompletedTasks,
     DeleteOldErroredTasks,

@@ -15,8 +15,6 @@ public abstract class AbstractBackgroundTasked<T>(
 {
     private decimal _prevProgress;
 
-    public abstract Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
-
     public virtual async Task UpdateProgress(Guid taskId, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken)
     {
@@ -33,4 +31,11 @@ public abstract class AbstractBackgroundTasked<T>(
             logger.LogWarning(e, "Can't save progress");
         }
     }
+
+    public virtual Task PreExecuteAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    public abstract Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
 }

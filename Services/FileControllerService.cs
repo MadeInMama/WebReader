@@ -272,7 +272,8 @@ public class FileControllerService(
                             IsReading = reading != null,
                             IsParted = f.NextPartId.HasValue,
                             IsDone = reading?.IsDone ?? false,
-                            CurrentPartName = f.CurrentPartName
+                            CurrentPartName = f.CurrentPartName,
+                            CurrentPartNumber = f.CurrentPartNumber
                         };
                     });
 

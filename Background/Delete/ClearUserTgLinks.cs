@@ -8,6 +8,11 @@ namespace WebReader.Background.Delete;
 public class ClearUserTgLinks(UserTgLinkRepository userTgLinkRepository, ILogger<ClearUserTgLinks> logger)
     : IBackgroundTasked
 {
+    public Task PreExecuteAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         var result = await userTgLinkRepository.DeleteAllUsedOrExpiredAsync(cancellationToken);

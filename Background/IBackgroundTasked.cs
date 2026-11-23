@@ -6,7 +6,8 @@ namespace WebReader.Background;
 
 public interface IBackgroundTasked
 {
-    //TODO: before exec method
+    public Task PreExecuteAsync(CancellationToken cancellationToken);
+
     Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
     //TODO: after exec method
 

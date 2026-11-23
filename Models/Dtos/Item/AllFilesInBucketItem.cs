@@ -11,6 +11,7 @@ public class AllFilesInBucketItem
     public bool IsParted { get; init; }
     public bool IsDone { get; init; }
     public string? CurrentPartName { get; init; }
+    public uint? CurrentPartNumber { get; set; }
     public int TotalCount { get; set; }
     public ulong TotalSize { get; set; }
 }

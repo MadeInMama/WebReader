@@ -11,6 +11,11 @@ public class DeleteOldCompletedTasks(
     ILogger<DeleteOldCompletedTasks> logger)
     : IBackgroundTasked
 {
+    public Task PreExecuteAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
     public async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
     {
         if (!task.Settings.RootElement
