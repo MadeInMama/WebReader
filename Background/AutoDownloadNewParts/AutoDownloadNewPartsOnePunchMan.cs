@@ -28,23 +28,22 @@ public class AutoDownloadNewPartsOnePunchMan(
         contextFactory, fileUploadService, logger, scheduledTaskHubContext,
         taskRepository, notificationRepository)
 {
-    private List<MangaLibChapterDto> AllFilesLinks = [];
+    private List<MangaLibClient.ChapterInfo> AllFilesLinks = [];
     protected override string FileCustomName => "One-Punch Man";
-    protected override string Url => "706--onepunchman";
-    protected override string AllFilesLinksSelector => ".vue-recycle-scroller__item-view a";
-    protected override string CoverImagesSelector => ".cover__img";
+    protected override string Url => "https://mangalib.org/ru/manga/706--onepunchman?section=chapters";
+    protected override string AllFilesLinksSelector => "";
+    protected override string CoverImagesSelector => "";
 
     protected override async Task<ImmutableList<string>> GetAllFilesLinks(CancellationToken cancellationToken)
     {
         var resp = await mangaLibClient.GetChaptersAsync(Url, cancellationToken);
         AllFilesLinks = resp;
-        return resp.Select(f => f.Url).ToImmutableList();
+        return resp.Select(f => f.BranchId.ToString()).ToImmutableList();
     }
 
-    protected override async Task<ImmutableList<string>> GetAllCoversLinks(CancellationToken cancellationToken)
+    protected override Task<ImmutableList<string>> GetAllCoversLinks(CancellationToken cancellationToken)
     {
-        var resp = await mangaLibClient.GetAllCoversAsync(Url, cancellationToken);
-        return resp.Select(f => f.FullImageUrl).ToImmutableList();
+        return Task.FromResult<ImmutableList<string>>([]);
     }
 
     protected override async Task<Result<(bool isSkipped, File? file)>> ParseAndSaveFile(string link,
@@ -53,11 +52,11 @@ public class AutoDownloadNewPartsOnePunchMan(
         string? coverLink,
         CancellationToken cancellationToken)
     {
-        var dataNum = AllFilesLinks.FirstOrDefault(f => f.Url == link);
+        var chapter = AllFilesLinks.FirstOrDefault(f => f.BranchId.ToString() == link);
 
-        if (dataNum == null || (lastFile?.CurrentPartNumber ?? -1u) >= dataNum.Index)
+        if (chapter == null || (lastFile?.CurrentPartNumber ?? -1u) >= chapter.Index)
         {
-            logger.LogInformation("Skipping '{fileCustomName}' '{dataNum}'", FileCustomName, dataNum);
+            logger.LogInformation("Skipping '{fileCustomName}' '{dataNum}'", FileCustomName, chapter);
             return Result.Ok((true, lastFile));
         }
 
@@ -66,9 +65,9 @@ public class AutoDownloadNewPartsOnePunchMan(
         var fileName =
             $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
 
-        var images = await mangaLibClient.GetAllImagesBytesAsync(link, 1, cancellationToken);
+        var images = await mangaLibClient.GetChapterImagesBytesAsync(chapter, cancellationToken);
 
-        var currentPartName = MyRegex().Replace((dataNum.Name ?? dataNum.Number).Trim(), "");
+        var currentPartName = MyRegex().Replace(chapter.Name.Trim(), "");
 
         logger.LogTrace("Found '{images}' links", images.Count);
 
@@ -78,24 +77,20 @@ public class AutoDownloadNewPartsOnePunchMan(
 
         var coverFileName = $"{fileName.Replace(".zip", "")}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
 
-        if (coverLink != null)
-            await coverMemoryStream.WriteAsync(
-                await mangaLibClient.DownloadImageBytesAsync(coverLink, cancellationToken), cancellationToken);
-
         using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
-            foreach (var el in images.Index())
+            foreach (var el in images.OrderBy(f => f.PageIndex).Index())
             {
                 var imgName =
                     $"{el.Index}.{TypeHelper.ImgTypeNameDict[ImageType.Jpeg]}";
                 var entry = zipArchive.CreateEntry(imgName, CompressionLevel.SmallestSize);
                 await using var entryStream = entry.Open();
-                await entryStream.WriteAsync(el.Item, cancellationToken);
+                await entryStream.WriteAsync(el.Item.Bytes, cancellationToken);
                 await entryStream.FlushAsync(cancellationToken);
                 entryStream.Close();
             }
 
-            if (coverLink == null) await coverMemoryStream.WriteAsync(images.First(), cancellationToken);
+            if (coverLink == null) await coverMemoryStream.WriteAsync(images.First().Bytes, cancellationToken);
 
             images.Clear();
             images.TrimExcess();
@@ -121,7 +116,7 @@ public class AutoDownloadNewPartsOnePunchMan(
             "application/zip",
             FileType.ZipWithImg,
             currentPartName,
-            uint.Parse(dataNum.Index.ToString()),
+            uint.Parse(chapter.Index.ToString()),
             coverFileName,
             coverMemoryStream,
             cancellationToken

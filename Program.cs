@@ -308,11 +308,29 @@ builder.Services.AddHttpClient<ReadMangaClubClient>(client =>
     });
 builder.Services.AddHttpClient<MangaLibClient>(client =>
     {
+        client.DefaultRequestHeaders.Clear();
+
+        // 1. Базовые заголовки браузера
         client.DefaultRequestHeaders.Add("User-Agent",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-        client.DefaultRequestHeaders.Add("Accept",
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+        client.DefaultRequestHeaders.Add("Accept", "application/json, text/plain, */*");
         client.DefaultRequestHeaders.Add("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+        client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+
+        // 2. Заголовки происхождения (критически важны для API cdnlibs)
+        client.DefaultRequestHeaders.Add("Referer", "https://mangalib.org/");
+        client.DefaultRequestHeaders.Add("Origin", "https://mangalib.org");
+
+        // 3. Современные заголовки безопасности (Sec-Fetch-*), отсутствие которых часто вызывает 403
+        client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "empty");
+        client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "cors");
+        client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "same-site");
+
+        // 4. Client Hints (информация о клиенте, которую запрашивают современные WAF)
+        client.DefaultRequestHeaders.Add("Sec-Ch-Ua",
+            "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\"");
+        client.DefaultRequestHeaders.Add("Sec-Ch-Ua-Mobile", "?0");
+        client.DefaultRequestHeaders.Add("Sec-Ch-Ua-Platform", "\"Windows\"");
     })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
@@ -431,11 +449,10 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 
     // var files = await context.Files.AsNoTracking()
-    // .Where(f => f.CustomName == "Мир после падения" || f.CustomName == "Поднятие уровня в одиночку" ||
-    // f.CurrentPartNumber > 309).ToListAsync();
+        // .Where(f => f.CustomName == "One-Punch Man").ToListAsync();
 
     // await scope.ServiceProvider.GetRequiredService<FileService>()
-    // .DeleteFilesAsync([.. files.Select(f => f.Id)], CancellationToken.None);
+        // .DeleteFilesAsync([.. files.Select(f => f.Id)], CancellationToken.None);
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(telegramConfig.WebhookUrl!, secretToken: telegramConfig.SecretToken!);

@@ -1,308 +1,184 @@
-﻿using System.Text.Json.Serialization;
-using System.Web;
+﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace WebReader.Services.Http;
 
 public class MangaLibClient(HttpClient httpClient)
 {
-    public async Task<List<MangaLibChapterDto>> GetChaptersAsync(string mangaSlug,
-        CancellationToken cancellationToken)
+    private const string ApiBaseUrl = "https://api.cdnlibs.org/api";
+    private const string ImageHost = "https://img3.cdnlibs.org";
+
+    /// <summary>
+    ///     2. Получает список всех глав (с метаданными, необходимыми для загрузки картинок).
+    /// </summary>
+    public async Task<List<ChapterInfo>> GetChaptersAsync(string mangaUrl, CancellationToken cancellationToken)
     {
-        var url = $"https://api.cdnrulib.link/api/manga/{mangaSlug}/chapters";
+        var slug = ExtractSlug(mangaUrl);
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Add("Referer", "https://mangalib.org");
-        request.Headers.Add("Origin", "https://mangalib.org");
-        request.Headers.Add("Site-Id", "1");
+        var response = await httpClient.GetFromJsonAsync<ChaptersApiResponse>(
+            $"{ApiBaseUrl}/manga/{slug}/chapters?site_id[]=2", options, cancellationToken);
 
-        using var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (response?.data == null) return [];
 
-        var apiResponse = await response.Content.ReadFromJsonAsync<MangaLibChaptersResponse>(cancellationToken);
-
-        if (apiResponse?.Data == null)
-            return [];
-
-        return apiResponse.Data.OrderBy(f => f.Index).Select(ch =>
-        {
-            // Берем первую доступную ветку перевода (если их несколько)
-            var branchId = ch.Branches.FirstOrDefault()?.BranchId;
-            var branchQuery = branchId.HasValue ? $"?bid={branchId.Value}" : "";
-
-            // Формируем полную ссылку на главу
-            var chapterUrl = $"https://mangalib.orgru/{mangaSlug}/read/v{ch.Volume}/c{ch.Number}{branchQuery}";
-
-            return new MangaLibChapterDto(
-                ch.Volume,
-                ch.Number,
-                ch.Index,
-                ch.Name,
-                chapterUrl
-            );
-        }).ToList();
-    }
-
-    public async Task<List<MangaLibCoverDto>> GetAllCoversAsync(string mangaSlug, CancellationToken cancellationToken)
-    {
-        var url = $"https://api.cdnrulib.link/api/manga/{mangaSlug}/covers";
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Add("Referer", "https://mangalib.org");
-        request.Headers.Add("Origin", "https://mangalib.org");
-        request.Headers.Add("Site-Id", "1");
-
-        using var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var apiResponse = await response.Content.ReadFromJsonAsync<MangaLibCoversResponse>(cancellationToken);
-
-        if (apiResponse?.Data == null)
-            return new List<MangaLibCoverDto>();
-
-        return apiResponse.Data
-            .Where(item => !string.IsNullOrWhiteSpace(item.Cover?.Default))
-            .Select(item => new MangaLibCoverDto(
-                item.Id,
-                item.Info,
-                item.Order,
-                EnsureAbsoluteUrl(item.Cover!.Default!),
-                !string.IsNullOrWhiteSpace(item.Cover.Thumbnail)
-                    ? EnsureAbsoluteUrl(item.Cover.Thumbnail)
-                    : null
+        return response.data
+            .OrderBy(c => c.index ?? 0)
+            .Select(c => new ChapterInfo(
+                slug,
+                c.volume ?? "0",
+                c.number ?? "0",
+                c.name ?? c.number ?? "Без названия",
+                (c.branches?.FirstOrDefault()?.branch_id ?? c.branches?.FirstOrDefault()?.id)!.Value,
+                c.index!.Value
             ))
             .ToList();
     }
 
-    private static string EnsureAbsoluteUrl(string url)
+    /// <summary>
+    ///     3. Получает список прямых ссылок на изображения для конкретной главы.
+    /// </summary>
+    public async Task<List<string>> GetChapterImagesAsync(ChapterInfo chapter, CancellationToken cancellationToken)
     {
-        if (Uri.TryCreate(url, UriKind.Absolute, out _))
-            return url;
+        var queryParams = new List<string>
+        {
+            $"number={chapter.Number}",
+            $"volume={chapter.Volume}",
+            "site_id[]=2"
+        };
 
-        return $"https://imglib.info{url}";
+        queryParams.Add($"branch_id={chapter.BranchId}");
+
+        var url = $"{ApiBaseUrl}/manga/{chapter.Slug}/chapter?{string.Join("&", queryParams)}";
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+        var response = await httpClient.GetFromJsonAsync<ChapterDetailApiResponse>(url, options, cancellationToken);
+
+        if (response?.data?.pages == null) return new List<string>();
+
+        return response.data.pages
+            .Where(p => !string.IsNullOrEmpty(p.url))
+            .Select(p => GetFullImageUrl(p.url))
+            .ToList();
     }
 
-    public async Task<List<byte[]>> GetAllImagesBytesAsync(string readerUrl, int maxConcurrency,
-        CancellationToken cancellationToken)
+    /// <summary>
+    ///     4. Скачивает одно изображение по URL и возвращает его в виде массива байтов.
+    /// </summary>
+    public async Task<byte[]> DownloadImageAsync(string imageUrl, CancellationToken cancellationToken)
     {
-        if (!Uri.TryCreate(readerUrl, UriKind.Absolute, out var uri))
-            throw new ArgumentException($"Invalid URL: {readerUrl}", nameof(readerUrl));
+        if (string.IsNullOrEmpty(imageUrl))
+            throw new ArgumentException("URL изображения не может быть пустым.", nameof(imageUrl));
 
-        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        var readIndex = Array.IndexOf(segments, "read");
-
-        if (readIndex < 1 || readIndex + 2 >= segments.Length)
-            throw new ArgumentException($"Invalid MangaLib reader URL format: {readerUrl}", nameof(readerUrl));
-
-        var slug = segments[readIndex - 1].Trim('/');
-        var volume = segments[readIndex + 1].TrimStart('v', 'V');
-        var number = segments[readIndex + 2].TrimStart('c', 'C');
-
-        var query = HttpUtility.ParseQueryString(uri.Query);
-        var branchId = query["bid"];
-
-        // 1. Безопасная сборка URL через string.Join (гарантирует наличие /api/manga/)
-        var apiUrl = string.Join("/", "https://cdnrulib.link", "api", "manga", slug,
-            $"chapter?number={number}&volume={volume}");
-        if (!string.IsNullOrEmpty(branchId))
-            apiUrl += $"&branch_id={branchId}";
-
-        using var apiRequest = CreateApiRequest(apiUrl);
-        using var apiResponse = await httpClient.SendAsync(apiRequest, cancellationToken);
-        apiResponse.EnsureSuccessStatusCode();
-
-        var chapterData = await apiResponse.Content.ReadFromJsonAsync<MangaLibChapterDetailResponse>(cancellationToken);
-        var pages = chapterData?.Data?.Pages;
-
-        if (pages == null || pages.Count == 0)
-            return new List<byte[]>();
-
-        // 2. Получаем актуальный CDN-сервер картинок (по умолчанию "https://cdnrulib.link")
-        var imageHost = await GetImageServerHostAsync(cancellationToken);
-
-        // 3. Скачиваем все страницы параллельно с ограничением потоков
-        using var semaphore = new SemaphoreSlim(maxConcurrency);
-        var downloadTasks = pages
-            .OrderBy(p => p.PageNumber)
-            .Select(async page =>
-            {
-                await semaphore.WaitAsync(cancellationToken);
-                try
-                {
-                    var fullImageUrl = EnsureAbsoluteImageUrl(page.Url, imageHost);
-                    return await DownloadImageBytesAsync(fullImageUrl, cancellationToken);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            });
-
-        var imagesBytes = await Task.WhenAll(downloadTasks);
-        return imagesBytes.ToList();
-    }
-
-    private async Task<string> GetImageServerHostAsync(CancellationToken cancellationToken)
-    {
+        // HttpClient уже содержит нужные заголовки (User-Agent, Referer),
+        // которые необходимы MangaLib для отдачи картинок (защита от hotlinking).
         try
         {
-            var constantsUrl = string.Join("/", "https://cdnrulib.link", "api", "constants?fields[]=imageServers");
-            using var request = CreateApiRequest(constantsUrl);
-            using var response = await httpClient.SendAsync(request, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var constants = await response.Content.ReadFromJsonAsync<MangaLibConstantsResponse>(cancellationToken);
-
-                var mainServer = constants?.Data?.ImageServers?
-                    .Where(s => s.SiteIds.Contains(1) && !string.IsNullOrWhiteSpace(s.Url))
-                    .FirstOrDefault(s => s.Id == "main" && !s.Url.Contains("api.", StringComparison.OrdinalIgnoreCase));
-
-                if (mainServer != null)
-                    return mainServer.Url;
-            }
+            return await httpClient.GetByteArrayAsync(imageUrl, cancellationToken);
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            // В случае ошибки используем проверенный CDN-домен
+            throw new HttpRequestException(
+                $"Не удалось загрузить изображение по адресу {imageUrl}. Возможно, требуется авторизация или изменились правила доступа.",
+                ex);
+        }
+    }
+
+    /// <summary>
+    ///     5. Скачивает все изображения указанной главы и возвращает их в виде массивов байтов.
+    /// </summary>
+    /// <returns>Список кортежей, содержащих номер страницы, URL и байтовый массив изображения.</returns>
+    public async Task<List<ImageData>> GetChapterImagesBytesAsync(ChapterInfo chapter,
+        CancellationToken cancellationToken)
+    {
+        // 1. Сначала получаем список URL-адресов
+        var imageUrls = await GetChapterImagesAsync(chapter, cancellationToken);
+
+        if (!imageUrls.Any())
+            return new List<ImageData>();
+
+        var result = new List<ImageData>();
+
+        // 2. Последовательно скачиваем каждое изображение
+        // Примечание: Для очень больших глав лучше использовать асинхронный поток (Stream),
+        // чтобы избежать исключения OutOfMemoryException при хранении всех картинок в оперативной памяти.
+        for (var i = 0; i < imageUrls.Count; i++)
+        {
+            var url = imageUrls[i];
+            var imageBytes = await DownloadImageAsync(url, cancellationToken);
+
+            result.Add(new ImageData(
+                i + 1,
+                url,
+                imageBytes
+            ));
         }
 
-        return "https://cdnrulib.link";
+        return result;
     }
 
-    public async Task<byte[]> DownloadImageBytesAsync(string imageUrl, CancellationToken cancellationToken)
+    public record ChapterInfo(string Slug, string Volume, string Number, string Name, int BranchId, int Index);
+
+    public record ImageData(int PageIndex, string Url, byte[] Bytes);
+
+    #region Private Helpers
+
+    private string ExtractSlug(string url)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, imageUrl);
-        request.Headers.Add("Referer", "https://mangalib.org");
-
-        using var response =
-            await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        var match = Regex.Match(url, @"/(?:ru/)?(?:manga/)?(\d+--[\w\-]+)");
+        return match.Success
+            ? match.Groups[1].Value
+            : throw new ArgumentException("Не удалось извлечь slug из URL.", nameof(url));
     }
 
-    private static HttpRequestMessage CreateApiRequest(string url)
+    private string GetFullImageUrl(string rawUrl)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Add("Referer", "https://mangalib.org");
-        request.Headers.Add("Origin", "https://mangalib.org");
-        request.Headers.Add("Site-Id", "1");
-        return request;
+        if (string.IsNullOrEmpty(rawUrl)) return string.Empty;
+
+        // API может возвращать URL вида "//img..." или "/uploads/..."
+        var path = rawUrl.StartsWith("//") ? rawUrl.Substring(1) : rawUrl;
+        if (!path.StartsWith("/")) path = "/" + path;
+
+        return ImageHost + path;
     }
 
-    private static string EnsureAbsoluteImageUrl(string rawPath, string defaultHost)
+    #endregion
+
+    #region Internal API Models (для десериализации)
+
+    private class ChaptersApiResponse
     {
-        if (rawPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            rawPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            return rawPath;
-
-        var cleanHost = defaultHost.StartsWith("//")
-            ? $"https:{defaultHost}"
-            : defaultHost;
-
-        cleanHost = cleanHost.TrimEnd('/');
-        var cleanPath = rawPath.TrimStart('/');
-
-        return string.Join("/", cleanHost, cleanPath);
+        public List<ApiChapter>? data { get; set; }
     }
-}
 
-public class MangaLibChapterDetailResponse
-{
-    [JsonPropertyName("data")] public MangaLibChapterDetailData? Data { get; set; }
-}
+    private class ApiChapter
+    {
+        public string? volume { get; set; }
+        public string? number { get; set; }
+        public string? name { get; set; }
+        public int? index { get; set; }
+        public List<ApiBranch>? branches { get; set; }
+    }
 
-public class MangaLibChapterDetailData
-{
-    [JsonPropertyName("pages")] public List<MangaLibPageItem> Pages { get; set; } = new();
-}
+    private class ApiBranch
+    {
+        public int? branch_id { get; set; }
+        public int? id { get; set; }
+    }
 
-public class MangaLibPageItem
-{
-    [JsonPropertyName("p")] public int PageNumber { get; set; }
+    private class ChapterDetailApiResponse
+    {
+        public ChapterDetailData? data { get; set; }
+    }
 
-    [JsonPropertyName("url")] public string Url { get; set; } = string.Empty;
-}
+    private class ChapterDetailData
+    {
+        public List<ApiPage>? pages { get; set; }
+    }
 
-public class MangaLibConstantsResponse
-{
-    [JsonPropertyName("data")] public MangaLibConstantsData? Data { get; set; }
-}
+    private class ApiPage
+    {
+        public string? url { get; set; }
+    }
 
-public class MangaLibConstantsData
-{
-    [JsonPropertyName("imageServers")] public List<MangaLibImageServer>? ImageServers { get; set; }
-}
-
-public class MangaLibImageServer
-{
-    [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("url")] public string Url { get; set; } = string.Empty;
-
-    [JsonPropertyName("site_ids")] public List<int> SiteIds { get; set; } = new();
-}
-
-public record MangaLibChapterDto(
-    string Volume,
-    string Number,
-    int Index,
-    string? Name,
-    string Url
-);
-
-public class MangaLibChaptersResponse
-{
-    [JsonPropertyName("data")] public List<MangaLibChapterItem> Data { get; set; } = new();
-}
-
-public class MangaLibChapterItem
-{
-    [JsonPropertyName("id")] public int Id { get; set; }
-
-    [JsonPropertyName("volume")] public string Volume { get; set; } = string.Empty;
-
-    [JsonPropertyName("number")] public string Number { get; set; } = string.Empty;
-
-    [JsonPropertyName("name")] public string? Name { get; set; }
-
-    [JsonPropertyName("index")] public int Index { get; set; }
-
-    [JsonPropertyName("branches")] public List<MangaLibBranchItem> Branches { get; set; } = new();
-}
-
-public class MangaLibBranchItem
-{
-    [JsonPropertyName("branch_id")] public int? BranchId { get; set; }
-}
-
-public record MangaLibCoverDto(
-    int Id,
-    string Info,
-    int? Order,
-    string FullImageUrl,
-    string? ThumbnailUrl
-);
-
-public class MangaLibCoversResponse
-{
-    [JsonPropertyName("data")] public List<MangaLibCoverItem> Data { get; set; } = new();
-}
-
-public class MangaLibCoverItem
-{
-    [JsonPropertyName("id")] public int Id { get; set; }
-
-    [JsonPropertyName("info")] public string Info { get; set; } = string.Empty;
-
-    [JsonPropertyName("order")] public int Order { get; set; }
-
-    [JsonPropertyName("cover")] public MangaLibCoverUrls? Cover { get; set; }
-}
-
-public class MangaLibCoverUrls
-{
-    [JsonPropertyName("default")] public string? Default { get; set; }
-
-    [JsonPropertyName("thumbnail")] public string? Thumbnail { get; set; }
+    #endregion
 }
