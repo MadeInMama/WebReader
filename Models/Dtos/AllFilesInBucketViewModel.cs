@@ -8,6 +8,7 @@ public class AllFilesInBucketViewModel
     public required string BucketName { get; init; }
     public required bool IsBelongsToUser { get; init; }
     public required IEnumerable<AllFilesInBucketItem> Items { get; init; }
+    public required IEnumerable<string> OrderByValues { get; init; }
 
     public required int TotalCount { get; init; }
     public required int PageCount { get; init; }

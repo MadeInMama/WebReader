@@ -11,6 +11,7 @@ public class FileViewModel
     public required int? Scale { get; init; }
     public required string Title { get; init; }
     public string? CurrentPartName { get; init; }
+    public uint? CurrentPartNumber { get; init; }
     public Guid? NextPartId { get; init; }
     public Guid? PrevPartId { get; init; }
     public required FileType Type { get; set; }

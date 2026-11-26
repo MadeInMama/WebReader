@@ -41,7 +41,9 @@
                        asp-route-bucketId="@Model.Id"
                        asp-route-fileId="@item.Id" class="click-effect">
                         <span
-                            class="left main-info-span importance-0">(@item.CurrentPartNumber) @item.CurrentPartName</span>
+                            class="left main-info-span importance-0">@item.CurrentPartName</span>
+                        <br/>
+                        <span>@item.CurrentPartNumber</span>
                     </a>
 
                     <div class="event-output">
@@ -93,7 +95,9 @@
             <option value="6">6</option>
             <option value="8">8</option>
             <option value="10">10</option>
+            <option value="12">12</option>
             <option value="15">15</option>
+            <option value="16">16</option>
             <option value="2147483647">MAX</option>
         </select>
     </div>
@@ -101,9 +105,12 @@
     <div>
         <label for="page-index">Index:</label>
         <select asp-for="PageIndex" id="page-index" name="pageIndex" class="click-effect" disabled>
-            @for (var i = 0; i < (int)Math.Ceiling((double)Model.TotalCount / Model.PageCount); i++)
+            @{
+                var maxPageIndex = (int)Math.Ceiling((double)Model.TotalCount / Model.PageCount) - 1;
+            }
+            @for (var i = 0; i <= maxPageIndex; i++)
             {
-                <option value="@i">@i</option>
+                <option value="@i">@(i)/@(maxPageIndex)</option>
             }
         </select>
     </div>
@@ -111,8 +118,10 @@
     <div>
         <label for="order-by">Order By:</label>
         <select asp-for="OrderBy" id="order-by" name="orderBy" class="click-effect" disabled>
-            <option value="CurrentPartName">CurrentPartName</option>
-            <option value="IsDone">IsDone</option>
+            @foreach (var item in Model.OrderByValues)
+            {
+                <option value="@item">@item</option>
+            }
         </select>
     </div>
 }

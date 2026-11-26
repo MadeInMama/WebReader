@@ -68,18 +68,11 @@ builder.Services.AddHttpContextAccessor();
 
 var dbConfig = new DbConfig();
 builder.Configuration.GetRequiredSection(nameof(DbConfig)).Bind(dbConfig);
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseNpgsql(
         dbConfig.ConnectionString!,
         npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(30), null)
     )
-);
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-        options.UseNpgsql(
-            dbConfig.ConnectionString!,
-            npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(30), null)
-        ),
-    ServiceLifetime.Scoped
 );
 
 builder.Services.AddHybridCache(options =>

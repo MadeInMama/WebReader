@@ -29,11 +29,22 @@ else if (int.TryParse(Model.CurrentPartName, out _))
 }
 else
 {
-    @section SpecialInfo {
-        <h3 class="special-info-big">@Model.CurrentPartName</h3>
-    }
+    if (Model.CurrentPartName!.Contains(Model.CurrentPartNumber.ToString()!))
+    {
+        @section SpecialInfo {
+            <h3 class="special-info-big">@Model.CurrentPartName</h3>
+        }
 
-    <h3 class="special-info-small">@Model.CurrentPartName</h3>
+        <h3 class="special-info-small">@Model.CurrentPartName</h3>
+    }
+    else
+    {
+        @section SpecialInfo {
+            <h3 class="special-info-big">@Model.CurrentPartNumber - @Model.CurrentPartName</h3>
+        }
+
+        <h3 class="special-info-small">@Model.CurrentPartNumber - @Model.CurrentPartName</h3>
+    }
 }
 
 @section HeaderMenuItems {
@@ -53,17 +64,28 @@ else
             <a asp-controller="File" asp-action="GetFile"
                asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.PrevPartId.Value"
                class="click-effect" id="nav-previous-part">
-                Previous part
+                Previous
             </a>
         </li>
     }
     @if (Model.NextPartId.HasValue)
     {
+        @if (User.Identity is { IsAuthenticated: true })
+        {
+            <li>
+                <a asp-controller="File" asp-action="DeleteAndGetFile"
+                   asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value"
+                   asp-route-deleteFileId="@Model.FileId" class="click-effect" id="nav-delete-next-part">
+                    Delete + Next
+                </a>
+            </li>
+        }
+
         <li>
             <a asp-controller="File" asp-action="GetFile"
                asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value"
                class="click-effect" id="nav-next-part">
-                Next part
+                Next
             </a>
         </li>
     }

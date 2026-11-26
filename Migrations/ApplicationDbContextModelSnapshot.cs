@@ -400,14 +400,10 @@ namespace WebReader.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<int>("Page")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasColumnType("integer");
 
                     b.Property<int>("Scale")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("timestamp with time zone");

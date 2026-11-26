@@ -301,14 +301,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserReading>()
-            .Property(f => f.Page)
-            .HasDefaultValue(1);
-
-        modelBuilder.Entity<UserReading>()
-            .Property(f => f.Scale)
-            .HasDefaultValue(1);
-
         modelBuilder.Entity<File>()
             .HasIndex(f => new { f.Name, f.BucketId })
             .IsUnique();

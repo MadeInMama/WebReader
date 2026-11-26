@@ -37,7 +37,7 @@ public class FileControllerService(
                                 CustomName = bucket.CustomName ?? bucket.Name,
                                 DateTime = bucket.CreatedDate,
                                 Size = bucket.Size ?? 0
-                            });
+                            }).OrderBy(f => f.CustomName, StringComparer.OrdinalIgnoreCase);
 
                     return new AllBucketsViewModel { Items = res };
                 },
@@ -200,7 +200,9 @@ public class FileControllerService(
                         AscDirection = ascDirection,
                         OrderBy = orderBy,
                         PageCount = orderedRes.Count,
-                        PageIndex = 0
+                        PageIndex = 0,
+                        OrderByValues =
+                            [nameof(AllFilesInBucketItem.CurrentPartNumber), nameof(AllFilesByBucketItem.IsDone)]
                     };
                 },
                 logger,
@@ -294,7 +296,9 @@ public class FileControllerService(
                         AscDirection = ascDirection,
                         OrderBy = orderBy,
                         PageCount = pageCount,
-                        PageIndex = pageIndex
+                        PageIndex = pageIndex,
+                        OrderByValues =
+                            [nameof(AllFilesInBucketItem.CurrentPartNumber), nameof(AllFilesByBucketItem.IsDone)]
                     };
                 },
                 logger,
@@ -373,12 +377,13 @@ public class FileControllerService(
                                 FileId = r.FileId,
                                 CustomName = r.File?.CustomName ?? r.File?.Name ?? "",
                                 CurrentPartName = r.File?.CurrentPartName,
+                                CurrentPartNumber = r.File?.CurrentPartNumber,
                                 DateTime = r.UpdatedDate,
                                 Size = r.File?.Size ?? 0,
                                 Page = r.Page
                             })
-                            .OrderBy(f => f.CustomName)
-                            .ThenBy(f => f.CurrentPartName)
+                            .OrderBy(f => f.CustomName, StringComparer.OrdinalIgnoreCase)
+                            .ThenBy(f => f.CurrentPartNumber)
                             .ToList());
 
                     return new AllFilesReadingViewModel { Items = res };
@@ -421,6 +426,7 @@ public class FileControllerService(
                 BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",
                 FileName = file.CustomName ?? file.Name,
                 CurrentPartName = file.CurrentPartName,
+                CurrentPartNumber = file.CurrentPartNumber,
                 NextPartId = file.NextPartId,
                 PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
                     f.BucketId == bucketId &&

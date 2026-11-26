@@ -3,6 +3,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Dtos;
@@ -18,6 +19,8 @@ public class FileController(
     BucketRepository bucketRepository,
     FileRepository fileRepository,
     FileUploadService fileUploadService,
+    FileService fileService,
+    HybridCache cache,
     FileControllerService fileControllerService) : Controller
 {
     [ServiceFilter(typeof(LogRequestAttribute))]
@@ -77,6 +80,28 @@ public class FileController(
         if (res.IsFailed) return RedirectToAction("AccessDenied", "Account");
 
         return View(res.Value);
+    }
+
+    [ServiceFilter(typeof(LogRequestAttribute))]
+    public async Task<IActionResult> DeleteAndGetFile(Guid bucketId, Guid fileId, Guid deleteFileId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!User.GetUserRoles().Contains(RoleType.Admin)) return BadRequest(ModelState);
+
+        var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == deleteFileId, null, cancellationToken, true);
+
+        if (file == null) return NotFound(ModelState);
+
+        await fileService.DeleteFilesAsync([deleteFileId], cancellationToken);
+
+        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
+
+        var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId,
+            cancellationToken);
+
+        if (res.IsFailed) return RedirectToAction("CustomNotFound", "Account");
+
+        return View("GetFile", res.Value);
     }
 
     [ServiceFilter(typeof(LogRequestAttribute))]
