@@ -24,7 +24,7 @@ function prepareFile(data) {
         });
 
         SetPage(currentPage, false);
-        document.querySelector('.fullscreen-btn-on').removeAttribute("disabled");
+        Array.from(document.querySelectorAll('.set-filter-invert')).forEach(f => f.removeAttribute("disabled"));
     });
 }
 

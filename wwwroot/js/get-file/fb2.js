@@ -44,7 +44,6 @@ function prepareFile(data) {
         });
 
         SetPage(currentPage, false);
-        document.querySelector('.fullscreen-btn-on').removeAttribute("disabled");
     } catch (err) {
         console.error('Failed to load FB2:', err);
     }

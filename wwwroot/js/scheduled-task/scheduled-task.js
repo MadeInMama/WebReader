@@ -10,6 +10,8 @@ const filterValues = {
     "Cron": [],
 };
 
+const scheduledTasksFixedRequestQueue = new FixedRequestQueue(5, 1000);
+
 window.reload = function reload() {
     const filteredValues = Object.fromEntries(
         Object.entries(filterValues)
@@ -17,33 +19,35 @@ window.reload = function reload() {
             .map(([key, value]) => [key, value])
     );
 
-    requestQueue.enqueue({
-        method: 'POST',
-        url: '/ScheduledTask/ScheduledTasksPartial',
-        data: {Values: filteredValues},
-        options: {
-            headers: {
-                'RequestVerificationToken': GetAntiForgeryToken()
+    scheduledTasksFixedRequestQueue.push(() => {
+        requestQueue.enqueue({
+            method: 'POST',
+            url: '/ScheduledTask/ScheduledTasksPartial',
+            data: {Values: filteredValues},
+            options: {
+                headers: {
+                    'RequestVerificationToken': GetAntiForgeryToken()
+                },
+                withCredentials: true
             },
-            withCredentials: true
-        },
-        beforeSend: () => {
-        },
-        setProgress: (val) => {
-        }
-    })
-        .then(async response => {
-            const data = await response.data;
-            document.getElementById('scheduled_tasks_partial').innerHTML = data
-                .trim()
-                .replaceAll('\n', '')
-                .replaceAll('\r', '');
-
-            convertUtcToLocal();
+            beforeSend: () => {
+            },
+            setProgress: (val) => {
+            }
         })
-        .catch(error => {
-            console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
-        });
+            .then(async response => {
+                const data = await response.data;
+                document.getElementById('scheduled_tasks_partial').innerHTML = data
+                    .trim()
+                    .replaceAll('\n', '')
+                    .replaceAll('\r', '');
+
+                convertUtcToLocal();
+            })
+            .catch(error => {
+                console.error(`Ошибка при выполнении AJAX-запроса: ${error}`);
+            });
+    });
 }
 
 function setDefaultDateTime() {

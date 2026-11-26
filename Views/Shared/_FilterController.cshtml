@@ -1,0 +1,19 @@
+﻿@using WebReader.Models
+@* @formatter:off *@
+@if (FileType.ZipWithImg == Model.Type || FileType.Pdf == Model.Type)
+{
+    @if ((bool?)ViewData["with-wrapper"] ?? false)
+    {
+        @:<div disabled class="set-filter-invert-wrapper disabled-with-anim">
+    }
+
+        <button disabled
+            class="set-filter-invert @((bool?)ViewData["with-wrapper"] ?? false ? "" : "disabled-with-anim") click-effect">
+        </button>
+
+    @if ((bool?)ViewData["with-wrapper"] ?? false)
+    {
+        @:</div>
+    }
+}
+@* @formatter:on *@

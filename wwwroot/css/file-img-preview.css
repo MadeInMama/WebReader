@@ -3,5 +3,6 @@
     opacity: 0;
     width: 100%;
     object-fit: contain;
-    transition: opacity var(--animation-time) ease-in-out;
+    transition: opacity var(--animation-time) ease-in-out,
+    filter var(--animation-time) ease-in-out;
 }

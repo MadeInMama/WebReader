@@ -13,12 +13,14 @@ footer {
 }
 
 footer > .controls-start {
+    display: flex;
+    gap: 0.5em;
     grid-column: 1;
 }
 
 footer > .controls-center {
     display: grid;
-    grid-template-columns: 2em auto 2em;
+    grid-template-columns: auto auto auto;
     gap: 0.5em;
     grid-column: 2;
     justify-self: center;
@@ -37,6 +39,8 @@ footer > .controls-center > *:nth-child(3) {
 }
 
 footer > .controls-end {
+    display: flex;
+    gap: 0.5em;
     grid-column: 3;
     justify-self: end;
 }
@@ -46,6 +50,18 @@ footer > .controls-end {
     mask: url("../icons/arrow-circle-up-svgrepo-com.svg") no-repeat center;
     mask-size: cover;
     -webkit-mask: url("../icons/arrow-circle-up-svgrepo-com.svg") no-repeat center;
+    -webkit-mask-size: cover;
+    height: 2em;
+    width: 2em;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.set-filter-invert {
+    background-color: var(--foreground-color);
+    mask: url("../icons/loop-1-svgrepo-com.svg") no-repeat center;
+    mask-size: cover;
+    -webkit-mask: url("../icons/loop-1-svgrepo-com.svg") no-repeat center;
     -webkit-mask-size: cover;
     height: 2em;
     width: 2em;
@@ -162,7 +178,7 @@ footer > .controls-end {
     right: env(safe-area-inset-right);
 }
 
-.set-scale-wrapper, .preview-page-wrapper {
+.set-scale-wrapper, .preview-page-wrapper, .set-filter-invert-wrapper {
     padding: 0.5em;
     border-radius: 0.75em;
     box-shadow: 0 0 1em var(--drop-shadow-color);
@@ -170,7 +186,7 @@ footer > .controls-end {
     backdrop-filter: blur(var(--backdrop-blur));
 }
 
-.set-scale-wrapper {
+.tools-container-horizontal-spacer {
     margin-right: auto;
 }
 

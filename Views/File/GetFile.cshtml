@@ -112,6 +112,11 @@ else
         {
             { "with-wrapper", true }
         })
+        @await Html.PartialAsync("_FilterController", Model, new ViewDataDictionary(ViewData)
+        {
+            { "with-wrapper", true }
+        })
+        <div class="tools-container-horizontal-spacer"></div>
         @if (FileType.Fb2 == Model.Type)
         {
             @await Html.PartialAsync("_AudioController")
@@ -134,6 +139,10 @@ else
 {
     <div class="controls-start">
         @await Html.PartialAsync("_SetScaleControl", Model, new ViewDataDictionary(ViewData)
+        {
+            { "with-wrapper", false }
+        })
+        @await Html.PartialAsync("_FilterController", Model, new ViewDataDictionary(ViewData)
         {
             { "with-wrapper", false }
         })
@@ -192,7 +201,7 @@ else
         let currentScale = @(Model.Type switch
                            {
                                FileType.Pdf => Model.Scale ?? -1,
-                               FileType.ZipWithImg => Model.Scale ?? -1,
+                               FileType.ZipWithImg => Model.Scale ?? 0,
                                FileType.Fb2 => Model.Scale ?? 125,
                                _ => throw new ArgumentOutOfRangeException()
                            });

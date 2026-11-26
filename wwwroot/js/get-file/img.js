@@ -20,7 +20,7 @@ function prepareFile(zip) {
             });
 
             SetPage(currentPage, false);
-            document.querySelector('.fullscreen-btn-on').removeAttribute("disabled");
+            Array.from(document.querySelectorAll('.set-filter-invert')).forEach(f => f.removeAttribute("disabled"));
         });
     } catch (err) {
         console.error('Failed to load ZIP:', err);

@@ -449,10 +449,10 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
 
     // var files = await context.Files.AsNoTracking()
-        // .Where(f => f.CustomName == "One-Punch Man").ToListAsync();
+    // .Where(f => f.CustomName == "One-Punch Man").ToListAsync();
 
     // await scope.ServiceProvider.GetRequiredService<FileService>()
-        // .DeleteFilesAsync([.. files.Select(f => f.Id)], CancellationToken.None);
+    // .DeleteFilesAsync([.. files.Select(f => f.Id)], CancellationToken.None);
 
     var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
     await botClient.SetWebhook(telegramConfig.WebhookUrl!, secretToken: telegramConfig.SecretToken!);

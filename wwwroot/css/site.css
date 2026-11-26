@@ -21,7 +21,7 @@
     --error-foreground-color: #B91C1C;
     --drop-shadow-color: #111111;
     --input-background: #3a3a3a;
-    --canvas-invert: 0.867;
+    --canvas-invert: 0.865;
     --animation-time: 150ms;
 }
 
@@ -38,7 +38,7 @@
         --error-foreground-color: #EF4444;
         --drop-shadow-color: #aaaaaa;
         --input-background: #fcfcfc;
-        --canvas-invert: 0.067;
+        --canvas-invert: 0.135;
         color-scheme: light;
     }
 }

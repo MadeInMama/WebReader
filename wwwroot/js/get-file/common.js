@@ -31,6 +31,7 @@
         })
             .then(response => {
                 prepareFile(response);
+                document.querySelector('.fullscreen-btn-on').removeAttribute("disabled");
                 customSendCurrPageEvent.detail.message = `<div class="success"></div>`;
                 customSendCurrPageEvent.detail.type = EventTypes.FROM_MILLIS;
                 customSendCurrPageEvent.detail.millis = 3000;
@@ -43,6 +44,21 @@
                 console.error(error);
             });
     }
+});
+
+Array.from(document.querySelectorAll('.set-filter-invert')).forEach(value => {
+    value.onclick = () => {
+        //TODO: select pdf-canvas
+        let canvas = document.querySelector("#img-canvas") || document.querySelector("#img-canvas");
+
+        if (canvas) {
+            if (canvas.style.filter && canvas.style.filter !== "none") {
+                canvas.style.filter = "none";
+            } else {
+                canvas.style.filter = "invert(var(--canvas-invert))"
+            }
+        }
+    };
 });
 
 Array.from(document.getElementsByClassName("prev-page-controller")).forEach(value => {
