@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
@@ -13,7 +14,8 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
     ScheduledTaskRepository taskRepository,
     MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
-    ILogger<MakeUnavailableBucketsThatNotExistsInS3> logger)
+    ILogger<MakeUnavailableBucketsThatNotExistsInS3> logger,
+    HybridCache cache)
     : AbstractBackgroundTasked<MakeUnavailableBucketsThatNotExistsInS3>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
@@ -60,5 +62,11 @@ public class MakeUnavailableBucketsThatNotExistsInS3(
             result);
 
         return Result.Ok($"Update count: {result}");
+    }
+
+    public override async Task PostExecuteAsync(CancellationToken cancellationToken)
+    {
+        await cache.RemoveByTagAsync(["Buckets", "Files"], cancellationToken);
+        await base.PostExecuteAsync(cancellationToken);
     }
 }

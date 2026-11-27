@@ -5,6 +5,7 @@ using AngleSharp.Html.Parser;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
@@ -24,10 +25,10 @@ public class AutoDownloadNewPartsSoloLevelingRagnarok(
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository,
     NotificationRepository notificationRepository,
-    ReadMangaClubClient readMangaClubClient)
+    ReadMangaClubClient readMangaClubClient,
+    HybridCache cache)
     : AbstractAutoDownloadNewParts<AutoDownloadNewPartsSoloLevelingRagnarok>(
-        contextFactory, fileUploadService, logger, scheduledTaskHubContext,
-        taskRepository, notificationRepository)
+        contextFactory, logger, scheduledTaskHubContext, taskRepository, cache)
 {
     private string? _html;
     protected override string FileCustomName => "Поднятие уровня в одиночку: Рагнарёк";

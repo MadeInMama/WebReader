@@ -94,7 +94,7 @@ public class FileController(
 
         await fileService.DeleteFilesAsync([deleteFileId], cancellationToken);
 
-        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
+        await cache.RemoveByTagAsync(["Buckets", "Files"], cancellationToken);
 
         var res = await fileControllerService.GetFile(User.GetUserGuid(), User.GetUserRoles(), bucketId, fileId,
             cancellationToken);

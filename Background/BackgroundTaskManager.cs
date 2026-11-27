@@ -196,8 +196,11 @@ public class BackgroundTaskManager(
 
                         logger.LogInformation("Started task: {}({typeCode}) | {settings}", task.Type, (int)task.Type,
                             task.Settings.RootElement.ToString());
+
                         await taskExecutor.PreExecuteAsync(combinedToken);
                         var result = await taskExecutor.ExecuteAsync(task, combinedToken);
+                        await taskExecutor.PostExecuteAsync(combinedToken);
+
                         logger.LogInformation("Finished task: {}({typeCode})", task.Type, (int)task.Type);
 
                         if (result.IsSuccess)

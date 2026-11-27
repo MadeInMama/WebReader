@@ -31,18 +31,11 @@ public class S3Controller(
 
         var httpClient = httpClientFactory.CreateClient("S3");
 
-        var customOptions = new HybridCacheEntryOptions
-        {
-            LocalCacheExpiration = TimeSpan.FromSeconds(500),
-            Expiration = TimeSpan.FromSeconds(500)
-        };
-
         var presignedUrl = await cache.GetOrCreateWithLoggingAsync(
             $"filePresignedUrl_{file.Id}",
             async _ => await minioService.GetFileUrlAsync(file.Bucket!.Name, file.Name),
             logger,
-            cancellationToken: cancellationToken,
-            options: customOptions
+            cancellationToken: cancellationToken
         );
 
         if (string.IsNullOrEmpty(presignedUrl))

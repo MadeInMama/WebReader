@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Helpers;
 using WebReader.Models;
 using WebReader.Models.Entities;
@@ -15,7 +16,8 @@ public class RemoveTtsForFilesThatNotExistsInDb(
     FileRepository fileRepository,
     MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
-    ILogger<RemoveTtsForFilesThatNotExistsInDb> logger)
+    ILogger<RemoveTtsForFilesThatNotExistsInDb> logger,
+    HybridCache cache)
     : AbstractBackgroundTasked<RemoveTtsForFilesThatNotExistsInDb>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
@@ -71,5 +73,11 @@ public class RemoveTtsForFilesThatNotExistsInDb(
         var res = string.Join(", ", namesRemoved);
 
         return Result.Ok(string.IsNullOrWhiteSpace(res) ? "No removed folders" : $"Removed folders: {res}");
+    }
+
+    public override async Task PostExecuteAsync(CancellationToken cancellationToken)
+    {
+        await cache.RemoveByTagAsync(["Buckets", "Files"], cancellationToken);
+        await base.PostExecuteAsync(cancellationToken);
     }
 }

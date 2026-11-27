@@ -15,6 +15,11 @@ public abstract class AbstractBackgroundTasked<T>(
 {
     private decimal _prevProgress;
 
+    public virtual Task PostExecuteAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
     public virtual async Task UpdateProgress(Guid taskId, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken)
     {

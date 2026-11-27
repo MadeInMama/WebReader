@@ -8,9 +8,10 @@ public interface IBackgroundTasked
 {
     public Task PreExecuteAsync(CancellationToken cancellationToken);
 
-    Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
-    //TODO: after exec method
+    public Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken);
 
-    Task UpdateProgress(Guid taskId, TaskStatus status, decimal? progress, string? result,
+    public Task PostExecuteAsync(CancellationToken cancellationToken);
+
+    public Task UpdateProgress(Guid taskId, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken);
 }

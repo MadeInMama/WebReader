@@ -46,7 +46,7 @@ public class FileApiController(
                 request.IsLastPage, cancellationToken);
         }
 
-        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
+        await cache.RemoveByTagAsync(["Files"], cancellationToken);
 
         return Accepted();
     }
@@ -62,7 +62,7 @@ public class FileApiController(
 
         await readingRepository.DeleteAllAsync([request.Id], cancellationToken);
 
-        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
+        await cache.RemoveByTagAsync(["Files"], cancellationToken);
 
         return NoContent();
     }
@@ -73,10 +73,7 @@ public class FileApiController(
     public async Task<IActionResult> DeleteFile([FromBody] DeleteRequest request,
         CancellationToken cancellationToken = default)
     {
-        //TODO: error if file not deleted or not exists
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-
-        if (!User.GetUserRoles().Contains(RoleType.Admin)) return BadRequest(ModelState);
+        if (!ModelState.IsValid || !User.GetUserRoles().Contains(RoleType.Admin)) return BadRequest(ModelState);
 
         var file = await fileRepository.FirstOrDefaultAsync(f => f.Id == request.Id, null, cancellationToken, true);
 
@@ -84,7 +81,7 @@ public class FileApiController(
 
         await fileService.DeleteFilesAsync([request.Id], cancellationToken);
 
-        await cache.RemoveByTagAsync($"files_{User.GetUserGuid()}", cancellationToken);
+        await cache.RemoveByTagAsync(["Buckets", "Files"], cancellationToken);
 
         return NoContent();
     }

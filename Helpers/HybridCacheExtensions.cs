@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Hybrid;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace WebReader.Helpers;
 
@@ -13,6 +14,8 @@ public static class HybridCacheExtensions
         IEnumerable<string>? tags = null,
         CancellationToken cancellationToken = default)
     {
+        var watch = Stopwatch.StartNew();
+
         var isCacheMiss = false;
 
         var result = await cache.GetOrCreateAsync(
@@ -28,10 +31,12 @@ public static class HybridCacheExtensions
             cancellationToken
         );
 
+        watch.Stop();
+
         if (isCacheMiss)
-            logger.LogTrace("HybridCache MISS: {key}", key);
+            logger.LogTrace("HybridCache MISS: {key} | {time}", key, watch.Elapsed.TotalMilliseconds);
         else
-            logger.LogTrace("HybridCache HIT: {key}", key);
+            logger.LogTrace("HybridCache HIT: {key} | {time}", key, watch.Elapsed.TotalMilliseconds);
 
         return result;
     }

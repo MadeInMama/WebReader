@@ -26,7 +26,7 @@ public class FileControllerService(
         try
         {
             return await cache.GetOrCreateWithLoggingAsync(
-                $"buckets_{userGuid}_{string.Join(",", roles)}",
+                $"GetAllBuckets_{userGuid}",
                 async _ =>
                 {
                     var res = (await bucketRepository.GetAllAvailableBucketsAsync(roles, userGuid, cancellationToken))
@@ -42,6 +42,7 @@ public class FileControllerService(
                     return new AllBucketsViewModel { Items = res };
                 },
                 logger,
+                tags: ["Buckets"],
                 cancellationToken: cancellationToken);
         }
         catch (CustomApiException e)
@@ -56,7 +57,7 @@ public class FileControllerService(
         try
         {
             return await cache.GetOrCreateWithLoggingAsync(
-                $"files_by_bucket_{userGuid}_{string.Join(",", roles)}_{orderBy}",
+                $"GetAllFilesByBucket_{userGuid}_{orderBy}",
                 async _ =>
                 {
                     var prop = typeof(AllFilesByBucketItem).GetProperty(orderBy);
@@ -130,7 +131,7 @@ public class FileControllerService(
                     };
                 },
                 logger,
-                tags: [$"files_{userGuid}"],
+                tags: ["Buckets", "Files"],
                 cancellationToken: cancellationToken
             );
         }
@@ -146,7 +147,7 @@ public class FileControllerService(
         try
         {
             return await cache.GetOrCreateWithLoggingAsync(
-                $"files_in_bucket_{userGuid}_{string.Join(",", roles)}_{bucketId}_{orderBy}",
+                $"GetAllFilesInBucket_{userGuid}_{bucketId}_{orderBy}_{ascDirection}",
                 async _ =>
                 {
                     var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
@@ -206,7 +207,7 @@ public class FileControllerService(
                     };
                 },
                 logger,
-                tags: [$"files_{userGuid}"],
+                tags: ["Buckets", "Files"],
                 cancellationToken: cancellationToken
             );
         }
@@ -223,7 +224,7 @@ public class FileControllerService(
         try
         {
             return await cache.GetOrCreateWithLoggingAsync(
-                $"parts_in_file_{userGuid}_{string.Join(",", roles)}_{bucketId}_{fileId}_{orderBy}",
+                $"GetAllPartsInFile_{userGuid}_{bucketId}_{fileId}_{orderBy}_{ascDirection}_{pageCount}_{pageIndex}",
                 async _ =>
                 {
                     var prop = typeof(AllFilesInBucketItem).GetProperty(orderBy);
@@ -302,7 +303,7 @@ public class FileControllerService(
                     };
                 },
                 logger,
-                tags: [$"files_{userGuid}"],
+                tags: ["Buckets", "Files"],
                 cancellationToken: cancellationToken
             );
         }
@@ -318,7 +319,7 @@ public class FileControllerService(
         try
         {
             return await cache.GetOrCreateWithLoggingAsync(
-                $"reading_{userGuid}_{string.Join(",", roles)}",
+                $"GetReading_{userGuid}",
                 async _ =>
                 {
                     var allUserReadings =
@@ -389,7 +390,7 @@ public class FileControllerService(
                     return new AllFilesReadingViewModel { Items = res };
                 },
                 logger,
-                tags: [$"files_{userGuid}"],
+                tags: ["Buckets", "Files"],
                 cancellationToken: cancellationToken
             );
         }
@@ -404,36 +405,45 @@ public class FileControllerService(
     {
         try
         {
-            var file = await fileRepository.FirstOrDefaultAsync(f =>
-                    f.BucketId == bucketId &&
-                    f.Id == fileId &&
-                    f.AccessRoles.Intersect(roles).Any(), null, cancellationToken, true,
-                f => f.Bucket!) ?? throw new CustomApiException("File not found");
+            return await cache.GetOrCreateWithLoggingAsync(
+                $"GetFile_{userGuid}_{bucketId}_{fileId}",
+                async _ =>
+                {
+                    var file = await fileRepository.FirstOrDefaultAsync(f =>
+                            f.BucketId == bucketId &&
+                            f.Id == fileId &&
+                            f.AccessRoles.Intersect(roles).Any(), null, cancellationToken, true,
+                        f => f.Bucket!) ?? throw new CustomApiException("File not found");
 
-            var reading = await readingRepository
-                .FirstOrDefaultAsync(f => f.UserId == userGuid
-                                          && f.File!.BucketId == bucketId
-                                          && f.FileId == fileId, null, cancellationToken, true);
+                    var reading = await readingRepository
+                        .FirstOrDefaultAsync(f => f.UserId == userGuid
+                                                  && f.File!.BucketId == bucketId
+                                                  && f.FileId == fileId, null, cancellationToken, true);
 
-            return new FileViewModel
-            {
-                UserId = userGuid,
-                FileId = file.Id,
-                Page = reading?.Page ?? 1,
-                Scale = reading?.Scale,
-                Title = file.CustomName ?? file.Name,
-                BucketId = file.BucketId,
-                BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",
-                FileName = file.CustomName ?? file.Name,
-                CurrentPartName = file.CurrentPartName,
-                CurrentPartNumber = file.CurrentPartNumber,
-                NextPartId = file.NextPartId,
-                PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
-                    f.BucketId == bucketId &&
-                    f.NextPartId == file.Id &&
-                    f.AccessRoles.Intersect(roles).Any(), null, cancellationToken, true))?.Id,
-                Type = file.Type
-            };
+                    return new FileViewModel
+                    {
+                        UserId = userGuid,
+                        FileId = file.Id,
+                        Page = reading?.Page ?? 1,
+                        Scale = reading?.Scale,
+                        Title = file.CustomName ?? file.Name,
+                        BucketId = file.BucketId,
+                        BucketName = file.Bucket?.CustomName ?? file.Bucket?.Name ?? "",
+                        FileName = file.CustomName ?? file.Name,
+                        CurrentPartName = file.CurrentPartName,
+                        CurrentPartNumber = file.CurrentPartNumber,
+                        NextPartId = file.NextPartId,
+                        PrevPartId = (await fileRepository.FirstOrDefaultAsync(f =>
+                            f.BucketId == bucketId &&
+                            f.NextPartId == file.Id &&
+                            f.AccessRoles.Intersect(roles).Any(), null, cancellationToken, true))?.Id,
+                        Type = file.Type
+                    };
+                },
+                logger,
+                tags: ["Buckets", "Files"],
+                cancellationToken: cancellationToken
+            );
         }
         catch (CustomApiException e)
         {

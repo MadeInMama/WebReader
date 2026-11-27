@@ -22,6 +22,11 @@ public class ClearUserTgLinks(UserTgLinkRepository userTgLinkRepository, ILogger
         return Result.Ok($"Deleted count: {result}");
     }
 
+    public Task PostExecuteAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
     public Task UpdateProgress(Guid taskId, TaskStatus status, decimal? progress, string? result,
         CancellationToken cancellationToken)
     {

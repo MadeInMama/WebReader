@@ -1,6 +1,7 @@
 ﻿using WebReader.Models;
 using WebReader.Models.Entities;
 using WebReader.Repositories;
+using TaskStatus = WebReader.Models.TaskStatus;
 
 namespace WebReader.Services;
 
@@ -39,23 +40,32 @@ public class FileService(
             await fileRepository.DeleteAsync(guid.Item, cancellationToken);
         }
 
-        await scheduledTaskRepository.AddRangeAsync([
-            new ScheduledTask
-            {
-                Type = TaskType.RemoveFilesThatNotExistsInDb,
-                Priority = sbyte.MaxValue,
-                Cron = TaskCron.Manually,
-                HaveToStartAt = DateTimeOffset.UtcNow
-            },
-            new ScheduledTask
-            {
-                Type = TaskType.RemoveTtsForFilesThatNotExistsInDb,
-                Priority = sbyte.MaxValue - 1,
-                Cron = TaskCron.Manually,
-                HaveToStartAt = DateTimeOffset.UtcNow
-            }
-        ], cancellationToken);
-        await scheduledTaskRepository.SaveChangesAsync(cancellationToken);
+        var task = await scheduledTaskRepository.FirstOrDefaultAsync(
+            f => TaskType.RemoveFilesThatNotExistsInDb == f.Type &&
+                 TaskStatus.Pending == f.Status &&
+                 f.HaveToStartAt < DateTimeOffset.UtcNow,
+            null, cancellationToken, true);
+
+        if (task == null)
+        {
+            await scheduledTaskRepository.AddRangeAsync([
+                new ScheduledTask
+                {
+                    Type = TaskType.RemoveFilesThatNotExistsInDb,
+                    Priority = sbyte.MaxValue,
+                    Cron = TaskCron.Manually,
+                    HaveToStartAt = DateTimeOffset.UtcNow
+                },
+                new ScheduledTask
+                {
+                    Type = TaskType.RemoveTtsForFilesThatNotExistsInDb,
+                    Priority = sbyte.MaxValue - 1,
+                    Cron = TaskCron.Manually,
+                    HaveToStartAt = DateTimeOffset.UtcNow
+                }
+            ], cancellationToken);
+            await scheduledTaskRepository.SaveChangesAsync(cancellationToken);
+        }
 
         logger.LogInformation("Deleting files done");
     }

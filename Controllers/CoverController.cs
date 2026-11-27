@@ -29,19 +29,12 @@ public class CoverController(
 
         var httpClient = httpClientFactory.CreateClient("S3");
 
-        var customOptions = new HybridCacheEntryOptions
-        {
-            LocalCacheExpiration = TimeSpan.FromSeconds(500),
-            Expiration = TimeSpan.FromSeconds(500)
-        };
-
         var presignedUrl = await cache.GetOrCreateWithLoggingAsync(
             $"filePresignedUrl_covers_{file.CoverName ?? CoverHelper.GetCoverNameByFileType(file.Type)}",
             async _ => await minioService.GetCoverFileUrlAsync(file.CoverName ??
                                                                CoverHelper.GetCoverNameByFileType(file.Type)),
             logger,
-            cancellationToken: cancellationToken,
-            options: customOptions
+            cancellationToken: cancellationToken
         );
 
         var response =

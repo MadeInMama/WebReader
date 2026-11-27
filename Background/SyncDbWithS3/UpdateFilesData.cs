@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Hybrid;
 using Minio.DataModel;
 using WebReader.Models;
 using WebReader.Models.Entities;
@@ -16,7 +17,8 @@ public class UpdateFilesData(
     ScheduledTaskRepository taskRepository,
     MinioService minioService,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
-    ILogger<UpdateFilesData> logger)
+    ILogger<UpdateFilesData> logger,
+    HybridCache cache)
     : AbstractBackgroundTasked<UpdateFilesData>(taskRepository, scheduledTaskHubContext, logger)
 {
     public override async Task<Result<string>> ExecuteAsync(ScheduledTask task, CancellationToken cancellationToken)
@@ -93,5 +95,11 @@ public class UpdateFilesData(
         logger.LogTrace($"{nameof(UpdateFilesData)}: Total update count {{updated}}", result);
 
         return Result.Ok($"Update count: {result}");
+    }
+
+    public override async Task PostExecuteAsync(CancellationToken cancellationToken)
+    {
+        await cache.RemoveByTagAsync(["Buckets", "Files"], cancellationToken);
+        await base.PostExecuteAsync(cancellationToken);
     }
 }

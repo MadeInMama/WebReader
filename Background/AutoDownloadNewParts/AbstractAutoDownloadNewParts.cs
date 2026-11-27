@@ -4,12 +4,12 @@ using System.Text.RegularExpressions;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models.Entities;
 using WebReader.Models.Signal;
 using WebReader.Repositories;
-using WebReader.Services;
 using File = WebReader.Models.Entities.File;
 using TaskStatus = WebReader.Models.TaskStatus;
 
@@ -18,11 +18,10 @@ namespace WebReader.Background.AutoDownloadNewParts;
 //TODO: refactor
 public abstract partial class AbstractAutoDownloadNewParts<T>(
     IDbContextFactory<ApplicationDbContext> contextFactory,
-    FileUploadService fileUploadService,
     ILogger<T> logger,
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository,
-    NotificationRepository notificationRepository)
+    HybridCache cache)
     : AbstractBackgroundTasked<T>(taskRepository, scheduledTaskHubContext, logger)
 {
     private const ulong DefaultMaxSize = 1024u; //1gb
@@ -98,6 +97,12 @@ public abstract partial class AbstractAutoDownloadNewParts<T>(
         }
 
         return result;
+    }
+
+    public override async Task PostExecuteAsync(CancellationToken cancellationToken)
+    {
+        await cache.RemoveByTagAsync(["Buckets", "Files"], cancellationToken);
+        await base.PostExecuteAsync(cancellationToken);
     }
 
     protected virtual async Task<Bucket> GetDefaultBucket(ApplicationDbContext context,

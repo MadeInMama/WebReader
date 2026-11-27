@@ -40,12 +40,6 @@ public class TtsController(
 
         var httpClient = httpClientFactory.CreateClient("S3");
 
-        var customOptions = new HybridCacheEntryOptions
-        {
-            LocalCacheExpiration = TimeSpan.FromSeconds(500),
-            Expiration = TimeSpan.FromSeconds(500)
-        };
-
         var presignedUrl = await cache.GetOrCreateWithLoggingAsync(
             $"ttsPresignedUrl_{ttsId}",
             async _ =>
@@ -73,8 +67,7 @@ public class TtsController(
                 return await minioService.GetFileUrlAsync(StaticNames.TtsBucketName, objectName);
             },
             logger,
-            cancellationToken: cancellationToken,
-            options: customOptions
+            cancellationToken: cancellationToken
         );
 
         if (string.IsNullOrEmpty(presignedUrl))

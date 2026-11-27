@@ -4,6 +4,7 @@ using System.Text.Json;
 using FluentResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using WebReader.Data;
 using WebReader.Helpers;
 using WebReader.Models;
@@ -23,10 +24,10 @@ public class AutoDownloadNewPartsOnePunchMan(
     IHubContext<ScheduledTaskHub> scheduledTaskHubContext,
     ScheduledTaskRepository taskRepository,
     NotificationRepository notificationRepository,
-    MangaLibClient mangaLibClient)
+    MangaLibClient mangaLibClient,
+    HybridCache cache)
     : AbstractAutoDownloadNewParts<AutoDownloadNewPartsOnePunchMan>(
-        contextFactory, fileUploadService, logger, scheduledTaskHubContext,
-        taskRepository, notificationRepository)
+        contextFactory, logger, scheduledTaskHubContext, taskRepository, cache)
 {
     private List<MangaLibClient.ChapterInfo> AllFilesLinks = [];
     protected override string FileCustomName => "One-Punch Man";
