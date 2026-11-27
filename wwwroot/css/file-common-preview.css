@@ -55,6 +55,7 @@ footer > .controls-end {
     width: 2em;
     background-repeat: no-repeat;
     background-size: cover;
+    opacity: 0.5;
 }
 
 .set-filter-invert {
@@ -115,6 +116,7 @@ footer > .controls-end {
     display: flex;
     gap: 0.5em;
     width: 100%;
+    height: 3em;
     justify-content: flex-end;
 }
 
@@ -228,11 +230,6 @@ footer > .controls-end {
     .big-page-nav > .next-page-controller {
         align-items: end;
         top: calc(var(--pwa-height) / 2);
-    }
-
-    .big-page-nav > .prev-page-controller > .prev-page,
-    .big-page-nav > .next-page-controller > .next-page {
-        opacity: 0.5;
     }
 
     .big-page-nav > .prev-page-controller > .prev-page {
