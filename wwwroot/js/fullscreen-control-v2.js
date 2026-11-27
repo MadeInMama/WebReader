@@ -24,6 +24,7 @@
         setFilterContainer.removeAttribute('disabled');
         previewPageContainer.removeAttribute('disabled');
         footerElement.setAttribute('disabled', '');
+        document.body.style.gridTemplateRows = "env(safe-area-inset-top) auto 1fr auto 3px 0";
 
         isFullscreen = true;
     }
@@ -43,6 +44,7 @@
         setFilterContainer.setAttribute('disabled', '');
         previewPageContainer.setAttribute('disabled', '');
         footerElement.removeAttribute('disabled');
+        document.body.style.removeProperty("grid-template-rows");
 
         isFullscreen = false;
     }
