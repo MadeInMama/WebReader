@@ -49,7 +49,7 @@ public class FileController(
     [ServiceFilter(typeof(LogRequestAttribute))]
     [Obsolete]
     public async Task<IActionResult> GetAllFilesInBucket(Guid bucketId, string orderBy = "FileName",
-        bool ascDirection = true, CancellationToken cancellationToken = default)
+        bool ascDirection = false, CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllFilesInBucket(User.GetUserGuid(), User.GetUserRoles(), bucketId,
             orderBy, ascDirection, cancellationToken);
@@ -61,7 +61,7 @@ public class FileController(
 
     [ServiceFilter(typeof(LogRequestAttribute))]
     public async Task<IActionResult> GetAllPartsInFile(Guid bucketId, Guid fileId, string orderBy = "IsDone",
-        bool ascDirection = true, int pageCount = 4, int pageIndex = 0,
+        bool ascDirection = false, int pageCount = 4, int pageIndex = 0,
         CancellationToken cancellationToken = default)
     {
         var res = await fileControllerService.GetAllPartsInFile(User.GetUserGuid(), User.GetUserRoles(), bucketId,

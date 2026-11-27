@@ -36,12 +36,6 @@ namespace WebReader.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubscriberTgs_UserId",
-                table: "SubscriberTgs",
-                column: "UserId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_UserTgLinks_UserId",
                 table: "UserTgLinks",
                 column: "UserId");
@@ -56,11 +50,6 @@ namespace WebReader.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_SubscriberTgs_UserId",
                 table: "SubscriberTgs");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SubscriberTgs_UserId",
-                table: "SubscriberTgs",
-                column: "UserId");
         }
     }
 }

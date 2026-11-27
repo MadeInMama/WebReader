@@ -154,7 +154,10 @@ function SetPage(page, send = true) {
         clearTimeout(hideHeaderTimeout);
         hideHeaderTimeout = null;
         document.querySelector("header.can-be-opened").classList.add("opened");
+        document.querySelector("#nav-delete-next-part").parentElement.removeAttribute("disabled");
         execOnFullscreenExit();
+    } else {
+        document.querySelector("#nav-delete-next-part").parentElement.setAttribute("disabled", "");
     }
 }
 

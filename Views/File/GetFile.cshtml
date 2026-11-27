@@ -72,7 +72,7 @@ else
     {
         @if (User.Identity is { IsAuthenticated: true })
         {
-            <li>
+            <li class="disabled-with-anim" disabled>
                 <a asp-controller="File" asp-action="DeleteAndGetFile"
                    asp-route-bucketId="@Model.BucketId" asp-route-fileId="@Model.NextPartId.Value"
                    asp-route-deleteFileId="@Model.FileId" class="click-effect" id="nav-delete-next-part">
@@ -246,4 +246,12 @@ else
     }
 
     <script nonce="@nonce" src="~/js/get-file/common.js" asp-append-version="true"></script>
+
+    <script nonce="@nonce">
+        document.querySelector("#nav-delete-next-part").onclick = (e) => {
+            if (!confirm("Delete current file and move to next?")) {
+                e.preventDefault()
+            }
+        }
+    </script>
 }

@@ -63,7 +63,7 @@ public class AutoDownloadNewPartsOnePunchMan(
         logger.LogInformation("Go to '{link}'", link);
 
         var fileName =
-            $"{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
+            $"{FileCustomName.Replace(" ", "").Replace("-", "").ToLowerInvariant()}{link.Replace("/", "_").Replace(":", "").Replace("https", "").Replace("http", "").Trim('_')}.zip";
 
         var images = await mangaLibClient.GetChapterImagesBytesAsync(chapter, cancellationToken);
 
