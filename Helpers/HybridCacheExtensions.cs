@@ -5,6 +5,8 @@ namespace WebReader.Helpers;
 
 public static class HybridCacheExtensions
 {
+    private static readonly Stopwatch Watch = new();
+
     public static async ValueTask<T> GetOrCreateWithLoggingAsync<T, T1>(
         this HybridCache cache,
         string key,
@@ -14,7 +16,7 @@ public static class HybridCacheExtensions
         IEnumerable<string>? tags = null,
         CancellationToken cancellationToken = default)
     {
-        var watch = Stopwatch.StartNew();
+        Watch.Restart();
 
         var isCacheMiss = false;
 
@@ -31,12 +33,12 @@ public static class HybridCacheExtensions
             cancellationToken
         );
 
-        watch.Stop();
+        Watch.Stop();
 
         if (isCacheMiss)
-            logger.LogTrace("HybridCache MISS: {key} | {time}", key, watch.Elapsed.TotalMilliseconds);
+            logger.LogTrace("HybridCache MISS: {key} | {time}", key, Watch.Elapsed.TotalMilliseconds);
         else
-            logger.LogTrace("HybridCache HIT: {key} | {time}", key, watch.Elapsed.TotalMilliseconds);
+            logger.LogTrace("HybridCache HIT: {key} | {time}", key, Watch.Elapsed.TotalMilliseconds);
 
         return result;
     }
